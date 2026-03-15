@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Fredoka", "Yuanti SC", "STYuanti-SC-Regular", "YouYuan", "VAGRounded", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
+
+@keyframes breathe-scale {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+}
+
+@keyframes drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+}
+
+@keyframes drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-40px, 30px) scale(0.85); }
+  66% { transform: translate(20px, -20px) scale(1.15); }
+}
+
+.animate-breathe-scale {
+  animation: breathe-scale 1.5s ease-in-out infinite;
+}
+
+.animate-drift-1 {
+  animation: drift-1 12s infinite ease-in-out;
+}
+
+.animate-drift-2 {
+  animation: drift-2 15s infinite ease-in-out;
+}
+
+body {
+  font-family: var(--font-sans);
+}
