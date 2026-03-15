@@ -8,7 +8,8 @@ import {
   Footprints, Sunrise, Gift, Ear, Mic, BookOpen, 
   Repeat, CalendarCheck, ShoppingBag, Palette, 
   Zap, Star, Medal, Crown, Target, Rocket,
-  ShieldCheck, BarChart3, Bell, Sliders, User
+  ShieldCheck, BarChart3, Bell, Sliders, User,
+  Clock, Map
 } from 'lucide-react';
 
 /**
@@ -47,6 +48,121 @@ const MOCK_HISTORY_STATUS: Record<number, number> = {
   1: 2, 2: 2, 3: 1, 4: 0, 5: 2, 6: 2, 7: 2, 8: 1, 9: 0, 10: 2, 11: 2, 12: 2, 13: 1
 };
 
+const RADAR_DATA = [
+  { subject: '说', grade: 'A', A: 80, fullMark: 100 },
+  { subject: '写', grade: 'B', A: 40, fullMark: 100 },
+  { subject: '读', grade: 'B-', A: 30, fullMark: 100 },
+  { subject: '听', grade: 'C', A: 20, fullMark: 100 },
+];
+
+const CustomPolarGrid = ({ cx, cy, polarRadius, polarAngles }: any) => {
+  if (!polarRadius || !polarAngles) return null;
+  const maxRadius = Math.max(...polarRadius);
+  const step = maxRadius / 4;
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={step * 4} fill="#fff7ed" stroke="none" />
+      <circle cx={cx} cy={cy} r={step * 3} fill="#ffedd5" stroke="none" />
+      <circle cx={cx} cy={cy} r={step * 2} fill="#fed7aa" stroke="none" />
+      <circle cx={cx} cy={cy} r={step * 1} fill="#fdba74" stroke="none" />
+      {polarAngles.map((angle: number, index: number) => {
+        const rad = -angle * Math.PI / 180;
+        const x = cx + maxRadius * Math.cos(rad);
+        const y = cy + maxRadius * Math.sin(rad);
+        return (
+          <line key={index} x1={cx} y1={cy} x2={x} y2={y} stroke="#fdba74" strokeWidth={1} opacity={0.6} />
+        );
+      })}
+    </g>
+  );
+};
+
+const CustomTick = ({ payload, x, y, textAnchor, stroke, radius }: any) => {
+  const dataItem = RADAR_DATA.find(item => item.subject === payload.value);
+  return (
+    <g className="recharts-layer recharts-polar-angle-axis-tick">
+      <text radius={radius} stroke={stroke} x={x} y={y} className="recharts-text recharts-polar-angle-axis-tick-value" textAnchor={textAnchor}>
+        <tspan x={x} dy="-0.2em" fill="#4b5563" fontSize="14" fontWeight="bold">{payload.value}</tspan>
+        <tspan x={x} dy="1.4em" fill="#f97316" fontSize="14" fontWeight="bold">{dataItem?.grade}</tspan>
+      </text>
+    </g>
+  );
+};
+
+const useVerticalDragToScroll = () => {
+  const ref = useRef<any>(null);
+  const isDragging = useRef(false);
+  const startY = useRef(0);
+  const scrollTop = useRef(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!ref.current) return;
+    isDragging.current = true;
+    startY.current = e.pageY - ref.current.offsetTop;
+    scrollTop.current = ref.current.scrollTop;
+  };
+
+  const handleMouseLeave = () => {
+    isDragging.current = false;
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || !ref.current) return;
+    e.preventDefault();
+    const y = e.pageY - ref.current.offsetTop;
+    const walk = (y - startY.current) * 1.5;
+    ref.current.scrollTop = scrollTop.current - walk;
+  };
+
+  return { ref, onMouseDown: handleMouseDown, onMouseLeave: handleMouseLeave, onMouseUp: handleMouseUp, onMouseMove: handleMouseMove };
+};
+
+const AwardCard = ({ ach }: { ach: any }) => {
+  const [flipped, setFlipped] = useState(false);
+
+  return (
+    <div 
+      className={`relative w-full [perspective:1000px] ${ach.acquired ? 'cursor-pointer group' : ''}`}
+      onClick={() => ach.acquired && setFlipped(!flipped)}
+    >
+      <div className={`w-full h-full transition-transform duration-500 [transform-style:preserve-3d] ${flipped ? '[transform:rotateY(180deg)]' : ''}`}>
+        
+        {/* Front */}
+        <div 
+          className={`relative [backface-visibility:hidden] rounded-[32px] p-5 sm:p-6 flex flex-col items-center justify-center text-center border-2 transition-all duration-300 ${
+            ach.acquired 
+              ? 'bg-white border-slate-100 shadow-lg group-hover:-translate-y-1 group-hover:shadow-xl' 
+              : 'bg-slate-50 border-transparent opacity-50 grayscale'
+          }`}
+        >
+          <div className={`w-16 h-16 sm:w-20 sm:h-20 ${ach.iconBg} rounded-full flex items-center justify-center mb-4 shadow-inner relative`}>
+            {ach.acquired && <div className="absolute inset-0 bg-white/20 rounded-full animate-pulse" />}
+            <ach.IconComponent size={32} className={`${ach.iconColor} drop-shadow-sm relative z-10`} />
+          </div>
+          <h3 className="font-black text-slate-800 text-sm sm:text-base mb-1.5">{ach.name}</h3>
+          <p className="text-xs text-slate-500 leading-snug line-clamp-2 font-medium">{ach.intro}</p>
+        </div>
+
+        {/* Back */}
+        <div 
+          className={`absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-[32px] p-5 sm:p-6 flex flex-col items-center justify-center text-center shadow-lg ${ach.iconBg}`}
+        >
+          <div className={`w-12 h-12 bg-white/50 rounded-full flex items-center justify-center mb-3 shadow-inner`}>
+            <CalendarIcon size={24} className={ach.iconColor} />
+          </div>
+          <h3 className={`font-black ${ach.iconColor} text-sm sm:text-base mb-2`}>获得日期</h3>
+          <p className={`text-xs sm:text-sm font-bold ${ach.iconColor} opacity-80`}>2025年03月15日</p>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
 export default function App() {
   // --- 状态管理 ---
   const [currentView, setCurrentView] = useState('home');
@@ -62,9 +178,50 @@ export default function App() {
   const [gateInput, setGateInput] = useState(''); 
   const [learningTitle, setLearningTitle] = useState('');
 
+  const verticalDragProps = useVerticalDragToScroll();
+  const calendarDragProps = useVerticalDragToScroll();
+
   const mapScrollRef = useRef<number>(0);
   const mainRef = useRef<HTMLElement>(null);
   const isDragging = useRef(false);
+
+  // --- 全局点击音效 ---
+  useEffect(() => {
+    const playPop = () => {
+      try {
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.05);
+        
+        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+        
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        
+        osc.start();
+        osc.stop(ctx.currentTime + 0.1);
+      } catch (e) {
+        // Ignore audio context errors
+      }
+    };
+
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('button') || target.closest('[class*="cursor-pointer"]')) {
+        playPop();
+      }
+    };
+
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
 
@@ -129,6 +286,46 @@ export default function App() {
 
   const handleOpenReward = (mIdx: number) => {
     setShowModuleReward(mIdx);
+    
+    // 播放胜利庆祝音效
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContext) {
+        const ctx = new AudioContext();
+        
+        const playNote = (freq: number, startTime: number, duration: number, type: OscillatorType = 'triangle') => {
+          const osc = ctx.createOscillator();
+          const gainNode = ctx.createGain();
+          
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, startTime);
+          
+          gainNode.gain.setValueAtTime(0, startTime);
+          gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+          
+          osc.connect(gainNode);
+          gainNode.connect(ctx.destination);
+          
+          osc.start(startTime);
+          osc.stop(startTime + duration);
+        };
+
+        const now = ctx.currentTime;
+        // C Major Arpeggio: C4, E4, G4, C5
+        playNote(261.63, now, 0.4);       // C4
+        playNote(329.63, now + 0.1, 0.4); // E4
+        playNote(392.00, now + 0.2, 0.4); // G4
+        playNote(523.25, now + 0.3, 0.8, 'sine'); // C5
+        
+        // Add harmony on the last note
+        playNote(329.63, now + 0.3, 0.8, 'sine'); // E4
+        playNote(392.00, now + 0.3, 0.8, 'sine'); // G4
+      }
+    } catch (e) {
+      // Ignore audio context errors
+    }
+
     confetti({
       particleCount: 150,
       spread: 80,
@@ -144,6 +341,76 @@ export default function App() {
     setShowModuleReward(null);
     if (isLastMajor) {
       setShowGrandReward(true);
+      
+      // 播放更盛大的胜利庆祝音效
+      try {
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioContext) {
+          const ctx = new AudioContext();
+          
+          const playNote = (freq: number, startTime: number, duration: number, type: OscillatorType = 'triangle') => {
+            const osc = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, startTime);
+            
+            gainNode.gain.setValueAtTime(0, startTime);
+            gainNode.gain.linearRampToValueAtTime(0.4, startTime + 0.05);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+            
+            osc.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+          };
+
+          const now = ctx.currentTime;
+          // Fanfare: C4, F4, C4, F4, A4, C5
+          playNote(261.63, now, 0.2);       // C4
+          playNote(349.23, now + 0.2, 0.2); // F4
+          playNote(261.63, now + 0.4, 0.2); // C4
+          playNote(349.23, now + 0.6, 0.2); // F4
+          playNote(440.00, now + 0.8, 0.2); // A4
+          playNote(523.25, now + 1.0, 1.5, 'sine'); // C5
+          
+          // Harmony
+          playNote(349.23, now + 1.0, 1.5, 'sine'); // F4
+          playNote(440.00, now + 1.0, 1.5, 'sine'); // A4
+        }
+      } catch (e) {
+        // Ignore audio context errors
+      }
+
+      // 盛大纸屑
+      const duration = 3000;
+      const end = Date.now() + duration;
+
+      const frame = () => {
+        confetti({
+          particleCount: 5,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: ['#3b82f6', '#22c55e', '#f59e0b', '#a855f7', '#ec4899'],
+          zIndex: 1000
+        });
+        confetti({
+          particleCount: 5,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: ['#3b82f6', '#22c55e', '#f59e0b', '#a855f7', '#ec4899'],
+          zIndex: 1000
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      };
+      frame();
+
     } else {
       const nextIdx = majorIdx + 1;
       setMajorIdx(nextIdx);
@@ -216,16 +483,16 @@ export default function App() {
       
       if (isMajorDone) {
         // Finished: Soft theme color, solid but calm
-        if (mIdx === 0) { bgClass = 'bg-[#d5ecfe]'; borderClass = 'border-blue-400/60'; }
+        if (mIdx === 0) { bgClass = 'bg-[#d5ecfe]'; borderClass = 'border-blue-200'; }
         else if (mIdx === 1) { bgClass = 'bg-green-100/80'; borderClass = 'border-green-300/50'; }
         else if (mIdx === 2) { bgClass = 'bg-amber-100/80'; borderClass = 'border-amber-300/50'; }
         else if (mIdx === 3) { bgClass = 'bg-purple-100/80'; borderClass = 'border-purple-300/50'; }
       } else if (isMajorCurrent) {
         // Current: Bright, glowing, active
-        if (mIdx === 0) { bgClass = 'bg-blue-50/90 shadow-[0_0_30px_rgba(59,130,246,0.3)]'; borderClass = 'border-blue-400'; }
-        else if (mIdx === 1) { bgClass = 'bg-green-50/90 shadow-[0_0_30px_rgba(34,197,94,0.3)]'; borderClass = 'border-green-400'; }
-        else if (mIdx === 2) { bgClass = 'bg-amber-50/90 shadow-[0_0_30px_rgba(245,158,11,0.3)]'; borderClass = 'border-amber-400'; }
-        else if (mIdx === 3) { bgClass = 'bg-purple-50/90 shadow-[0_0_30px_rgba(168,85,247,0.3)]'; borderClass = 'border-purple-400'; }
+        if (mIdx === 0) { bgClass = 'bg-blue-50/90 shadow-[0_0_30px_rgba(59,130,246,0.3)]'; borderClass = 'border-blue-500'; }
+        else if (mIdx === 1) { bgClass = 'bg-green-50/90 shadow-[0_0_30px_rgba(34,197,94,0.3)]'; borderClass = 'border-green-500'; }
+        else if (mIdx === 2) { bgClass = 'bg-amber-50/90 shadow-[0_0_30px_rgba(245,158,11,0.3)]'; borderClass = 'border-amber-500'; }
+        else if (mIdx === 3) { bgClass = 'bg-purple-50/90 shadow-[0_0_30px_rgba(168,85,247,0.3)]'; borderClass = 'border-purple-500'; }
       } else {
         // Unfinished: Muted, glassmorphism, gray
         bgClass = 'bg-white/20 grayscale opacity-60';
@@ -324,8 +591,8 @@ export default function App() {
             {/* Animated Background for Current Module */}
             {isMajorCurrent && (
               <div className="absolute inset-0 pointer-events-none z-0">
-                <div className={`absolute -top-10 -left-10 w-64 h-64 rounded-full filter blur-3xl opacity-40 animate-drift-1 ${mIdx === 0 ? 'bg-blue-300' : mIdx === 1 ? 'bg-green-300' : mIdx === 2 ? 'bg-amber-300' : 'bg-purple-300'}`}></div>
-                <div className={`absolute -bottom-10 -right-10 w-72 h-72 rounded-full filter blur-3xl opacity-40 animate-drift-2 ${mIdx === 0 ? 'bg-blue-200' : mIdx === 1 ? 'bg-green-200' : mIdx === 2 ? 'bg-amber-200' : 'bg-purple-200'}`}></div>
+                <div className={`absolute -top-10 -left-10 w-64 h-64 rounded-full opacity-20 animate-drift-1 ${mIdx === 0 ? 'bg-blue-300' : mIdx === 1 ? 'bg-green-300' : mIdx === 2 ? 'bg-amber-300' : 'bg-purple-300'}`}></div>
+                <div className={`absolute -bottom-10 -right-10 w-72 h-72 rounded-full opacity-20 animate-drift-2 ${mIdx === 0 ? 'bg-blue-200' : mIdx === 1 ? 'bg-green-200' : mIdx === 2 ? 'bg-amber-200' : 'bg-purple-200'}`}></div>
               </div>
             )}
 
@@ -403,38 +670,59 @@ export default function App() {
             >
               <div className="flex items-center min-w-max h-full py-4">{renderMapPath()}</div>
             </main>
-            <footer className="h-[22%] flex items-center justify-center pb-6 relative z-20">
-              <div className="bg-white/90 backdrop-blur-xl px-14 py-6 rounded-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] flex items-center space-x-14 border-2 border-white relative overflow-hidden">
-                {/* Decorative background glow */}
-                <div className="absolute -top-10 -left-10 w-32 h-32 bg-blue-200 rounded-full blur-3xl opacity-50"></div>
-                <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-purple-200 rounded-full blur-3xl opacity-50"></div>
+            <footer className="h-[22%] flex items-center justify-center pb-6 relative z-20 space-x-6">
+              {/* Main Pill */}
+              <div className="bg-white px-8 py-4 rounded-[40px] shadow-[0_10px_40px_rgba(0,0,0,0.05)] flex items-center space-x-8 border border-slate-100 relative overflow-hidden">
                 
-                <div className="text-center relative z-10">
-                  <p className="text-[12px] font-black uppercase tracking-widest text-slate-400 mb-1">学习时长</p>
-                  <p className="text-3xl font-black bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent drop-shadow-sm">12 <span className="text-sm font-bold">MIN</span></p>
-                </div>
-                
-                <div className="h-14 w-1 bg-slate-100 rounded-full relative z-10" />
-                
-                <div className="flex flex-col items-center relative z-10">
-                  <p className="text-[12px] font-black uppercase tracking-widest text-slate-400 mb-3">探险进度</p>
-                  <div className="flex space-x-3 bg-slate-50 px-4 py-2 rounded-full border border-slate-100">
-                    {TASK_DATA.map((_, i) => 
-                      <div key={`dot-${i}`} className={`w-3.5 h-3.5 rounded-full transition-all duration-500 shadow-inner ${i < majorIdx ? 'bg-gradient-to-r from-green-400 to-emerald-500 w-8' : i === majorIdx ? 'bg-gradient-to-r from-blue-400 to-cyan-500 animate-pulse shadow-blue-400/50' : 'bg-slate-200'}`} />
-                    )}
+                {/* Study Time */}
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                    <Clock size={24} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Study Time</p>
+                    <p className="text-xl font-black text-slate-800">12 MIN</p>
                   </div>
                 </div>
-                
-                <div className="h-14 w-1 bg-slate-100 rounded-full relative z-10" />
-                
-                <div className="flex space-x-5 relative z-10">
-                  <button onClick={() => setShowCalendar(true)} className="w-16 h-16 bg-gradient-to-b from-white to-rose-50 rounded-2xl shadow-md flex items-center justify-center text-rose-500 border-b-4 border-rose-200 hover:translate-y-1 hover:border-b-0 transition-all">
-                    <CalendarIcon size={30} className="drop-shadow-sm" />
-                  </button>
-                  <button onClick={() => setCurrentView('awards')} className="w-16 h-16 bg-gradient-to-b from-white to-amber-50 rounded-2xl shadow-md flex items-center justify-center text-amber-500 border-b-4 border-amber-200 hover:translate-y-1 hover:border-b-0 transition-all">
-                    <Trophy size={30} className="drop-shadow-sm" />
-                  </button>
+
+                <div className="h-10 w-[1px] bg-slate-200" />
+
+                {/* Daily Goal */}
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-500">
+                    <Trophy size={24} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Daily Goal</p>
+                    <p className="text-xl font-black text-slate-800">STAGE {Math.min(majorIdx + 1, TASK_DATA.length)}/{TASK_DATA.length}</p>
+                  </div>
                 </div>
+
+                <div className="h-10 w-[1px] bg-slate-200" />
+
+                {/* Adventure Progress */}
+                <div className="flex flex-col justify-center w-56">
+                  <div className="flex justify-between items-end mb-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Adventure Progress</p>
+                    <p className="text-[12px] font-black text-orange-500">{Math.round((majorIdx / TASK_DATA.length) * 100)}%</p>
+                  </div>
+                  <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-orange-500 rounded-full transition-all duration-1000" 
+                      style={{ width: `${(majorIdx / TASK_DATA.length) * 100}%` }} 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Secondary Pill (Buttons) */}
+              <div className="bg-white p-2 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.05)] flex items-center space-x-3 border border-slate-100">
+                <button onClick={() => setShowCalendar(true)} className="w-14 h-14 bg-purple-500 rounded-full flex items-center justify-center text-white transition-all shadow-[0_4px_0_#7e22ce] active:shadow-none active:translate-y-1">
+                  <CalendarIcon size={24} />
+                </button>
+                <button onClick={() => setCurrentView('awards')} className="w-14 h-14 bg-sky-500 rounded-full flex items-center justify-center text-white transition-all shadow-[0_4px_0_#0369a1] active:shadow-none active:translate-y-1">
+                  <Award size={24} />
+                </button>
               </div>
             </footer>
           </div>
@@ -459,7 +747,7 @@ export default function App() {
               <button onClick={() => setCurrentView('home')} className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 active:scale-90 transition-transform"><ChevronLeft size={32} /></button>
               <h2 className="font-black text-slate-800 text-2xl tracking-widest">{currentView === 'parent' ? '家长中心' : currentView === 'awards' ? '我的勋章' : currentView === 'shop' ? '魔法商城' : '学员档案'}</h2><div className="w-14" />
             </header>
-            <main className="flex-1 p-[4%] overflow-y-auto no-scrollbar text-slate-800">
+            <main {...verticalDragProps} className="flex-1 p-[4%] overflow-y-auto no-scrollbar text-slate-800 cursor-grab active:cursor-grabbing">
                {currentView === 'awards' ? (
                  <div className="max-w-5xl mx-auto">
                    <div className="flex items-center space-x-4 mb-8">
@@ -471,64 +759,50 @@ export default function App() {
                    </div>
                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 pb-10">
                      {ACHIEVEMENTS_LIST.map(ach => (
-                       <div 
-                         key={ach.id} 
-                         className={`rounded-[32px] p-5 sm:p-6 flex flex-col items-center justify-center text-center border-2 transition-all duration-300 ${
-                           ach.acquired 
-                             ? 'bg-white border-slate-100 shadow-lg hover:-translate-y-1 hover:shadow-xl' 
-                             : 'bg-slate-50 border-transparent opacity-50 grayscale'
-                         }`}
-                       >
-                         <div className={`w-16 h-16 sm:w-20 sm:h-20 ${ach.iconBg} rounded-full flex items-center justify-center mb-4 shadow-inner relative`}>
-                           {ach.acquired && <div className="absolute inset-0 bg-white/20 rounded-full animate-pulse" />}
-                           <ach.IconComponent size={32} className={`${ach.iconColor} drop-shadow-sm relative z-10`} />
-                         </div>
-                         <h3 className="font-black text-slate-800 text-sm sm:text-base mb-1.5">{ach.name}</h3>
-                         <p className="text-xs text-slate-500 leading-snug line-clamp-2 font-medium">{ach.intro}</p>
-                       </div>
+                       <AwardCard key={ach.id} ach={ach} />
                      ))}
                    </div>
                  </div>
                ) : currentView === 'parent' ? (
                  <div className="max-w-4xl mx-auto space-y-6 py-4"><div className="flex items-center space-x-3 mb-4"><ShieldCheck className="text-blue-500" size={32} /><h1 className="text-2xl font-black">管理面板</h1></div><div className="grid grid-cols-2 gap-6"><div className="bg-slate-50 p-6 rounded-[30px] border border-slate-100 text-center py-10 opacity-60"><p className="font-black uppercase">管理功能开发中...</p></div></div></div>
                ) : currentView === 'profile' ? (
-                 <div className="max-w-5xl mx-auto h-full flex flex-col pb-10">
+                 <div className="max-w-5xl mx-auto h-full flex flex-col pb-4">
                    {/* Top Profile Banner */}
-                   <div className="flex items-center mb-10 w-full">
+                   <div className="flex items-center mb-6 w-full">
                      <div className="relative mr-8">
                        <div className="absolute inset-0 bg-yellow-400 rounded-[32px] -rotate-6 scale-105 shadow-md"></div>
-                       <div className="w-28 h-28 bg-white rounded-[32px] p-1.5 shadow-xl border-4 border-white overflow-hidden relative z-10">
+                       <div className="w-24 h-24 bg-white rounded-[32px] p-1.5 shadow-xl border-4 border-white overflow-hidden relative z-10">
                          <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Qian" alt="avatar" className="w-full h-full object-cover bg-blue-50" />
                        </div>
                        <div className="absolute -top-2 -right-4 text-3xl animate-bounce z-20">✨</div>
                        <div className="absolute -bottom-2 -left-4 text-3xl animate-pulse z-20">🌟</div>
                      </div>
                      <div className="flex flex-col items-start">
-                       <h1 className="text-4xl font-black text-slate-800 tracking-wide mb-3">王大王大王</h1>
-                       <div className="bg-blue-100 text-blue-600 px-5 py-1.5 rounded-full font-black text-sm shadow-sm border border-blue-200">
+                       <h1 className="text-3xl font-black text-slate-800 tracking-wide mb-2">糯米团子</h1>
+                       <div className="bg-blue-100 text-blue-600 px-4 py-1 rounded-full font-black text-xs shadow-sm border border-blue-200">
                          小小探险家
                        </div>
                      </div>
                    </div>
 
-                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1">
+                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
                      {/* Left: Skill Cards */}
-                     <div className="grid grid-cols-2 gap-4">
+                     <div className="grid grid-cols-2 gap-3">
                        {[
                          { id: 'listen', name: '听', level: 1, progress: 20, color: 'bg-blue-500', light: 'bg-blue-100', text: 'text-blue-600', icon: '🎧' },
                          { id: 'speak', name: '说', level: 12, progress: 80, color: 'bg-green-500', light: 'bg-green-100', text: 'text-green-600', icon: '🎙️' },
                          { id: 'read', name: '读', level: 1, progress: 30, color: 'bg-amber-500', light: 'bg-amber-100', text: 'text-amber-600', icon: '📖' },
                          { id: 'write', name: '写', level: 1, progress: 40, color: 'bg-purple-500', light: 'bg-purple-100', text: 'text-purple-600', icon: '✍️' },
                        ].map(item => (
-                         <div key={item.id} className={`${item.light} rounded-[32px] p-5 flex flex-col relative overflow-hidden transition-transform hover:scale-105 cursor-pointer border-2 border-white shadow-sm`}>
-                           <div className="flex justify-between items-start mb-4">
-                             <div className={`w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-2xl shadow-sm`}>
+                         <div key={item.id} className={`${item.light} rounded-[24px] p-4 flex flex-col relative overflow-hidden transition-transform hover:scale-105 cursor-pointer border-2 border-white shadow-sm`}>
+                           <div className="flex justify-between items-start mb-2">
+                             <div className={`w-10 h-10 bg-white rounded-xl flex items-center justify-center text-xl shadow-sm`}>
                                {item.icon}
                              </div>
-                             <div className={`font-black ${item.text} text-lg bg-white/60 px-2 py-1 rounded-xl`}>Lv.{item.level}</div>
+                             <div className={`font-black ${item.text} text-sm bg-white/60 px-2 py-0.5 rounded-lg`}>Lv.{item.level}</div>
                            </div>
-                           <h3 className={`font-black ${item.text} text-xl mb-3`}>{item.name}力</h3>
-                           <div className="h-4 bg-white/60 rounded-full overflow-hidden p-0.5">
+                           <h3 className={`font-black ${item.text} text-lg mb-2`}>{item.name}力</h3>
+                           <div className="h-3 bg-white/60 rounded-full overflow-hidden p-0.5 mt-auto">
                              <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.progress}%` }} />
                            </div>
                          </div>
@@ -536,23 +810,31 @@ export default function App() {
                      </div>
 
                      {/* Right: Radar Chart */}
-                     <div className="bg-slate-50 rounded-[40px] p-6 flex flex-col items-center justify-center border-4 border-slate-100 relative shadow-sm">
-                       <div className="absolute top-6 left-6 bg-white px-4 py-2 rounded-2xl shadow-sm font-black text-slate-700 flex items-center space-x-2 z-10">
-                         <Target className="text-red-500" size={20} />
+                     <div className="bg-slate-50 rounded-[32px] p-4 flex flex-col items-center justify-center border-4 border-slate-100 relative shadow-sm min-h-0">
+                       <div className="absolute top-4 left-4 bg-white px-3 py-1.5 rounded-xl shadow-sm font-black text-slate-700 flex items-center space-x-2 z-10 text-sm">
+                         <Target className="text-red-500" size={16} />
                          <span>我的超能力雷达</span>
                        </div>
-                       <div className="w-full h-64 mt-8">
+                       <div className="w-full h-full min-h-[150px] mt-6">
                          <ResponsiveContainer width="100%" height="100%">
-                           <RadarChart cx="50%" cy="50%" outerRadius="70%" data={[
-                             { subject: '说', A: 80, fullMark: 100 },
-                             { subject: '写', A: 40, fullMark: 100 },
-                             { subject: '读', A: 30, fullMark: 100 },
-                             { subject: '听', A: 20, fullMark: 100 },
-                           ]}>
-                             <PolarGrid gridType="polygon" stroke="#cbd5e1" strokeDasharray="3 3" />
-                             <PolarAngleAxis dataKey="subject" tick={{ fill: '#475569', fontSize: 16, fontWeight: 900 }} />
-                             <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                             <Radar name="能力" dataKey="A" stroke="#3b82f6" strokeWidth={4} fill="#60a5fa" fillOpacity={0.5} />
+                           <RadarChart cx="50%" cy="50%" outerRadius="65%" data={RADAR_DATA}>
+                             <PolarGrid content={<CustomPolarGrid />} />
+                             <PolarAngleAxis dataKey="subject" tick={<CustomTick />} />
+                             <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
+                             <Radar 
+                               name="能力" 
+                               dataKey="A" 
+                               stroke="#f97316" 
+                               strokeWidth={3} 
+                               fill="#fb923c" 
+                               fillOpacity={0.8} 
+                               isAnimationActive={true}
+                               animationBegin={0}
+                               animationDuration={1500}
+                               animationEasing="ease-out"
+                               dot={{ r: 4, fill: '#fff', stroke: '#f97316', strokeWidth: 2 }}
+                               activeDot={{ r: 6, fill: '#fff', stroke: '#f97316', strokeWidth: 2 }}
+                             />
                            </RadarChart>
                          </ResponsiveContainer>
                        </div>
@@ -560,26 +842,26 @@ export default function App() {
                    </div>
 
                    {/* Bottom: Overall Progress */}
-                   <div className="mt-8 bg-white border-4 border-slate-100 rounded-[32px] p-6 relative overflow-hidden shadow-sm">
-                     <div className="flex justify-between items-end mb-4 relative z-10">
+                   <div className="mt-4 bg-white border-4 border-slate-100 rounded-[24px] p-4 relative overflow-hidden shadow-sm shrink-0">
+                     <div className="flex justify-between items-end mb-2 relative z-10">
                        <div>
-                         <p className="text-slate-400 font-bold text-sm mb-1">当前进度</p>
-                         <h3 className="font-black text-2xl text-slate-800 flex items-center space-x-2">
-                           <Crown className="text-yellow-500" size={24} />
+                         <p className="text-slate-400 font-bold text-xs mb-1">当前进度</p>
+                         <h3 className="font-black text-xl text-slate-800 flex items-center space-x-2">
+                           <Crown className="text-yellow-500" size={20} />
                            <span>Lv.2 入门</span>
                          </h3>
                        </div>
                        <div className="text-right">
-                         <p className="text-slate-400 font-bold text-sm mb-1">下一级</p>
-                         <h3 className="font-black text-xl text-slate-400">Lv.3 学徒</h3>
+                         <p className="text-slate-400 font-bold text-xs mb-1">下一级</p>
+                         <h3 className="font-black text-lg text-slate-400">Lv.3 学徒</h3>
                        </div>
                      </div>
-                     <div className="h-8 bg-slate-100 rounded-full relative overflow-hidden p-1 z-10">
+                     <div className="h-6 bg-slate-100 rounded-full relative overflow-hidden p-1 z-10">
                        <div className="absolute left-1 top-1 bottom-1 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full w-[30%] shadow-sm relative overflow-hidden">
                          <div className="absolute top-0 left-0 right-0 h-1/2 bg-white/20 rounded-full"></div>
                        </div>
                      </div>
-                     <Rocket className="absolute -right-4 -bottom-4 text-slate-50 opacity-50" size={120} />
+                     <Rocket className="absolute -right-2 -bottom-2 text-slate-50 opacity-50" size={80} />
                    </div>
                  </div>
                ) : (
@@ -593,9 +875,9 @@ export default function App() {
 
         {showCalendar && (
           <div className="absolute inset-0 z-[700] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-[4%]">
-            <div className="bg-white w-full max-w-2xl h-[90%] rounded-[40px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in duration-300 text-slate-800">
+            <div className="bg-white w-full max-w-4xl h-[90%] rounded-[40px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in duration-300 text-slate-800">
               <header className="bg-blue-600 p-6 text-white flex justify-between items-center"><button onClick={() => setShowCalendar(false)} className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center"><X size={24}/></button><div className="flex items-center bg-white/10 rounded-2xl p-2 px-4 space-x-6"><button onClick={() => changeDay(-1)} className="p-2 hover:bg-white/20 rounded-full transition-colors"><ArrowLeft size={24}/></button><div className="text-center min-w-[120px]"><p className="text-xs font-bold opacity-70 uppercase tracking-widest">March 2024</p><p className="text-2xl font-black">{selectedDate.getDate()}日</p></div><button onClick={() => changeDay(1)} disabled={new Date(new Date(selectedDate).setDate(selectedDate.getDate()+1)) > new Date()} className="p-2 hover:bg-white/20 rounded-full transition-colors disabled:opacity-30"><ArrowRight size={24}/></button></div><button onClick={() => setSelectedDate(new Date())} className="bg-white text-blue-600 px-6 py-2.5 rounded-xl font-black text-sm active:scale-95">今天</button></header>
-              <div className="flex-1 p-8 flex flex-col overflow-hidden"><div className="grid grid-cols-7 gap-3 text-center mb-3">{['S','M','T','W','T','F','S'].map((d, i) => <div key={`cal-h-${i}`} className="font-black text-xs text-slate-300 uppercase">{d}</div>)}</div><div className="grid grid-cols-7 gap-3 flex-1 overflow-y-auto no-scrollbar">{[...Array(31)].map((_, i) => { const d = i + 1; const isFuture = d > new Date().getDate(); const isPicked = d === selectedDate.getDate(); const status = MOCK_HISTORY_STATUS[d] ?? -1; let statusColor = "bg-slate-50 text-slate-600"; if (!isFuture) { if (status === 2) statusColor = "bg-green-50 text-green-600"; else if (status === 1) statusColor = "bg-yellow-50 text-yellow-600"; else if (status === 0) statusColor = "bg-red-50 text-red-400"; } return (<div key={`day-c-${i}`} onClick={() => !isFuture && setSelectedDate(new Date(2024, 2, d))} className={`aspect-square relative flex flex-col items-center justify-center rounded-2xl font-black text-lg transition-all cursor-pointer ${isFuture ? 'text-slate-200 cursor-not-allowed bg-slate-50/30' : isPicked ? 'ring-4 ring-blue-500/30 scale-105 z-10' : ''} ${!isPicked ? statusColor : 'bg-blue-600 text-white shadow-lg'}`}><span>{d}</span>{!isFuture && !isPicked && status !== -1 && (<div className={`w-2 h-2 rounded-full absolute bottom-2 ${status === 2 ? 'bg-green-400' : status === 1 ? 'bg-yellow-400' : 'bg-red-300'}`} />)}</div>); })}</div><div className="mt-6 flex justify-center space-x-6 text-xs font-bold text-slate-400 border-t border-slate-50 pt-4"><div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-green-400" /><span>已完成</span></div><div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-yellow-400" /><span>未完成</span></div><div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-red-400" /><span>未学习</span></div></div></div>
+              <div className="flex-1 p-8 flex flex-col overflow-hidden"><div className="grid grid-cols-7 gap-3 text-center mb-3">{['S','M','T','W','T','F','S'].map((d, i) => <div key={`cal-h-${i}`} className="font-black text-xs text-slate-300 uppercase">{d}</div>)}</div><div {...calendarDragProps} className="grid grid-cols-7 gap-3 flex-1 overflow-y-auto no-scrollbar cursor-grab active:cursor-grabbing">{[...Array(31)].map((_, i) => { const d = i + 1; const isFuture = d > new Date().getDate(); const isPicked = d === selectedDate.getDate(); const status = MOCK_HISTORY_STATUS[d] ?? -1; let statusColor = "bg-slate-50 text-slate-600"; if (!isFuture) { if (status === 2) statusColor = "bg-green-50 text-green-600"; else if (status === 1) statusColor = "bg-yellow-50 text-yellow-600"; else if (status === 0) statusColor = "bg-red-50 text-red-400"; } return (<div key={`day-c-${i}`} onClick={() => !isFuture && setSelectedDate(new Date(2024, 2, d))} className={`aspect-square relative flex flex-col items-center justify-center rounded-2xl font-black text-lg transition-all cursor-pointer ${isFuture ? 'text-slate-200 cursor-not-allowed bg-slate-50/30' : isPicked ? 'ring-4 ring-blue-500/30 scale-105 z-10' : ''} ${!isPicked ? statusColor : 'bg-blue-600 text-white shadow-lg'}`}><span>{d}</span>{!isFuture && !isPicked && status !== -1 && (<div className={`w-2 h-2 rounded-full absolute bottom-2 ${status === 2 ? 'bg-green-400' : status === 1 ? 'bg-yellow-400' : 'bg-red-300'}`} />)}</div>); })}</div><div className="mt-6 flex justify-center space-x-6 text-xs font-bold text-slate-400 border-t border-slate-50 pt-4"><div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-green-400" /><span>已完成</span></div><div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-yellow-400" /><span>未完成</span></div><div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-red-400" /><span>未学习</span></div></div></div>
               <div className="p-6 bg-slate-50 border-t flex justify-center"><button onClick={handleConfirmDate} className={`w-full py-4 rounded-2xl font-black text-xl shadow-lg active:scale-95 ${isToday ? 'bg-blue-600 text-white' : 'bg-green-600 text-white'}`}>{isToday ? "开始今日学习探险" : "开启该日复习模式"}</button></div>
             </div>
           </div>
