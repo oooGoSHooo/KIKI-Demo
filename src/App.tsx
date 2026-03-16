@@ -222,13 +222,21 @@ const FlashcardLearning = ({ onFinish, onBack }: { onFinish: () => void, onBack:
     center: {
       zIndex: 1,
       x: 0,
-      opacity: 1
+      opacity: 1,
+      transition: {
+        x: { type: "spring", stiffness: 300, damping: 30, delay: 0.08 },
+        opacity: { duration: 0.2, delay: 0.08 }
+      }
     },
     exit: (direction: number) => {
       return {
         zIndex: 0,
         x: direction < 0 ? 1000 : -1000,
-        opacity: 0
+        opacity: 0,
+        transition: {
+          x: { type: "spring", stiffness: 300, damping: 30 },
+          opacity: { duration: 0.2 }
+        }
       };
     }
   };
@@ -242,7 +250,7 @@ const FlashcardLearning = ({ onFinish, onBack }: { onFinish: () => void, onBack:
       </header>
       
       <div className="flex-1 flex items-center justify-center p-4 sm:p-8 relative">
-        <AnimatePresence initial={false} custom={direction} mode="wait">
+        <AnimatePresence initial={false} custom={direction}>
           <motion.div
             key={currentIndex}
             custom={direction}
@@ -250,10 +258,6 @@ const FlashcardLearning = ({ onFinish, onBack }: { onFinish: () => void, onBack:
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{
-              x: { type: "spring", stiffness: 300, damping: 30 },
-              opacity: { duration: 0.2 }
-            }}
             className="w-full max-w-4xl bg-white rounded-[40px] shadow-2xl border border-slate-100 flex flex-col md:flex-row overflow-hidden absolute"
           >
             {/* Image Section */}
