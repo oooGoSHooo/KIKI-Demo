@@ -9,14 +9,14 @@ import {
   Repeat, CalendarCheck, ShoppingBag, Palette, 
   Zap, Star, Medal, Crown, Target, Rocket,
   ShieldCheck, BarChart3, Bell, Sliders, User,
-  Clock, Map
+  Clock, Map, ChevronRight, LogOut, FileText, Headphones, Sparkles, Loader2
 } from 'lucide-react';
 
 /**
  * 核心任务配置数据
  */
 const TASK_DATA = [
-  { id: 'listen', name: '听 (LISTEN)', color: '#3b82f6', icon: '🎧', subs: ['视频', '童谣', '听音', '互动'], rewardName: '听力能量包' },
+  { id: 'listen', name: '听 (LISTEN)', color: '#3b82f6', icon: '🎧', subs: ['视频', '单词卡', '听音', '互动'], rewardName: '听力能量包' },
   { id: 'speak', name: '说 (SPEAK)', color: '#22c55e', icon: '🎙️', subs: ['跟读', 'AI评测'], rewardName: '口语奖励箱' },
   { id: 'read', name: '读 (READ)', color: '#f59e0b', icon: '📖', subs: ['认读', '拼读'], rewardName: '阅读宝藏库' },
   { id: 'write', name: '写 (WRITE)', color: '#a855f7', icon: '✍️', subs: ['排序', '拼写'], rewardName: '书写大师杯' }
@@ -25,6 +25,34 @@ const TASK_DATA = [
 /**
  * 勋章成就数据 (包含12个预设解锁)
  */
+const SUBSCRIPTIONS_LIST = [
+  { id: 1, name: '千千妈妈启蒙认知方法课', desc: '家长课', status: 'active', expireDate: '2026年12月31日', image: '/icons/1.png' },
+  { id: 2, name: '科普英文阅读课', desc: 'Little Kids', status: 'active', expireDate: '2026年12月31日', image: '/icons/2.png' },
+  { id: 3, name: '红火箭分级阅读 黄盒', desc: '5-7级', status: 'active', expireDate: '2026年12月31日', image: '/icons/3.png' },
+  { id: 4, name: '红火箭分级阅读 蓝盒', desc: '1-4级', status: 'expired', expireDate: '已过期', image: '/icons/4.png' },
+  { id: 5, name: '红火箭分级阅读', desc: '全套', status: 'unpurchased', expireDate: '未购买', image: '/icons/5.png' },
+  { id: 6, name: '兰登精品阅读课', desc: 'Step into Reading', status: 'unpurchased', expireDate: '未购买', image: '/icons/6.png' },
+  { id: 7, name: '标准美式发音课+音标课', desc: '千千妈妈', status: 'unpurchased', expireDate: '未购买', image: '/icons/7.png' },
+  { id: 8, name: '千千妈妈自然拼读课', desc: '核心课程', status: 'unpurchased', expireDate: '未购买', image: '/icons/8.png' },
+  { id: 9, name: '千千妈妈桥梁书俱乐部', desc: '进阶阅读', status: 'unpurchased', expireDate: '未购买', image: '/icons/9.png' },
+  { id: 10, name: '苏斯博士绘本小课堂', desc: 'Dr. Seuss', status: 'unpurchased', expireDate: '未购买', image: '/icons/10.png' },
+  { id: 11, name: '听力口语陪跑营 1阶段', desc: '基础启蒙', status: 'unpurchased', expireDate: '未购买', image: '/icons/11.png' },
+  { id: 12, name: '听力口语陪跑营 2阶段', desc: '进阶提升', status: 'unpurchased', expireDate: '未购买', image: '/icons/12.png' },
+  { id: 13, name: '听力口语陪跑营 3阶段', desc: '流利表达', status: 'unpurchased', expireDate: '未购买', image: '/icons/13.png' },
+  { id: 14, name: '听力口语陪跑营 4阶段', desc: 'Whiz Kids News', status: 'unpurchased', expireDate: '未购买', image: '/icons/14.png' },
+  { id: 15, name: 'Mia唱童谣', desc: '千千妈妈', status: 'unpurchased', expireDate: '未购买', image: '/icons/15.png' },
+  { id: 16, name: '章节书俱乐部', desc: '千千妈妈', status: 'unpurchased', expireDate: '未购买', image: '/icons/16.png' },
+  { id: 17, name: 'Awesome Leveled Readers', desc: '字母课', status: 'unpurchased', expireDate: '未购买', image: '/icons/17.png' },
+  { id: 18, name: '字母启蒙精品课', desc: 'Awesome Alphabet', status: 'unpurchased', expireDate: '未购买', image: '/icons/18.png' },
+  { id: 19, name: '高频词课', desc: 'Awesome Sight Words', status: 'unpurchased', expireDate: '未购买', image: '/icons/19.png' },
+  { id: 20, name: '剑桥英语精品课 KET-PET', desc: 'A2+', status: 'unpurchased', expireDate: '未购买', image: '/icons/20.png' },
+  { id: 21, name: '剑桥英语精品课 PET-FCE', desc: 'B1+', status: 'unpurchased', expireDate: '未购买', image: '/icons/21.png' },
+  { id: 22, name: '剑桥英语精品课 KET', desc: 'A1-A2', status: 'unpurchased', expireDate: '未购买', image: '/icons/22.png' },
+  { id: 23, name: '卓越KPF考冲班 FCE', desc: '考前冲刺', status: 'unpurchased', expireDate: '未购买', image: '/icons/23.png' },
+  { id: 24, name: '卓越KPF考冲班 KET', desc: '考前冲刺', status: 'unpurchased', expireDate: '未购买', image: '/icons/24.png' },
+  { id: 25, name: '卓越KPF考冲班 PET', desc: '考前冲刺', status: 'unpurchased', expireDate: '未购买', image: '/icons/25.png' },
+];
+
 const ACHIEVEMENTS_LIST = [
   { id: 'a1', name: '第一步', intro: '开启奇妙探险的第一步！', iconBg: 'bg-blue-100', iconColor: 'text-blue-500', IconComponent: Footprints, acquired: true },
   { id: 'a2', name: '宝箱开启者', intro: '这里面藏着魔法！', iconBg: 'bg-amber-100', iconColor: 'text-amber-500', IconComponent: Gift, acquired: true },
@@ -126,30 +154,30 @@ const AwardCard = ({ ach }: { ach: any }) => {
 
   return (
     <div 
-      className={`relative w-full [perspective:1000px] ${ach.acquired ? 'cursor-pointer group' : ''}`}
+      className={`relative w-full h-full [perspective:1000px] ${ach.acquired ? 'cursor-pointer group' : ''}`}
       onClick={() => ach.acquired && setFlipped(!flipped)}
     >
-      <div className={`w-full h-full transition-transform duration-500 [transform-style:preserve-3d] ${flipped ? '[transform:rotateY(180deg)]' : ''}`}>
+      <div className={`w-full h-full transition-all duration-500 [transform-style:preserve-3d] ${flipped ? '[transform:rotateY(180deg)]' : ''} ${ach.acquired ? 'group-hover:-translate-y-1' : ''}`}>
         
         {/* Front */}
         <div 
-          className={`relative [backface-visibility:hidden] rounded-[32px] p-5 sm:p-6 flex flex-col items-center justify-center text-center border-2 transition-all duration-300 ${
+          className={`relative h-full [backface-visibility:hidden] rounded-[32px] p-5 sm:p-6 flex flex-col items-center justify-start text-center border-2 transition-all duration-300 ${
             ach.acquired 
-              ? 'bg-white border-slate-100 shadow-lg group-hover:-translate-y-1 group-hover:shadow-xl' 
+              ? 'bg-white border-slate-100 shadow-lg group-hover:shadow-xl' 
               : 'bg-slate-50 border-transparent opacity-50 grayscale'
           }`}
         >
-          <div className={`w-16 h-16 sm:w-20 sm:h-20 ${ach.iconBg} rounded-full flex items-center justify-center mb-4 shadow-inner relative`}>
+          <div className={`w-16 h-16 sm:w-20 sm:h-20 shrink-0 ${ach.iconBg} rounded-full flex items-center justify-center mb-4 shadow-inner relative`}>
             {ach.acquired && <div className="absolute inset-0 bg-white/20 rounded-full animate-pulse" />}
             <ach.IconComponent size={32} className={`${ach.iconColor} drop-shadow-sm relative z-10`} />
           </div>
           <h3 className="font-black text-slate-800 text-sm sm:text-base mb-1.5">{ach.name}</h3>
-          <p className="text-xs text-slate-500 leading-snug line-clamp-2 font-medium">{ach.intro}</p>
+          <p className="text-xs text-slate-500 leading-snug line-clamp-2 font-medium h-9 flex items-center justify-center">{ach.intro}</p>
         </div>
 
         {/* Back */}
         <div 
-          className={`absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-[32px] p-5 sm:p-6 flex flex-col items-center justify-center text-center shadow-lg ${ach.iconBg}`}
+          className={`absolute inset-0 h-full [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-[32px] p-5 sm:p-6 flex flex-col items-center justify-center text-center shadow-lg transition-all duration-300 group-hover:shadow-xl ${ach.iconBg}`}
         >
           <div className={`w-12 h-12 bg-white/50 rounded-full flex items-center justify-center mb-3 shadow-inner`}>
             <CalendarIcon size={24} className={ach.iconColor} />
@@ -159,6 +187,305 @@ const AwardCard = ({ ach }: { ach: any }) => {
         </div>
 
       </div>
+    </div>
+  );
+};
+
+import { motion, AnimatePresence } from 'motion/react';
+
+const FLASHCARDS_DATA = [
+  { word: 'Apple', pos: 'n.', pron: '/ˈæp.əl/', meaning: '苹果', example: 'I eat an apple every day.', image: 'https://image.pollinations.ai/prompt/A%20beautiful%203D%20CG%20style%20illustration%20of%20a%20red%20apple%20fruit%20cute%20vibrant?width=400&height=400&nologo=true' },
+  { word: 'Cat', pos: 'n.', pron: '/kæt/', meaning: '猫', example: 'The cat is sleeping on the sofa.', image: 'https://image.pollinations.ai/prompt/A%20beautiful%203D%20CG%20style%20illustration%20of%20a%20cute%20cat%20vibrant?width=400&height=400&nologo=true' },
+  { word: 'Sun', pos: 'n.', pron: '/sʌn/', meaning: '太阳', example: 'The sun is shining brightly.', image: 'https://image.pollinations.ai/prompt/A%20beautiful%203D%20CG%20style%20illustration%20of%20a%20smiling%20sun%20vibrant?width=400&height=400&nologo=true' },
+  { word: 'Book', pos: 'n.', pron: '/bʊk/', meaning: '书', example: 'She is reading a book.', image: 'https://image.pollinations.ai/prompt/A%20beautiful%203D%20CG%20style%20illustration%20of%20a%20magic%20book%20vibrant?width=400&height=400&nologo=true' },
+  { word: 'Tree', pos: 'n.', pron: '/triː/', meaning: '树', example: 'There is a big tree in the garden.', image: 'https://image.pollinations.ai/prompt/A%20beautiful%203D%20CG%20style%20illustration%20of%20a%20green%20tree%20vibrant?width=400&height=400&nologo=true' },
+];
+
+const FlashcardLearning = ({ onFinish, onBack }: { onFinish: () => void, onBack: () => void }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(1);
+
+  const handleNext = () => {
+    if (currentIndex < FLASHCARDS_DATA.length - 1) {
+      setDirection(1);
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const variants = {
+    enter: (direction: number) => {
+      return {
+        x: direction > 0 ? 1000 : -1000,
+        opacity: 0
+      };
+    },
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1
+    },
+    exit: (direction: number) => {
+      return {
+        zIndex: 0,
+        x: direction < 0 ? 1000 : -1000,
+        opacity: 0
+      };
+    }
+  };
+
+  return (
+    <div className="relative h-full w-full bg-slate-50 z-[100] flex flex-col animate-in slide-in-from-bottom duration-500 text-slate-800 overflow-hidden">
+      <header className="h-[10%] min-h-[60px] px-[4%] flex items-center justify-between bg-white shadow-sm border-b border-slate-100 shrink-0 z-10">
+        <button onClick={onBack} className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors"><X size={28} /></button>
+        <h2 className="font-black tracking-widest text-xl uppercase text-slate-600">单词卡 ({currentIndex + 1}/{FLASHCARDS_DATA.length})</h2>
+        <div className="w-12" />
+      </header>
+      
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 relative">
+        <AnimatePresence initial={false} custom={direction} mode="wait">
+          <motion.div
+            key={currentIndex}
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: "spring", stiffness: 300, damping: 30 },
+              opacity: { duration: 0.2 }
+            }}
+            className="w-full max-w-4xl bg-white rounded-[40px] shadow-2xl border border-slate-100 flex flex-col md:flex-row overflow-hidden absolute"
+          >
+            {/* Image Section */}
+            <div className="w-full md:w-1/2 aspect-square md:aspect-auto bg-slate-100 relative">
+              <img src={FLASHCARDS_DATA[currentIndex].image} alt={FLASHCARDS_DATA[currentIndex].word} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            </div>
+            
+            {/* Content Section */}
+            <div className="w-full md:w-1/2 p-8 sm:p-12 flex flex-col justify-center relative bg-white">
+              <div className="space-y-6">
+                <div>
+                  <h1 className="text-5xl sm:text-6xl font-black text-slate-800 mb-2">{FLASHCARDS_DATA[currentIndex].word}</h1>
+                  <div className="flex items-center space-x-3 text-lg sm:text-xl font-bold text-slate-500">
+                    <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-lg">{FLASHCARDS_DATA[currentIndex].pos}</span>
+                    <span>{FLASHCARDS_DATA[currentIndex].pron}</span>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">中文意思</h3>
+                  <p className="text-2xl font-bold text-slate-700">{FLASHCARDS_DATA[currentIndex].meaning}</p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">例句</h3>
+                  <p className="text-lg font-medium text-slate-600 italic leading-relaxed">"{FLASHCARDS_DATA[currentIndex].example}"</p>
+                </div>
+              </div>
+              
+              {/* Next Button */}
+              <div className="mt-12 flex justify-end">
+                {currentIndex < FLASHCARDS_DATA.length - 1 ? (
+                  <button 
+                    onClick={handleNext}
+                    className="w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-blue-600 active:scale-90 transition-all"
+                  >
+                    <ArrowRight size={32} />
+                  </button>
+                ) : (
+                  <button 
+                    onClick={onFinish}
+                    className="px-8 py-4 bg-green-500 text-white rounded-full font-black text-xl shadow-lg hover:bg-green-600 active:scale-95 transition-all flex items-center space-x-2"
+                  >
+                    <Check size={28} strokeWidth={3} />
+                    <span>完成学习</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
+
+const ReportGenerator = ({ onBack }: { onBack: () => void }) => {
+  const [status, setStatus] = useState<'idle' | 'generating' | 'success' | 'error'>('idle');
+  const [progress, setProgress] = useState(0);
+  const [reportUrl, setReportUrl] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    title: '张明的学习报告',
+    templateId: 10009,
+    studentInfo: '姓名张明，性别男，2015年3月出生，家长张建国，联系方式138XXXX1234，特殊需求为对花粉轻微过敏，课堂尽量避免摆放鲜花类装饰',
+    learningContent: '学习领域为小学五年级数学，核心知识点是小数乘法与除法、简易方程、多边形面积计算；学习目标为掌握小数运算技巧，能独立解简易方程，熟练计算平行四边形/三角形面积；内容难度为五年级同步难度，使用人教版小学五年级数学（上册）学习材料',
+    learningSituation: '当前基础为小数加减法掌握较好，乘法计算易漏小数点；学习进度完成小数乘法章节（课本第1-3单元）；单元测试小数乘法部分得分82分；优势是对图形类题目理解较快；待提升小数除法的竖式计算准确率；已完成本周3节数学同步辅导课'
+  });
+
+  const handleGenerate = () => {
+    setStatus('generating');
+    setProgress(0);
+    
+    // Simulate polling
+    let currentProgress = 0;
+    const interval = setInterval(() => {
+      currentProgress += Math.floor(Math.random() * 15) + 5;
+      if (currentProgress >= 100) {
+        currentProgress = 100;
+        clearInterval(interval);
+        setStatus('success');
+        setReportUrl('https://cyberai.dev.xrunda.com/creator-review/cw_1769655106291_39479145/page_1769655912709_ebd8bc1a?version=2016709183749292033');
+      }
+      setProgress(currentProgress);
+    }, 800);
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto py-6">
+      <div className="flex items-center space-x-4 mb-8">
+        <button onClick={onBack} className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors">
+          <ArrowLeft size={24} />
+        </button>
+        <div>
+          <h1 className="text-2xl font-black text-slate-800">模拟生成学习报告</h1>
+          <p className="text-slate-500 font-bold text-sm">测试 AIGC 报告生成流程</p>
+        </div>
+      </div>
+
+      {status === 'idle' && (
+        <div className="bg-white rounded-[32px] p-8 shadow-xl border border-slate-100 space-y-6">
+          <div>
+            <label className="block text-sm font-black text-slate-700 mb-2">报告标题</label>
+            <input 
+              type="text" 
+              value={formData.title}
+              onChange={e => setFormData({...formData, title: e.target.value})}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-black text-slate-700 mb-2">模板 ID</label>
+            <input 
+              type="number" 
+              value={formData.templateId}
+              onChange={e => setFormData({...formData, templateId: parseInt(e.target.value)})}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-black text-slate-700 mb-2">学生信息 (studentInfo)</label>
+            <textarea 
+              value={formData.studentInfo}
+              onChange={e => setFormData({...formData, studentInfo: e.target.value})}
+              rows={3}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-black text-slate-700 mb-2">学习内容 (learningContent)</label>
+            <textarea 
+              value={formData.learningContent}
+              onChange={e => setFormData({...formData, learningContent: e.target.value})}
+              rows={4}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-black text-slate-700 mb-2">学习情况 (learningSituation)</label>
+            <textarea 
+              value={formData.learningSituation}
+              onChange={e => setFormData({...formData, learningSituation: e.target.value})}
+              rows={4}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            />
+          </div>
+          <button 
+            onClick={handleGenerate}
+            className="w-full py-4 bg-blue-500 text-white rounded-2xl font-black text-xl shadow-lg hover:bg-blue-600 active:scale-95 transition-all flex items-center justify-center space-x-2"
+          >
+            <Sparkles size={24} />
+            <span>开始生成报告</span>
+          </button>
+        </div>
+      )}
+
+      {status === 'generating' && (
+        <div className="bg-white rounded-[32px] p-12 shadow-xl border border-slate-100 flex flex-col items-center justify-center text-center space-y-8">
+          <div className="relative w-32 h-32 flex items-center justify-center">
+            <svg className="animate-spin w-full h-full text-blue-100" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+              <path className="opacity-75 text-blue-500" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-2xl font-black text-blue-500">{progress}%</span>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-2xl font-black text-slate-800 mb-2">AIGC 报告生成中...</h3>
+            <p className="text-slate-500 font-bold">
+              {progress < 20 ? '正在创建课件...' : 
+               progress < 40 ? '获取模板信息...' : 
+               progress < 80 ? '调用 AI 生成内容...' : 
+               '保存结果中...'}
+            </p>
+          </div>
+          <div className="w-full max-w-md bg-slate-100 rounded-full h-4 overflow-hidden">
+            <div 
+              className="bg-blue-500 h-full rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {status === 'success' && (
+        <div className="bg-white rounded-[32px] p-12 shadow-xl border border-slate-100 flex flex-col items-center justify-center text-center space-y-6">
+          <div className="w-24 h-24 bg-green-100 text-green-500 rounded-full flex items-center justify-center mb-4">
+            <Check size={48} strokeWidth={3} />
+          </div>
+          <h3 className="text-3xl font-black text-slate-800">报告生成成功！</h3>
+          <p className="text-slate-500 font-bold text-lg max-w-md">
+            学习报告已成功生成，您可以点击下方按钮预览报告。
+          </p>
+          <div className="pt-6 w-full max-w-sm space-y-4">
+            <button 
+              onClick={() => setShowPreview(true)}
+              className="w-full py-4 bg-green-500 text-white rounded-2xl font-black text-xl shadow-lg hover:bg-green-600 active:scale-95 transition-all flex items-center justify-center space-x-2"
+            >
+              <FileText size={24} />
+              <span>预览报告</span>
+            </button>
+            <button 
+              onClick={() => setStatus('idle')}
+              className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-xl hover:bg-slate-200 active:scale-95 transition-all"
+            >
+              重新生成
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showPreview && reportUrl && (
+        <div className="fixed inset-0 z-[200] bg-white flex flex-col animate-in slide-in-from-bottom duration-300">
+          <header className="h-[10%] min-h-[60px] px-[4%] flex items-center justify-between bg-white shadow-sm border-b border-slate-100 shrink-0">
+            <button onClick={() => setShowPreview(false)} className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 active:scale-90 transition-transform">
+              <ChevronLeft size={28} />
+            </button>
+            <h2 className="font-black text-slate-800 text-xl tracking-widest">学习报告预览</h2>
+            <div className="w-12" />
+          </header>
+          <div className="flex-1 w-full h-full bg-slate-50">
+            <iframe 
+              src={reportUrl} 
+              className="w-full h-full border-none"
+              title="学习报告预览"
+              sandbox="allow-scripts allow-same-origin"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -180,6 +507,15 @@ export default function App() {
 
   const verticalDragProps = useVerticalDragToScroll();
   const calendarDragProps = useVerticalDragToScroll();
+
+  useEffect(() => {
+    if (showCalendar) {
+      const el = document.getElementById(`cal-day-${selectedDate.getDate()}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [selectedDate, showCalendar]);
 
   const mapScrollRef = useRef<number>(0);
   const mainRef = useRef<HTMLElement>(null);
@@ -701,16 +1037,37 @@ export default function App() {
                 <div className="h-10 w-[1px] bg-slate-200" />
 
                 {/* Adventure Progress */}
-                <div className="flex flex-col justify-center w-56">
-                  <div className="flex justify-between items-end mb-2">
+                <div className="flex flex-col justify-center w-80 relative pr-3">
+                  <div className="flex justify-between items-end mb-3">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Adventure Progress</p>
-                    <p className="text-[12px] font-black text-orange-500">{Math.round((majorIdx / TASK_DATA.length) * 100)}%</p>
+                    <p className="text-[12px] font-black text-orange-500">{Math.round((TASK_DATA.slice(0, majorIdx).reduce((acc, task) => acc + task.subs.length, 0) + subIdx) / TASK_DATA.reduce((acc, task) => acc + task.subs.length, 0) * 100)}%</p>
                   </div>
-                  <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="relative h-3 w-full bg-slate-100 rounded-full">
                     <div 
-                      className="h-full bg-orange-500 rounded-full transition-all duration-1000" 
-                      style={{ width: `${(majorIdx / TASK_DATA.length) * 100}%` }} 
-                    />
+                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all duration-1000 ease-out" 
+                      style={{ width: `${(TASK_DATA.slice(0, majorIdx).reduce((acc, task) => acc + task.subs.length, 0) + subIdx) / TASK_DATA.reduce((acc, task) => acc + task.subs.length, 0) * 100}%` }} 
+                    >
+                      <div className="absolute inset-0 bg-white/20 w-full h-full animate-pulse rounded-full" />
+                    </div>
+                    {TASK_DATA.map((task, idx) => {
+                      const totalSubs = TASK_DATA.reduce((acc, t) => acc + t.subs.length, 0);
+                      const currentTotalSubsDone = TASK_DATA.slice(0, majorIdx).reduce((acc, t) => acc + t.subs.length, 0) + subIdx;
+                      const taskEndSubs = TASK_DATA.slice(0, idx + 1).reduce((acc, t) => acc + t.subs.length, 0);
+                      const nodePercent = (taskEndSubs / totalSubs) * 100;
+                      const isReached = currentTotalSubsDone >= taskEndSubs;
+                      const isCurrent = majorIdx === idx;
+                      return (
+                        <div 
+                          key={task.id}
+                          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center"
+                          style={{ left: `${nodePercent}%` }}
+                        >
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] shadow-sm transition-all duration-500 z-10 ${isReached ? 'bg-white border-2 border-orange-500 scale-110' : isCurrent ? 'bg-orange-100 border-2 border-orange-400 scale-125' : 'bg-slate-200 border-2 border-white grayscale opacity-60'}`}>
+                            {task.icon}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -730,22 +1087,33 @@ export default function App() {
 
         {/* 学习详情页：纯白背景 & 修复按钮高度 */}
         {currentView === 'learning' && (
-          <div className="relative h-full w-full bg-white z-[100] flex flex-col animate-in slide-in-from-bottom duration-500 text-slate-800">
-            <header className="h-[12%] px-[4%] flex items-center justify-between bg-slate-50 border-b border-slate-100 shadow-sm">
-              <button onClick={() => setCurrentView('home')} className="w-14 h-14 bg-slate-200 rounded-2xl flex items-center justify-center text-slate-600 hover:bg-slate-300 transition-colors"><X size={32} /></button>
-              <h2 className="font-black tracking-widest text-xl uppercase text-slate-600">{learningTitle}</h2><div className="w-14" />
-            </header>
-            <div className="flex-1 flex items-center justify-center p-6 sm:p-10"><div className="w-full h-full max-w-4xl aspect-video bg-slate-100 rounded-[40px] border-4 border-slate-200 shadow-xl flex items-center justify-center relative overflow-hidden"><Play size={80} className="text-slate-300 opacity-50" /><div className="absolute bottom-6 left-6 right-6 h-3 bg-slate-200 rounded-full overflow-hidden"><div className="h-full bg-blue-500 w-1/3" /></div></div></div>
-            <div className="h-[16%] flex items-center justify-center px-10 pb-4"><button onClick={finishSubTask} className="bg-blue-600 text-white px-14 py-4 rounded-2xl font-black text-2xl shadow-lg active:scale-95">学完了！领取奖励</button></div>
-          </div>
+          learningTitle.includes('单词卡') ? (
+            <FlashcardLearning onFinish={finishSubTask} onBack={() => setCurrentView('home')} />
+          ) : (
+            <div className="relative h-full w-full bg-white z-[100] flex flex-col animate-in slide-in-from-bottom duration-500 text-slate-800">
+              <header className="h-[12%] px-[4%] flex items-center justify-between bg-slate-50 border-b border-slate-100 shadow-sm">
+                <button onClick={() => setCurrentView('home')} className="w-14 h-14 bg-slate-200 rounded-2xl flex items-center justify-center text-slate-600 hover:bg-slate-300 transition-colors"><X size={32} /></button>
+                <h2 className="font-black tracking-widest text-xl uppercase text-slate-600">{learningTitle}</h2><div className="w-14" />
+              </header>
+              <div className="flex-1 flex items-center justify-center p-6 sm:p-10"><div className="w-full h-full max-w-4xl aspect-video bg-slate-100 rounded-[40px] border-4 border-slate-200 shadow-xl flex items-center justify-center relative overflow-hidden"><Play size={80} className="text-slate-300 opacity-50" /><div className="absolute bottom-6 left-6 right-6 h-3 bg-slate-200 rounded-full overflow-hidden"><div className="h-full bg-blue-500 w-1/3" /></div></div></div>
+              <div className="h-[16%] flex items-center justify-center px-10 pb-4"><button onClick={finishSubTask} className="bg-blue-600 text-white px-14 py-4 rounded-2xl font-black text-2xl shadow-lg active:scale-95">学完了！领取奖励</button></div>
+            </div>
+          )
         )}
 
         {/* 各二级视图 (纯白背景) */}
-        {['parent', 'awards', 'shop', 'profile'].includes(currentView) && (
+        {['parent', 'awards', 'shop', 'profile', 'settings', 'subscriptions', 'reports', 'report-generator'].includes(currentView) && (
           <div className="relative h-full w-full bg-white z-50 flex flex-col animate-in slide-in-from-left duration-300">
             <header className="h-[12%] px-[4%] flex items-center justify-between bg-white shadow-sm border-b border-slate-100">
-              <button onClick={() => setCurrentView('home')} className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 active:scale-90 transition-transform"><ChevronLeft size={32} /></button>
-              <h2 className="font-black text-slate-800 text-2xl tracking-widest">{currentView === 'parent' ? '家长中心' : currentView === 'awards' ? '我的勋章' : currentView === 'shop' ? '魔法商城' : '学员档案'}</h2><div className="w-14" />
+              <button onClick={() => currentView === 'report-generator' ? setCurrentView('reports') : ['settings', 'subscriptions', 'reports'].includes(currentView) ? setCurrentView('parent') : setCurrentView('home')} className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 active:scale-90 transition-transform"><ChevronLeft size={32} /></button>
+              <h2 className="font-black text-slate-800 text-2xl tracking-widest">{currentView === 'parent' ? '家长中心' : currentView === 'awards' ? '我的勋章' : currentView === 'shop' ? '魔法商城' : currentView === 'settings' ? 'App 设置' : currentView === 'subscriptions' ? '管理订阅' : currentView === 'reports' ? '接收学习报告' : currentView === 'report-generator' ? '生成学习报告' : '学员档案'}</h2>
+              {currentView === 'parent' ? (
+                <button onClick={() => setCurrentView('settings')} className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 active:scale-90 transition-transform">
+                  <Settings size={28} />
+                </button>
+              ) : (
+                <div className="w-14" />
+              )}
             </header>
             <main {...verticalDragProps} className="flex-1 p-[4%] overflow-y-auto no-scrollbar text-slate-800 cursor-grab active:cursor-grabbing">
                {currentView === 'awards' ? (
@@ -757,14 +1125,203 @@ export default function App() {
                        <p className="text-slate-500 font-bold text-sm opacity-60">已解锁 {ACHIEVEMENTS_LIST.filter(a => a.acquired).length} / {ACHIEVEMENTS_LIST.length}</p>
                      </div>
                    </div>
-                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 pb-10">
+                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 pb-10 auto-rows-fr">
                      {ACHIEVEMENTS_LIST.map(ach => (
                        <AwardCard key={ach.id} ach={ach} />
                      ))}
                    </div>
                  </div>
                ) : currentView === 'parent' ? (
-                 <div className="max-w-4xl mx-auto space-y-6 py-4"><div className="flex items-center space-x-3 mb-4"><ShieldCheck className="text-blue-500" size={32} /><h1 className="text-2xl font-black">管理面板</h1></div><div className="grid grid-cols-2 gap-6"><div className="bg-slate-50 p-6 rounded-[30px] border border-slate-100 text-center py-10 opacity-60"><p className="font-black uppercase">管理功能开发中...</p></div></div></div>
+                 <div className="max-w-4xl mx-auto space-y-8 py-4">
+                   {/* 今日学习成就 */}
+                   <section>
+                     <div className="flex items-center space-x-3 mb-6">
+                       <BarChart3 className="text-blue-500" size={28} />
+                       <h3 className="text-xl font-black text-slate-800">今日学习成就</h3>
+                     </div>
+                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                       <div className="bg-blue-50 rounded-[24px] p-5 flex flex-col items-center justify-center text-center border-2 border-blue-100">
+                         <BookOpen className="text-blue-500 mb-2" size={24} />
+                         <span className="text-2xl font-black text-blue-600 mb-1">1,250</span>
+                         <span className="text-xs font-bold text-blue-400">总阅读量(字)</span>
+                       </div>
+                       <div className="bg-green-50 rounded-[24px] p-5 flex flex-col items-center justify-center text-center border-2 border-green-100">
+                         <Sparkles className="text-green-500 mb-2" size={24} />
+                         <span className="text-2xl font-black text-green-600 mb-1">24</span>
+                         <span className="text-xs font-bold text-green-400">新增词汇量(个)</span>
+                       </div>
+                       <div className="bg-amber-50 rounded-[24px] p-5 flex flex-col items-center justify-center text-center border-2 border-amber-100">
+                         <Clock className="text-amber-500 mb-2" size={24} />
+                         <span className="text-2xl font-black text-amber-600 mb-1">45</span>
+                         <span className="text-xs font-bold text-amber-400">学习时长(分)</span>
+                       </div>
+                       <div className="bg-purple-50 rounded-[24px] p-5 flex flex-col items-center justify-center text-center border-2 border-purple-100">
+                         <BookOpen className="text-purple-500 mb-2" size={24} />
+                         <span className="text-2xl font-black text-purple-600 mb-1">3</span>
+                         <span className="text-xs font-bold text-purple-400">读书总量(本)</span>
+                       </div>
+                     </div>
+                   </section>
+
+                   {/* 功能入口 */}
+                   <section className="flex flex-col space-y-4">
+                     <button onClick={() => setCurrentView('subscriptions')} className="bg-amber-50 hover:bg-amber-100 transition-colors rounded-[24px] p-6 flex items-center justify-between border-2 border-amber-100 group w-full">
+                       <div className="flex items-center space-x-4">
+                         <div className="w-14 h-14 bg-white rounded-full shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+                           <Crown className="text-amber-500" size={28} />
+                         </div>
+                         <div className="text-left">
+                           <h3 className="font-black text-slate-800 text-xl">管理订阅</h3>
+                           <p className="text-slate-500 font-bold text-sm">查看千千妈妈课程订阅状态</p>
+                         </div>
+                       </div>
+                       <ChevronRight className="text-amber-400 group-hover:text-amber-600 transition-colors" size={32} />
+                     </button>
+                     <button onClick={() => setCurrentView('reports')} className="bg-blue-50 hover:bg-blue-100 transition-colors rounded-[24px] p-6 flex items-center justify-between border-2 border-blue-100 group w-full">
+                       <div className="flex items-center space-x-4">
+                         <div className="w-14 h-14 bg-white rounded-full shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+                           <FileText className="text-blue-500" size={28} />
+                         </div>
+                         <div className="text-left">
+                           <h3 className="font-black text-slate-800 text-xl">接收学习报告</h3>
+                           <p className="text-slate-500 font-bold text-sm">绑定微信，获取每周学习反馈</p>
+                         </div>
+                       </div>
+                       <ChevronRight className="text-blue-400 group-hover:text-blue-600 transition-colors" size={32} />
+                     </button>
+                   </section>
+                 </div>
+               ) : currentView === 'subscriptions' ? (
+                 <div className="max-w-3xl mx-auto space-y-4 py-4">
+                   {SUBSCRIPTIONS_LIST.map((sub) => (
+                     <div key={sub.id} className={`bg-slate-50 rounded-[24px] p-6 border border-slate-100 flex items-center justify-between ${sub.status === 'expired' ? 'opacity-60 grayscale' : ''}`}>
+                       <div className="flex items-center space-x-4 sm:space-x-5">
+                         <div className="w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 relative flex items-center justify-center">
+                           <img src={sub.image} alt={sub.name} className="w-full h-full object-contain drop-shadow-sm" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${sub.id}/200/200`; }} />
+                           {sub.status === 'unpurchased' && (
+                             <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center backdrop-blur-[2px] rounded-2xl">
+                               <Lock className="text-white drop-shadow-md" size={32} />
+                             </div>
+                           )}
+                         </div>
+                         <div>
+                           <h3 className="font-black text-slate-800 text-lg">{sub.name}</h3>
+                           <p className="text-slate-500 font-bold text-sm">{sub.desc}</p>
+                         </div>
+                       </div>
+                       <div className="text-right">
+                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                           {sub.status === 'unpurchased' ? '状态' : sub.status === 'expired' ? '状态' : '到期时间'}
+                         </p>
+                         <p className={`font-black ${sub.status === 'unpurchased' ? 'text-slate-400' : sub.status === 'expired' ? 'text-slate-500' : 'text-slate-700'}`}>
+                           {sub.expireDate}
+                         </p>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               ) : currentView === 'reports' ? (
+                 <div className="h-full w-full flex items-center justify-center">
+                   <div className="max-w-5xl w-full flex flex-col md:flex-row items-center justify-between px-8 gap-12">
+                     {/* Left Side: Icon, Title, Subtitle */}
+                     <div className="flex-1 flex flex-col items-start text-left">
+                       <div className="w-24 h-24 bg-green-100 rounded-[32px] flex items-center justify-center text-green-500 mb-8 shadow-inner">
+                         <FileText size={48} />
+                       </div>
+                       <h2 className="text-4xl sm:text-5xl font-black text-slate-800 mb-6 leading-tight">绑定微信<br/>接收学习报告</h2>
+                       <p className="text-slate-500 font-bold text-lg max-w-md leading-relaxed mb-8">
+                         使用微信扫描右侧二维码，关注“千千妈妈”官方公众号，即可每周自动接收孩子的详细学习进度与报告。
+                       </p>
+                       <div className="flex items-center space-x-2 text-slate-400 font-bold text-sm bg-slate-50 px-5 py-3 rounded-full border border-slate-100">
+                         <ShieldCheck size={20} className="text-green-500" />
+                         <span>安全绑定，随时可取消</span>
+                       </div>
+                     </div>
+                     
+                     {/* Right Side: QR Code and Prompt */}
+                     <div className="flex flex-col items-center justify-center">
+                       <div className="bg-white p-6 rounded-[40px] shadow-2xl border border-slate-100 mb-6 relative group transform -translate-y-4">
+                         <div className="absolute -top-4 -right-4 bg-green-500 text-white text-sm font-black px-4 py-2 rounded-full shadow-lg transform rotate-12 group-hover:rotate-6 transition-transform z-10">
+                           扫一扫
+                         </div>
+                         <div className="w-56 h-56 sm:w-64 sm:h-64 bg-slate-50 rounded-2xl overflow-hidden relative">
+                           {/* 占位二维码，如果用户上传了图片，请将 src 替换为本地路径，例如 "./qrcode.jpg" */}
+                           <img 
+                             src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=QianQianMaMa" 
+                             alt="千千妈妈公众号二维码" 
+                             className="w-full h-full object-cover"
+                             referrerPolicy="no-referrer"
+                           />
+                         </div>
+                       </div>
+                       <p className="text-slate-400 font-black tracking-widest uppercase text-sm mb-6">
+                         Scan to Subscribe
+                       </p>
+                       <button 
+                         onClick={() => setCurrentView('report-generator')}
+                         className="px-8 py-4 bg-blue-500 text-white rounded-full font-black text-lg shadow-lg hover:bg-blue-600 active:scale-95 transition-all flex items-center space-x-2"
+                       >
+                         <FileText size={24} />
+                         <span>预览学习报告</span>
+                       </button>
+                     </div>
+                   </div>
+                 </div>
+               ) : currentView === 'report-generator' ? (
+                 <ReportGenerator onBack={() => setCurrentView('reports')} />
+               ) : currentView === 'settings' ? (
+                 <div className="max-w-3xl mx-auto space-y-6 py-4">
+                   <div className="bg-slate-50 rounded-[32px] p-6 sm:p-8 border border-slate-100 space-y-6">
+                     {/* 个性化推荐 */}
+                     <div className="flex items-center justify-between py-2 border-b border-slate-200/60">
+                       <div className="flex items-center space-x-4">
+                         <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center"><Sparkles className="text-purple-500" size={20} /></div>
+                         <span className="font-black text-slate-700 text-lg">个性化推荐</span>
+                       </div>
+                       <div className="w-14 h-8 bg-green-500 rounded-full relative cursor-pointer shadow-inner">
+                         <div className="absolute right-1 top-1 w-6 h-6 bg-white rounded-full shadow-sm"></div>
+                       </div>
+                     </div>
+                     {/* 语音测试难度 */}
+                     <div className="flex items-center justify-between py-2 border-b border-slate-200/60">
+                       <div className="flex items-center space-x-4">
+                         <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center"><Mic className="text-blue-500" size={20} /></div>
+                         <span className="font-black text-slate-700 text-lg">语音测试难度</span>
+                       </div>
+                       <div className="flex items-center space-x-2 bg-white rounded-xl p-1 shadow-sm border border-slate-100">
+                         <button className="px-4 py-1.5 rounded-lg font-bold text-sm text-slate-500 hover:bg-slate-50">简单</button>
+                         <button className="px-4 py-1.5 rounded-lg font-bold text-sm bg-blue-50 text-blue-600 shadow-sm">适中</button>
+                         <button className="px-4 py-1.5 rounded-lg font-bold text-sm text-slate-500 hover:bg-slate-50">挑战</button>
+                       </div>
+                     </div>
+                     {/* 用户协议 */}
+                     <button className="w-full flex items-center justify-between py-2 border-b border-slate-200/60 group">
+                       <div className="flex items-center space-x-4">
+                         <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center"><FileText className="text-slate-500" size={20} /></div>
+                         <span className="font-black text-slate-700 text-lg group-hover:text-blue-600 transition-colors">用户协议</span>
+                       </div>
+                       <ChevronRight className="text-slate-400 group-hover:text-blue-500 transition-colors" size={24} />
+                     </button>
+                     {/* 联系客服 */}
+                     <button className="w-full flex items-center justify-between py-2 border-b border-slate-200/60 group">
+                       <div className="flex items-center space-x-4">
+                         <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center"><Headphones className="text-slate-500" size={20} /></div>
+                         <span className="font-black text-slate-700 text-lg group-hover:text-blue-600 transition-colors">联系客服</span>
+                       </div>
+                       <ChevronRight className="text-slate-400 group-hover:text-blue-500 transition-colors" size={24} />
+                     </button>
+                     {/* 退出登录 */}
+                     <button className="w-full flex items-center justify-between py-2 group mt-4">
+                       <div className="flex items-center space-x-4">
+                         <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center"><LogOut className="text-red-500" size={20} /></div>
+                         <span className="font-black text-red-500 text-lg">退出登录</span>
+                       </div>
+                     </button>
+                   </div>
+                   <div className="text-center text-slate-400 font-bold text-sm">
+                     当前版本 v1.0.0
+                   </div>
+                 </div>
                ) : currentView === 'profile' ? (
                  <div className="max-w-5xl mx-auto h-full flex flex-col pb-4">
                    {/* Top Profile Banner */}
@@ -874,11 +1431,75 @@ export default function App() {
         {/* --- 弹窗逻辑 --- */}
 
         {showCalendar && (
-          <div className="absolute inset-0 z-[700] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-[4%]">
-            <div className="bg-white w-full max-w-4xl h-[90%] rounded-[40px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in duration-300 text-slate-800">
-              <header className="bg-blue-600 p-6 text-white flex justify-between items-center"><button onClick={() => setShowCalendar(false)} className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center"><X size={24}/></button><div className="flex items-center bg-white/10 rounded-2xl p-2 px-4 space-x-6"><button onClick={() => changeDay(-1)} className="p-2 hover:bg-white/20 rounded-full transition-colors"><ArrowLeft size={24}/></button><div className="text-center min-w-[120px]"><p className="text-xs font-bold opacity-70 uppercase tracking-widest">March 2024</p><p className="text-2xl font-black">{selectedDate.getDate()}日</p></div><button onClick={() => changeDay(1)} disabled={new Date(new Date(selectedDate).setDate(selectedDate.getDate()+1)) > new Date()} className="p-2 hover:bg-white/20 rounded-full transition-colors disabled:opacity-30"><ArrowRight size={24}/></button></div><button onClick={() => setSelectedDate(new Date())} className="bg-white text-blue-600 px-6 py-2.5 rounded-xl font-black text-sm active:scale-95">今天</button></header>
-              <div className="flex-1 p-8 flex flex-col overflow-hidden"><div className="grid grid-cols-7 gap-3 text-center mb-3">{['S','M','T','W','T','F','S'].map((d, i) => <div key={`cal-h-${i}`} className="font-black text-xs text-slate-300 uppercase">{d}</div>)}</div><div {...calendarDragProps} className="grid grid-cols-7 gap-3 flex-1 overflow-y-auto no-scrollbar cursor-grab active:cursor-grabbing">{[...Array(31)].map((_, i) => { const d = i + 1; const isFuture = d > new Date().getDate(); const isPicked = d === selectedDate.getDate(); const status = MOCK_HISTORY_STATUS[d] ?? -1; let statusColor = "bg-slate-50 text-slate-600"; if (!isFuture) { if (status === 2) statusColor = "bg-green-50 text-green-600"; else if (status === 1) statusColor = "bg-yellow-50 text-yellow-600"; else if (status === 0) statusColor = "bg-red-50 text-red-400"; } return (<div key={`day-c-${i}`} onClick={() => !isFuture && setSelectedDate(new Date(2024, 2, d))} className={`aspect-square relative flex flex-col items-center justify-center rounded-2xl font-black text-lg transition-all cursor-pointer ${isFuture ? 'text-slate-200 cursor-not-allowed bg-slate-50/30' : isPicked ? 'ring-4 ring-blue-500/30 scale-105 z-10' : ''} ${!isPicked ? statusColor : 'bg-blue-600 text-white shadow-lg'}`}><span>{d}</span>{!isFuture && !isPicked && status !== -1 && (<div className={`w-2 h-2 rounded-full absolute bottom-2 ${status === 2 ? 'bg-green-400' : status === 1 ? 'bg-yellow-400' : 'bg-red-300'}`} />)}</div>); })}</div><div className="mt-6 flex justify-center space-x-6 text-xs font-bold text-slate-400 border-t border-slate-50 pt-4"><div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-green-400" /><span>已完成</span></div><div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-yellow-400" /><span>未完成</span></div><div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-red-400" /><span>未学习</span></div></div></div>
-              <div className="p-6 bg-slate-50 border-t flex justify-center"><button onClick={handleConfirmDate} className={`w-full py-4 rounded-2xl font-black text-xl shadow-lg active:scale-95 ${isToday ? 'bg-blue-600 text-white' : 'bg-green-600 text-white'}`}>{isToday ? "开始今日学习探险" : "开启该日复习模式"}</button></div>
+          <div className="absolute inset-0 z-[700] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-[4%]" onClick={() => setShowCalendar(false)}>
+            <div onClick={(e) => e.stopPropagation()} className="bg-white w-full max-w-4xl h-[90%] rounded-[40px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-90 fade-in duration-300 ease-out text-slate-800">
+              <header className="bg-blue-600 p-6 text-white flex justify-between items-center">
+                <button onClick={() => setShowCalendar(false)} className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center"><X size={24}/></button>
+                <div className="flex items-center bg-white/10 rounded-2xl p-2 px-4 space-x-6">
+                  <button onClick={() => changeDay(-1)} className="p-2 hover:bg-white/20 rounded-full transition-colors"><ArrowLeft size={24}/></button>
+                  <div className="text-center min-w-[120px]">
+                    <p className="text-xs font-bold opacity-70 uppercase tracking-widest">March 2024</p>
+                    <p className="text-2xl font-black">{selectedDate.getDate()}日</p>
+                  </div>
+                  <button onClick={() => changeDay(1)} disabled={new Date(new Date(selectedDate).setDate(selectedDate.getDate()+1)) > new Date()} className="p-2 hover:bg-white/20 rounded-full transition-colors disabled:opacity-30"><ArrowRight size={24}/></button>
+                </div>
+                <button onClick={() => setSelectedDate(new Date())} className="bg-white text-blue-600 px-6 py-2.5 rounded-xl font-black text-sm active:scale-95">回到今天</button>
+              </header>
+              <div className="flex-1 p-8 flex flex-col overflow-hidden">
+                <div className="grid grid-cols-7 gap-3 text-center mb-3">
+                  {['S','M','T','W','T','F','S'].map((d, i) => <div key={`cal-h-${i}`} className="font-black text-xs text-slate-300 uppercase">{d}</div>)}
+                </div>
+                <div {...calendarDragProps} className="grid grid-cols-7 gap-3 flex-1 overflow-y-auto no-scrollbar cursor-grab active:cursor-grabbing pb-12">
+                  {[...Array(31)].map((_, i) => { 
+                    const d = i + 1; 
+                    const isFuture = d > new Date().getDate(); 
+                    const isPicked = d === selectedDate.getDate(); 
+                    const status = MOCK_HISTORY_STATUS[d] ?? -1; 
+                    let statusColor = "bg-slate-50 text-slate-600"; 
+                    if (!isFuture) { 
+                      if (status === 2) statusColor = "bg-green-50 text-green-600"; 
+                      else if (status === 1) statusColor = "bg-yellow-50 text-yellow-600"; 
+                      else if (status === 0) statusColor = "bg-red-50 text-red-400"; 
+                    } 
+                    return (
+                      <div 
+                        key={`day-c-${i}`} 
+                        id={`cal-day-${d}`}
+                        onClick={() => !isFuture && setSelectedDate(new Date(2024, 2, d))} 
+                        className={`h-16 relative flex flex-col items-center justify-center rounded-2xl font-black text-lg transition-all cursor-pointer ${isFuture ? 'text-slate-200 cursor-not-allowed bg-slate-50/30' : isPicked ? 'ring-4 ring-blue-500/30 scale-105 z-10' : ''} ${!isPicked ? statusColor : 'bg-blue-600 text-white shadow-lg'}`}
+                      >
+                        <span>{d}</span>
+                        {!isFuture && !isPicked && status !== -1 && (
+                          <div className={`w-2 h-2 rounded-full absolute bottom-2 ${status === 2 ? 'bg-green-400' : status === 1 ? 'bg-yellow-400' : 'bg-red-300'}`} />
+                        )}
+                      </div>
+                    ); 
+                  })}
+                </div>
+                <div className="mt-6 flex justify-center space-x-6 text-xs font-bold text-slate-400 border-t border-slate-50 pt-4">
+                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-green-400" /><span>已完成</span></div>
+                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-yellow-400" /><span>未完成</span></div>
+                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-red-400" /><span>未学习</span></div>
+                </div>
+              </div>
+              <div className="p-6 bg-slate-50 border-t flex justify-center">
+                {(() => {
+                  const d = selectedDate.getDate();
+                  const status = MOCK_HISTORY_STATUS[d] ?? -1;
+                  let btnColor = "bg-blue-600 text-white";
+                  if (!isToday) {
+                    if (status === 2) btnColor = "bg-green-500 text-white";
+                    else if (status === 1) btnColor = "bg-yellow-500 text-white";
+                    else if (status === 0) btnColor = "bg-red-500 text-white";
+                    else btnColor = "bg-slate-400 text-white";
+                  }
+                  return (
+                    <button onClick={handleConfirmDate} className={`w-full py-4 rounded-2xl font-black text-xl shadow-lg active:scale-95 transition-colors ${btnColor}`}>
+                      {isToday ? "开始今日学习探险" : "开启该日复习模式"}
+                    </button>
+                  );
+                })()}
+              </div>
             </div>
           </div>
         )}
