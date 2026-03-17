@@ -1,0 +1,343 @@
+111:    <g className="recharts-layer recharts-polar-angle-axis-tick">
+112:      <text radius={radius} stroke={stroke} x={x} y={y} className="recharts-text recharts-polar-angle-axis-tick-value" textAnchor={textAnchor}>
+157:      className={`relative w-full h-full [perspective:1000px] ${ach.acquired ? 'cursor-pointer group' : ''}`}
+160:      <div className={`w-full h-full transition-all duration-500 [transform-style:preserve-3d] ${flipped ? '[transform:rotateY(180deg)]' : ''} ${ach.acquired ? 'group-hover:-translate-y-1' : ''}`}>
+164:          className={`relative h-full [backface-visibility:hidden] rounded-[32px] p-5 sm:p-6 flex flex-col items-center justify-start text-center border-2 transition-all duration-300 ${
+170:          <div className={`w-16 h-16 sm:w-20 sm:h-20 shrink-0 ${ach.iconBg} rounded-full flex items-center justify-center mb-4 shadow-inner relative`}>
+171:            {ach.acquired && <div className="absolute inset-0 bg-white/20 rounded-full animate-pulse" />}
+172:            <ach.IconComponent size={32} className={`${ach.iconColor} drop-shadow-sm relative z-10`} />
+174:          <h3 className="font-black text-slate-800 text-sm sm:text-base mb-1.5">{ach.name}</h3>
+175:          <p className="text-xs text-slate-500 leading-snug line-clamp-2 font-medium h-9 flex items-center justify-center">{ach.intro}</p>
+180:          className={`absolute inset-0 h-full [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-[32px] p-5 sm:p-6 flex flex-col items-center justify-center text-center shadow-lg transition-all duration-300 group-hover:shadow-xl ${ach.iconBg}`}
+182:          <div className={`w-12 h-12 bg-white/50 rounded-full flex items-center justify-center mb-3 shadow-inner`}>
+183:            <CalendarIcon size={24} className={ach.iconColor} />
+185:          <h3 className={`font-black ${ach.iconColor} text-sm sm:text-base mb-2`}>获得日期</h3>
+186:          <p className={`text-xs sm:text-sm font-bold ${ach.iconColor} opacity-80`}>2025年03月15日</p>
+245:    <div className="relative h-full w-full bg-slate-50 z-[100] flex flex-col animate-in slide-in-from-bottom duration-500 text-slate-800 overflow-hidden">
+246:      <header className="h-[10%] min-h-[60px] px-[4%] flex items-center justify-between bg-white shadow-sm border-b border-slate-100 shrink-0 z-10">
+247:        <button onClick={onBack} className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors"><X size={28} /></button>
+248:        <h2 className="font-black tracking-widest text-xl uppercase text-slate-600">单词卡 ({currentIndex + 1}/{FLASHCARDS_DATA.length})</h2>
+249:        <div className="w-12" />
+252:      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 relative">
+261:            className="w-full max-w-4xl bg-white rounded-[40px] shadow-2xl border border-slate-100 flex flex-col md:flex-row overflow-hidden absolute"
+264:            <div className="w-full md:w-1/2 aspect-square md:aspect-auto bg-slate-100 relative">
+265:              <img src={FLASHCARDS_DATA[currentIndex].image} alt={FLASHCARDS_DATA[currentIndex].word} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+269:            <div className="w-full md:w-1/2 p-8 sm:p-12 flex flex-col justify-center relative bg-white">
+270:              <div className="space-y-6">
+272:                  <h1 className="text-5xl sm:text-6xl font-black text-slate-800 mb-2">{FLASHCARDS_DATA[currentIndex].word}</h1>
+273:                  <div className="flex items-center space-x-3 text-lg sm:text-xl font-bold text-slate-500">
+274:                    <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-lg">{FLASHCARDS_DATA[currentIndex].pos}</span>
+280:                  <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">中文意思</h3>
+281:                  <p className="text-2xl font-bold text-slate-700">{FLASHCARDS_DATA[currentIndex].meaning}</p>
+285:                  <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">例句</h3>
+286:                  <p className="text-lg font-medium text-slate-600 italic leading-relaxed">"{FLASHCARDS_DATA[currentIndex].example}"</p>
+291:              <div className="mt-12 flex justify-end">
+295:                    className="w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-blue-600 active:scale-90 transition-all"
+302:                    className="px-8 py-4 bg-green-500 text-white rounded-full font-black text-xl shadow-lg hover:bg-green-600 active:scale-95 transition-all flex items-center space-x-2"
+350:    <div className="max-w-4xl mx-auto py-6">
+351:      <div className="flex items-center space-x-4 mb-8">
+352:        <button onClick={onBack} className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors">
+356:          <h1 className="text-2xl font-black text-slate-800">模拟生成学习报告</h1>
+357:          <p className="text-slate-500 font-bold text-sm">测试 AIGC 报告生成流程</p>
+362:        <div className="bg-white rounded-[32px] p-8 shadow-xl border border-slate-100 space-y-6">
+364:            <label className="block text-sm font-black text-slate-700 mb-2">报告标题</label>
+369:              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+373:            <label className="block text-sm font-black text-slate-700 mb-2">模板 ID</label>
+378:              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+382:            <label className="block text-sm font-black text-slate-700 mb-2">学生信息 (studentInfo)</label>
+387:              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+391:            <label className="block text-sm font-black text-slate-700 mb-2">学习内容 (learningContent)</label>
+396:              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+400:            <label className="block text-sm font-black text-slate-700 mb-2">学习情况 (learningSituation)</label>
+405:              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+410:            className="w-full py-4 bg-blue-500 text-white rounded-2xl font-black text-xl shadow-lg hover:bg-blue-600 active:scale-95 transition-all flex items-center justify-center space-x-2"
+419:        <div className="bg-white rounded-[32px] p-12 shadow-xl border border-slate-100 flex flex-col items-center justify-center text-center space-y-8">
+420:          <div className="relative w-32 h-32 flex items-center justify-center">
+421:            <svg className="animate-spin w-full h-full text-blue-100" viewBox="0 0 24 24">
+422:              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+423:              <path className="opacity-75 text-blue-500" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+425:            <div className="absolute inset-0 flex items-center justify-center">
+426:              <span className="text-2xl font-black text-blue-500">{progress}%</span>
+430:            <h3 className="text-2xl font-black text-slate-800 mb-2">AIGC 报告生成中...</h3>
+431:            <p className="text-slate-500 font-bold">
+438:          <div className="w-full max-w-md bg-slate-100 rounded-full h-4 overflow-hidden">
+440:              className="bg-blue-500 h-full rounded-full transition-all duration-300 ease-out"
+448:        <div className="bg-white rounded-[32px] p-12 shadow-xl border border-slate-100 flex flex-col items-center justify-center text-center space-y-6">
+449:          <div className="w-24 h-24 bg-green-100 text-green-500 rounded-full flex items-center justify-center mb-4">
+452:          <h3 className="text-3xl font-black text-slate-800">报告生成成功！</h3>
+453:          <p className="text-slate-500 font-bold text-lg max-w-md">
+456:          <div className="pt-6 w-full max-w-sm space-y-4">
+459:              className="w-full py-4 bg-green-500 text-white rounded-2xl font-black text-xl shadow-lg hover:bg-green-600 active:scale-95 transition-all flex items-center justify-center space-x-2"
+466:              className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-xl hover:bg-slate-200 active:scale-95 transition-all"
+475:        <div className="fixed inset-0 z-[200] bg-white flex flex-col animate-in slide-in-from-bottom duration-300">
+476:          <header className="h-[10%] min-h-[60px] px-[4%] flex items-center justify-between bg-white shadow-sm border-b border-slate-100 shrink-0">
+477:            <button onClick={() => setShowPreview(false)} className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 active:scale-90 transition-transform">
+480:            <h2 className="font-black text-slate-800 text-xl tracking-widest">学习报告预览</h2>
+481:            <div className="w-12" />
+483:          <div className="flex-1 w-full h-full bg-slate-50">
+486:              className="w-full h-full border-none"
+846:        <div key={`major-${mIdx}`} className="flex flex-col items-center relative group">
+847:          {isMajorCurrent && <div className="absolute -inset-4 bg-white/40 rounded-full blur-xl animate-pulse z-0" />}
+849:            className={`w-24 h-24 rounded-[40%] flex items-center justify-center border-4 border-white shadow-xl transition-all duration-500 relative z-10
+857:            {isMajorDone ? <Check size={48} color="white" /> : <span className="text-4xl drop-shadow-md">{major.icon}</span>}
+859:          <div className="mt-4 bg-white/90 backdrop-blur-sm px-4 py-1.5 rounded-full shadow-sm border border-white/50">
+860:            <span className="font-black text-[12px] text-slate-700 tracking-wider">{major.name}</span>
+871:          <div key={`line-sub-${mIdx}-${sIdx}`} className="w-10 h-2.5 bg-white/30 mx-1 rounded-full overflow-hidden shadow-inner relative">
+872:            <div className="absolute inset-0 bg-white/20" />
+874:              className={`h-full transition-all duration-700 ease-out rounded-full relative ${isSubDone ? 'bg-gradient-to-r from-green-400 to-emerald-500' : 'bg-transparent'}`} 
+884:            className={`w-14 h-14 rounded-full border-4 border-white shadow-md flex items-center justify-center relative transition-all duration-300
+894:              <div className="absolute -top-10 bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-3 py-1 rounded-xl text-[10px] font-black shadow-lg whitespace-nowrap z-50 border border-yellow-300">
+895:                {sub}<div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-amber-500 rotate-45 border-b border-r border-yellow-300" />
+898:            {isSubDone ? <Check size={20} color="white" /> : isSubActive ? <Play size={20} className="fill-amber-500 text-amber-500 drop-shadow-sm" /> : <div className="w-3 h-3 rounded-full" style={{ backgroundColor: major.color }} />}
+905:        <div key={`line-chest-${mIdx}`} className="w-10 h-2.5 bg-white/30 mx-1 rounded-full overflow-hidden shadow-inner relative">
+906:          <div className="absolute inset-0 bg-white/20" />
+907:          <div className={`h-full transition-all duration-700 ease-out rounded-full ${isMajorDone ? 'bg-gradient-to-r from-green-400 to-emerald-500' : 'bg-transparent'}`} style={{ width: isMajorDone ? '100%' : '0%' }} />
+915:          className={`w-16 h-16 rounded-2xl border-4 border-white shadow-xl flex items-center justify-center transition-all duration-500 relative
+922:          {isMajorDone ? <Check size={32} color="white" className="drop-shadow-md" /> : <span className={`text-3xl drop-shadow-sm ${(isMajorCurrent && subIdx === major.subs.length) ? 'animate-breathe-scale inline-block' : ''}`}>🎁</span>}
+929:          <div id={`major-module-${mIdx}`} className={`relative flex items-center h-[258px] px-6 py-8 mx-2 rounded-[40px] border-2 backdrop-blur-sm transition-all duration-700 overflow-hidden ${bgClass} ${borderClass}`}>
+933:              <div className="absolute inset-0 pointer-events-none z-0">
+934:                <div className={`absolute -top-10 -left-10 w-64 h-64 rounded-full opacity-20 animate-drift-1 ${mIdx === 0 ? 'bg-blue-300' : mIdx === 1 ? 'bg-green-300' : mIdx === 2 ? 'bg-amber-300' : 'bg-purple-300'}`}></div>
+935:                <div className={`absolute -bottom-10 -right-10 w-72 h-72 rounded-full opacity-20 animate-drift-2 ${mIdx === 0 ? 'bg-blue-200' : mIdx === 1 ? 'bg-green-200' : mIdx === 2 ? 'bg-amber-200' : 'bg-purple-200'}`}></div>
+940:            <div className="absolute top-3 left-0 w-full text-center font-black text-[15px] tracking-widest uppercase opacity-40 z-10" style={{ color: isMajorFuture ? '#94a3b8' : major.color }}>
+945:            <div className="flex items-center relative z-10 mt-4">
+952:            <div key={`major-conn-${mIdx}`} className="w-16 h-3 bg-white/30 rounded-full mx-1 shadow-inner overflow-hidden relative shrink-0">
+953:              <div className="absolute inset-0 bg-white/20" />
+954:              <div className={`h-full transition-all duration-1000 ${mIdx < majorIdx ? 'bg-gradient-to-r from-blue-400 to-cyan-400' : 'bg-transparent'}`} style={{ width: mIdx < majorIdx ? '100%' : '0%' }} />
+964:    <div className="bg-slate-900 w-full h-screen flex items-center justify-center overflow-hidden font-sans select-none text-slate-800">
+966:      <div id="app-stage" className="relative bg-[#E0F2FE] overflow-hidden w-full h-full">
+967:        <div className="absolute inset-0 bg-gradient-to-b from-blue-300 via-cyan-100 to-green-100 z-0">
+969:          <div className="absolute top-10 left-[10%] w-48 h-16 bg-white/40 rounded-full blur-2xl animate-pulse"></div>
+970:          <div className="absolute top-40 right-[15%] w-64 h-20 bg-white/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+971:          <div className="absolute bottom-32 left-[20%] w-80 h-24 bg-white/50 rounded-full blur-3xl"></div>
+972:          <div className="absolute top-1/3 left-1/2 w-96 h-96 bg-yellow-200/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+977:          <div className="relative h-full w-full flex flex-col z-10 animate-in fade-in duration-500">
+978:            <header className="h-[15%] px-[4%] flex justify-between items-center relative z-20">
+979:              <div onClick={() => setCurrentView('profile')} className="flex items-center space-x-4 cursor-pointer group">
+980:                <div className="relative">
+981:                  <div className="absolute inset-0 bg-yellow-400 rounded-2xl rotate-3 group-hover:rotate-6 transition-transform shadow-md"></div>
+982:                  <div className="w-16 h-16 bg-white rounded-2xl p-1 shadow-lg border-2 border-white overflow-hidden relative z-10 group-hover:scale-105 transition-transform">
+983:                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Qian" alt="avatar" className="bg-blue-50 w-full h-full object-cover" />
+986:                <div className="bg-white/90 backdrop-blur-sm px-5 py-2.5 rounded-full shadow-md border border-white/50 group-hover:bg-white transition-colors">
+987:                  <span className={`font-black text-sm tracking-wide ${isToday ? 'bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent' : 'text-green-600'}`}>
+992:              <div className="flex items-center space-x-5">
+993:                <div onClick={() => setCurrentView('shop')} className="bg-white/90 backdrop-blur-sm px-5 py-2.5 rounded-full shadow-md flex items-center space-x-2.5 cursor-pointer hover:bg-white hover:scale-105 transition-all border border-white/50">
+994:                  <Gem size={22} className="text-blue-500 drop-shadow-sm" />
+995:                  <span className="font-black text-slate-700 text-lg tracking-wider">{diamonds}</span>
+997:                <button onClick={openParentGate} className="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center text-slate-500 active:text-blue-600 active:rotate-90 transition-all border border-white/50">
+1009:              className="flex-1 overflow-x-auto overflow-y-hidden no-scrollbar px-[8%] flex items-center relative z-10 cursor-grab active:cursor-grabbing"
+1011:              <div className="flex items-center min-w-max h-full py-4">{renderMapPath()}</div>
+1013:            <footer className="h-[22%] flex items-center justify-center pb-6 relative z-20 space-x-6">
+1015:              <div className="bg-white px-8 py-4 rounded-[40px] shadow-[0_10px_40px_rgba(0,0,0,0.05)] flex items-center space-x-8 border border-slate-100 relative overflow-hidden">
+1018:                <div className="flex items-center space-x-4">
+1019:                  <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+1023:                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Study Time</p>
+1024:                    <p className="text-xl font-black text-slate-800">12 MIN</p>
+1028:                <div className="h-10 w-[1px] bg-slate-200" />
+1031:                <div className="flex items-center space-x-4">
+1032:                  <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-500">
+1036:                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Daily Goal</p>
+1037:                    <p className="text-xl font-black text-slate-800">STAGE {Math.min(majorIdx + 1, TASK_DATA.length)}/{TASK_DATA.length}</p>
+1041:                <div className="h-10 w-[1px] bg-slate-200" />
+1044:                <div className="flex flex-col justify-center w-80 relative pr-3">
+1045:                  <div className="flex justify-between items-end mb-3">
+1046:                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Adventure Progress</p>
+1047:                    <p className="text-[12px] font-black text-orange-500">{Math.round((TASK_DATA.slice(0, majorIdx).reduce((acc, task) => acc + task.subs.length, 0) + subIdx) / TASK_DATA.reduce((acc, task) => acc + task.subs.length, 0) * 100)}%</p>
+1049:                  <div className="relative h-3 w-full bg-slate-100 rounded-full">
+1051:                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all duration-1000 ease-out" 
+1054:                      <div className="absolute inset-0 bg-white/20 w-full h-full animate-pulse rounded-full" />
+1066:                          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center"
+1069:                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] shadow-sm transition-all duration-500 z-10 ${isReached ? 'bg-white border-2 border-orange-500 scale-110' : isCurrent ? 'bg-orange-100 border-2 border-orange-400 scale-125' : 'bg-slate-200 border-2 border-white grayscale opacity-60'}`}>
+1080:              <div className="bg-white p-2 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.05)] flex items-center space-x-3 border border-slate-100">
+1081:                <button onClick={() => setShowCalendar(true)} className="w-14 h-14 bg-purple-500 rounded-full flex items-center justify-center text-white transition-all shadow-[0_4px_0_#7e22ce] active:shadow-none active:translate-y-1">
+1084:                <button onClick={() => setCurrentView('awards')} className="w-14 h-14 bg-sky-500 rounded-full flex items-center justify-center text-white transition-all shadow-[0_4px_0_#0369a1] active:shadow-none active:translate-y-1">
+1097:            <div className="relative h-full w-full bg-white z-[100] flex flex-col animate-in slide-in-from-bottom duration-500 text-slate-800">
+1098:              <header className="h-[12%] px-[4%] flex items-center justify-between bg-slate-50 border-b border-slate-100 shadow-sm">
+1099:                <button onClick={() => setCurrentView('home')} className="w-14 h-14 bg-slate-200 rounded-2xl flex items-center justify-center text-slate-600 hover:bg-slate-300 transition-colors"><X size={32} /></button>
+1100:                <h2 className="font-black tracking-widest text-xl uppercase text-slate-600">{learningTitle}</h2><div className="w-14" />
+1102:              <div className="flex-1 flex items-center justify-center p-6 sm:p-10"><div className="w-full h-full max-w-4xl aspect-video bg-slate-100 rounded-[40px] border-4 border-slate-200 shadow-xl flex items-center justify-center relative overflow-hidden"><Play size={80} className="text-slate-300 opacity-50" /><div className="absolute bottom-6 left-6 right-6 h-3 bg-slate-200 rounded-full overflow-hidden"><div className="h-full bg-blue-500 w-1/3" /></div></div></div>
+1103:              <div className="h-[16%] flex items-center justify-center px-10 pb-4"><button onClick={finishSubTask} className="bg-blue-600 text-white px-14 py-4 rounded-2xl font-black text-2xl shadow-lg active:scale-95">学完了！领取奖励</button></div>
+1110:          <div className="relative h-full w-full bg-white z-50 flex flex-col animate-in slide-in-from-left duration-300">
+1111:            <header className="h-[12%] px-[4%] flex items-center justify-between bg-white shadow-sm border-b border-slate-100">
+1112:              <button onClick={() => currentView === 'report-generator' ? setCurrentView('reports') : ['settings', 'subscriptions', 'reports'].includes(currentView) ? setCurrentView('parent') : setCurrentView('home')} className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 active:scale-90 transition-transform"><ChevronLeft size={32} /></button>
+1113:              <h2 className="font-black text-slate-800 text-2xl tracking-widest">{currentView === 'parent' ? '家长中心' : currentView === 'awards' ? '我的勋章' : currentView === 'shop' ? '魔法商城' : currentView === 'settings' ? 'App 设置' : currentView === 'subscriptions' ? '管理订阅' : currentView === 'reports' ? '接收学习报告' : currentView === 'report-generator' ? '生成学习报告' : '学员档案'}</h2>
+1115:                <button onClick={() => setCurrentView('settings')} className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 active:scale-90 transition-transform">
+1119:                <div className="w-14" />
+1122:            <main {...verticalDragProps} className="flex-1 p-[4%] overflow-y-auto no-scrollbar text-slate-800 cursor-grab active:cursor-grabbing">
+1124:                 <div className="max-w-5xl mx-auto">
+1125:                   <div className="flex items-center space-x-4 mb-8">
+1126:                     <Trophy size={40} className="text-amber-500" />
+1128:                       <h1 className="text-2xl font-black text-slate-800">荣誉勋章墙</h1>
+1129:                       <p className="text-slate-500 font-bold text-sm opacity-60">已解锁 {ACHIEVEMENTS_LIST.filter(a => a.acquired).length} / {ACHIEVEMENTS_LIST.length}</p>
+1132:                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 pb-10 auto-rows-fr">
+1139:                 <div className="max-w-4xl mx-auto space-y-8 py-4">
+1142:                     <div className="flex items-center space-x-3 mb-6">
+1143:                       <BarChart3 className="text-blue-500" size={28} />
+1144:                       <h3 className="text-xl font-black text-slate-800">今日学习成就</h3>
+1146:                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+1147:                       <div className="bg-blue-50 rounded-[24px] p-5 flex flex-col items-center justify-center text-center border-2 border-blue-100">
+1148:                         <BookOpen className="text-blue-500 mb-2" size={24} />
+1149:                         <span className="text-2xl font-black text-blue-600 mb-1">1,250</span>
+1150:                         <span className="text-xs font-bold text-blue-400">总阅读量(字)</span>
+1152:                       <div className="bg-green-50 rounded-[24px] p-5 flex flex-col items-center justify-center text-center border-2 border-green-100">
+1153:                         <Sparkles className="text-green-500 mb-2" size={24} />
+1154:                         <span className="text-2xl font-black text-green-600 mb-1">24</span>
+1155:                         <span className="text-xs font-bold text-green-400">新增词汇量(个)</span>
+1157:                       <div className="bg-amber-50 rounded-[24px] p-5 flex flex-col items-center justify-center text-center border-2 border-amber-100">
+1158:                         <Clock className="text-amber-500 mb-2" size={24} />
+1159:                         <span className="text-2xl font-black text-amber-600 mb-1">45</span>
+1160:                         <span className="text-xs font-bold text-amber-400">学习时长(分)</span>
+1162:                       <div className="bg-purple-50 rounded-[24px] p-5 flex flex-col items-center justify-center text-center border-2 border-purple-100">
+1163:                         <BookOpen className="text-purple-500 mb-2" size={24} />
+1164:                         <span className="text-2xl font-black text-purple-600 mb-1">3</span>
+1165:                         <span className="text-xs font-bold text-purple-400">读书总量(本)</span>
+1171:                   <section className="flex flex-col space-y-4">
+1172:                     <button onClick={() => setCurrentView('subscriptions')} className="bg-amber-50 hover:bg-amber-100 transition-colors rounded-[24px] p-6 flex items-center justify-between border-2 border-amber-100 group w-full">
+1173:                       <div className="flex items-center space-x-4">
+1174:                         <div className="w-14 h-14 bg-white rounded-full shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+1175:                           <Crown className="text-amber-500" size={28} />
+1177:                         <div className="text-left">
+1178:                           <h3 className="font-black text-slate-800 text-xl">管理订阅</h3>
+1179:                           <p className="text-slate-500 font-bold text-sm">查看千千妈妈课程订阅状态</p>
+1182:                       <ChevronRight className="text-amber-400 group-hover:text-amber-600 transition-colors" size={32} />
+1184:                     <button onClick={() => setCurrentView('reports')} className="bg-blue-50 hover:bg-blue-100 transition-colors rounded-[24px] p-6 flex items-center justify-between border-2 border-blue-100 group w-full">
+1185:                       <div className="flex items-center space-x-4">
+1186:                         <div className="w-14 h-14 bg-white rounded-full shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+1187:                           <FileText className="text-blue-500" size={28} />
+1189:                         <div className="text-left">
+1190:                           <h3 className="font-black text-slate-800 text-xl">接收学习报告</h3>
+1191:                           <p className="text-slate-500 font-bold text-sm">绑定微信，获取每周学习反馈</p>
+1194:                       <ChevronRight className="text-blue-400 group-hover:text-blue-600 transition-colors" size={32} />
+1199:                 <div className="max-w-3xl mx-auto space-y-4 py-4">
+1201:                     <div key={sub.id} className={`bg-slate-50 rounded-[24px] p-6 border border-slate-100 flex items-center justify-between ${sub.status === 'expired' ? 'opacity-60 grayscale' : ''}`}>
+1202:                       <div className="flex items-center space-x-4 sm:space-x-5">
+1203:                         <div className="w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 relative flex items-center justify-center">
+1204:                           <div className="absolute inset-0 bg-[#CCCCCC] rounded-2xl animate-pulse" />
+1205:                           <img src={sub.image} alt={sub.name} className={`w-full h-full object-contain drop-shadow-sm relative z-10 opacity-0 transition-opacity duration-300 ${sub.status === 'unpurchased' ? 'brightness-75 saturate-50' : ''}`} referrerPolicy="no-referrer" onLoad={(e) => { e.currentTarget.classList.remove('opacity-0'); e.currentTarget.classList.add('opacity-100'); const prev = e.currentTarget.previousElementSibling as HTMLElement; if (prev) prev.style.display = 'none'; }} onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${sub.id}/200/200`; }} />
+1207:                             <div className="absolute inset-0 flex items-center justify-center rounded-2xl z-20">
+1208:                               <Lock className="text-white drop-shadow-md" size={32} />
+1213:                           <h3 className="font-black text-slate-800 text-lg">{sub.name}</h3>
+1214:                           <p className="text-slate-500 font-bold text-sm">{sub.desc}</p>
+1217:                       <div className="text-right">
+1218:                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+1221:                         <p className={`font-black ${sub.status === 'unpurchased' ? 'text-slate-400' : sub.status === 'expired' ? 'text-slate-500' : 'text-slate-700'}`}>
+1229:                 <div className="h-full w-full flex items-center justify-center">
+1230:                   <div className="max-w-5xl w-full flex flex-col md:flex-row items-center justify-between px-8 gap-12">
+1232:                     <div className="flex-1 flex flex-col items-start text-left">
+1233:                       <div className="w-24 h-24 bg-green-100 rounded-[32px] flex items-center justify-center text-green-500 mb-8 shadow-inner">
+1236:                       <h2 className="text-4xl sm:text-5xl font-black text-slate-800 mb-6 leading-tight">绑定微信<br/>接收学习报告</h2>
+1237:                       <p className="text-slate-500 font-bold text-lg max-w-md leading-relaxed mb-8">
+1240:                       <div className="flex items-center space-x-2 text-slate-400 font-bold text-sm bg-slate-50 px-5 py-3 rounded-full border border-slate-100">
+1241:                         <ShieldCheck size={20} className="text-green-500" />
+1247:                     <div className="flex flex-col items-center justify-center">
+1248:                       <div className="bg-white p-6 rounded-[40px] shadow-2xl border border-slate-100 mb-6 relative group transform -translate-y-4">
+1249:                         <div className="absolute -top-4 -right-4 bg-green-500 text-white text-sm font-black px-4 py-2 rounded-full shadow-lg transform rotate-12 group-hover:rotate-6 transition-transform z-10">
+1252:                         <div className="w-56 h-56 sm:w-64 sm:h-64 bg-slate-50 rounded-2xl overflow-hidden relative">
+1257:                             className="w-full h-full object-cover"
+1262:                       <p className="text-slate-400 font-black tracking-widest uppercase text-sm mb-6">
+1267:                         className="px-8 py-4 bg-blue-500 text-white rounded-full font-black text-lg shadow-lg hover:bg-blue-600 active:scale-95 transition-all flex items-center space-x-2"
+1278:                 <div className="max-w-3xl mx-auto space-y-6 py-4">
+1279:                   <div className="bg-slate-50 rounded-[32px] p-6 sm:p-8 border border-slate-100 space-y-6">
+1281:                     <div className="flex items-center justify-between py-2 border-b border-slate-200/60">
+1282:                       <div className="flex items-center space-x-4">
+1283:                         <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center"><Sparkles className="text-purple-500" size={20} /></div>
+1284:                         <span className="font-black text-slate-700 text-lg">个性化推荐</span>
+1286:                       <div className="w-14 h-8 bg-green-500 rounded-full relative cursor-pointer shadow-inner">
+1287:                         <div className="absolute right-1 top-1 w-6 h-6 bg-white rounded-full shadow-sm"></div>
+1291:                     <div className="flex items-center justify-between py-2 border-b border-slate-200/60">
+1292:                       <div className="flex items-center space-x-4">
+1293:                         <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center"><Mic className="text-blue-500" size={20} /></div>
+1294:                         <span className="font-black text-slate-700 text-lg">语音测试难度</span>
+1296:                       <div className="flex items-center space-x-2 bg-white rounded-xl p-1 shadow-sm border border-slate-100">
+1297:                         <button className="px-4 py-1.5 rounded-lg font-bold text-sm text-slate-500 hover:bg-slate-50">简单</button>
+1298:                         <button className="px-4 py-1.5 rounded-lg font-bold text-sm bg-blue-50 text-blue-600 shadow-sm">适中</button>
+1299:                         <button className="px-4 py-1.5 rounded-lg font-bold text-sm text-slate-500 hover:bg-slate-50">挑战</button>
+1303:                     <button className="w-full flex items-center justify-between py-2 border-b border-slate-200/60 group">
+1304:                       <div className="flex items-center space-x-4">
+1305:                         <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center"><FileText className="text-slate-500" size={20} /></div>
+1306:                         <span className="font-black text-slate-700 text-lg group-hover:text-blue-600 transition-colors">用户协议</span>
+1308:                       <ChevronRight className="text-slate-400 group-hover:text-blue-500 transition-colors" size={24} />
+1311:                     <button className="w-full flex items-center justify-between py-2 border-b border-slate-200/60 group">
+1312:                       <div className="flex items-center space-x-4">
+1313:                         <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center"><Headphones className="text-slate-500" size={20} /></div>
+1314:                         <span className="font-black text-slate-700 text-lg group-hover:text-blue-600 transition-colors">联系客服</span>
+1316:                       <ChevronRight className="text-slate-400 group-hover:text-blue-500 transition-colors" size={24} />
+1319:                     <button className="w-full flex items-center justify-between py-2 group mt-4">
+1320:                       <div className="flex items-center space-x-4">
+1321:                         <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center"><LogOut className="text-red-500" size={20} /></div>
+1322:                         <span className="font-black text-red-500 text-lg">退出登录</span>
+1326:                   <div className="text-center text-slate-400 font-bold text-sm">
+1331:                 <div className="max-w-5xl mx-auto h-full flex flex-col pb-4">
+1333:                   <div className="flex items-center mb-6 w-full">
+1334:                     <div className="relative mr-8">
+1335:                       <div className="absolute inset-0 bg-yellow-400 rounded-[32px] -rotate-6 scale-105 shadow-md"></div>
+1336:                       <div className="w-24 h-24 bg-white rounded-[32px] p-1.5 shadow-xl border-4 border-white overflow-hidden relative z-10">
+1337:                         <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Qian" alt="avatar" className="w-full h-full object-cover bg-blue-50" />
+1339:                       <div className="absolute -top-2 -right-4 text-3xl animate-bounce z-20">✨</div>
+1340:                       <div className="absolute -bottom-2 -left-4 text-3xl animate-pulse z-20">🌟</div>
+1342:                     <div className="flex flex-col items-start">
+1343:                       <h1 className="text-3xl font-black text-slate-800 tracking-wide mb-2">糯米团子</h1>
+1344:                       <div className="bg-blue-100 text-blue-600 px-4 py-1 rounded-full font-black text-xs shadow-sm border border-blue-200">
+1350:                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+1352:                     <div className="grid grid-cols-2 gap-3">
+1359:                         <div key={item.id} className={`${item.light} rounded-[24px] p-4 flex flex-col relative overflow-hidden transition-transform hover:scale-105 cursor-pointer border-2 border-white shadow-sm`}>
+1360:                           <div className="flex justify-between items-start mb-2">
+1361:                             <div className={`w-10 h-10 bg-white rounded-xl flex items-center justify-center text-xl shadow-sm`}>
+1364:                             <div className={`font-black ${item.text} text-sm bg-white/60 px-2 py-0.5 rounded-lg`}>Lv.{item.level}</div>
+1366:                           <h3 className={`font-black ${item.text} text-lg mb-2`}>{item.name}力</h3>
+1367:                           <div className="h-3 bg-white/60 rounded-full overflow-hidden p-0.5 mt-auto">
+1368:                             <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.progress}%` }} />
+1375:                     <div className="bg-slate-50 rounded-[32px] p-4 flex flex-col items-center justify-center border-4 border-slate-100 relative shadow-sm min-h-0">
+1376:                       <div className="absolute top-4 left-4 bg-white px-3 py-1.5 rounded-xl shadow-sm font-black text-slate-700 flex items-center space-x-2 z-10 text-sm">
+1377:                         <Target className="text-red-500" size={16} />
+1380:                       <div className="w-full h-full min-h-[150px] mt-6">
+1407:                   <div className="mt-4 bg-white border-4 border-slate-100 rounded-[24px] p-4 relative overflow-hidden shadow-sm shrink-0">
+1408:                     <div className="flex justify-between items-end mb-2 relative z-10">
+1410:                         <p className="text-slate-400 font-bold text-xs mb-1">当前进度</p>
+1411:                         <h3 className="font-black text-xl text-slate-800 flex items-center space-x-2">
+1412:                           <Crown className="text-yellow-500" size={20} />
+1416:                       <div className="text-right">
+1417:                         <p className="text-slate-400 font-bold text-xs mb-1">下一级</p>
+1418:                         <h3 className="font-black text-lg text-slate-400">Lv.3 学徒</h3>
+1421:                     <div className="h-6 bg-slate-100 rounded-full relative overflow-hidden p-1 z-10">
+1422:                       <div className="absolute left-1 top-1 bottom-1 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full w-[30%] shadow-sm relative overflow-hidden">
+1423:                         <div className="absolute top-0 left-0 right-0 h-1/2 bg-white/20 rounded-full"></div>
+1426:                     <Rocket className="absolute -right-2 -bottom-2 text-slate-50 opacity-50" size={80} />
+1430:                 <div className="flex flex-col items-center justify-center py-20 opacity-30"><div className="text-6xl mb-4">{currentView === 'shop' ? '🎁' : '👤'}</div><p className="font-black text-xs uppercase">界面设计中...</p></div>
+1439:          <div className="absolute inset-0 z-[700] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-[4%]" onClick={() => setShowCalendar(false)}>
+1440:            <div onClick={(e) => e.stopPropagation()} className="bg-white w-full max-w-4xl h-[90%] rounded-[40px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-90 fade-in duration-300 ease-out text-slate-800">
+1441:              <header className="bg-blue-600 p-6 text-white flex justify-between items-center">
+1442:                <button onClick={() => setShowCalendar(false)} className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center"><X size={24}/></button>
+1443:                <div className="flex items-center bg-white/10 rounded-2xl p-2 px-4 space-x-6">
+1444:                  <button onClick={() => changeDay(-1)} className="p-2 hover:bg-white/20 rounded-full transition-colors"><ArrowLeft size={24}/></button>
+1445:                  <div className="text-center min-w-[120px]">
+1446:                    <p className="text-xs font-bold opacity-70 uppercase tracking-widest">March 2024</p>
+1447:                    <p className="text-2xl font-black">{selectedDate.getDate()}日</p>
+1449:                  <button onClick={() => changeDay(1)} disabled={new Date(new Date(selectedDate).setDate(selectedDate.getDate()+1)) > new Date()} className="p-2 hover:bg-white/20 rounded-full transition-colors disabled:opacity-30"><ArrowRight size={24}/></button>
+1451:                <button onClick={() => setSelectedDate(new Date())} className="bg-white text-blue-600 px-6 py-2.5 rounded-xl font-black text-sm active:scale-95">回到今天</button>
+1453:              <div className="flex-1 p-8 flex flex-col overflow-hidden">
+1454:                <div className="grid grid-cols-7 gap-3 text-center mb-3">
+1455:                  {['S','M','T','W','T','F','S'].map((d, i) => <div key={`cal-h-${i}`} className="font-black text-xs text-slate-300 uppercase">{d}</div>)}
+1457:                <div {...calendarDragProps} className="grid grid-cols-7 gap-3 flex-1 overflow-y-auto no-scrollbar cursor-grab active:cursor-grabbing pb-12">
+1474:                        className={`h-16 relative flex flex-col items-center justify-center rounded-2xl font-black text-lg transition-all cursor-pointer ${isFuture ? 'text-slate-200 cursor-not-allowed bg-slate-50/30' : isPicked ? 'ring-4 ring-blue-500/30 scale-105 z-10' : ''} ${!isPicked ? statusColor : 'bg-blue-600 text-white shadow-lg'}`}
+1478:                          <div className={`w-2 h-2 rounded-full absolute bottom-2 ${status === 2 ? 'bg-green-400' : status === 1 ? 'bg-yellow-400' : 'bg-red-300'}`} />
+1484:                <div className="mt-6 flex justify-center space-x-6 text-xs font-bold text-slate-400 border-t border-slate-50 pt-4">
+1485:                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-green-400" /><span>已完成</span></div>
+1486:                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-yellow-400" /><span>未完成</span></div>
+1487:                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-red-400" /><span>未学习</span></div>
+1490:              <div className="p-6 bg-slate-50 border-t flex justify-center">
+1502:                    <button onClick={handleConfirmDate} className={`w-full py-4 rounded-2xl font-black text-xl shadow-lg active:scale-95 transition-colors ${btnColor}`}>
+1513:          <div className="absolute inset-0 z-[800] bg-transparent flex items-center justify-center text-slate-800">
+1514:            <div className="bg-white rounded-[40px] p-12 text-center shadow-2xl animate-in zoom-in duration-500 max-w-sm">
+1515:              <div className="text-8xl mb-6">🎁</div>
+1516:              <h2 className="text-3xl font-black text-orange-500 mb-2">{TASK_DATA[showModuleReward].name}</h2>
+1517:              <p className="text-slate-500 mb-8 font-bold text-sm">获得专属奖励能量包</p>
+1518:              <div className="text-5xl font-black text-blue-600 mb-10 flex items-center justify-center space-x-3"><span>+50</span> <Gem size={32} className="text-blue-400" /></div>
+1519:              <button onClick={handleRewardConfirm} className="w-full bg-blue-500 text-white text-2xl font-black py-5 rounded-3xl shadow-xl active:scale-95 transition-transform">收下奖励</button>
+1525:          <div className="absolute inset-0 z-[900] bg-gradient-to-b from-blue-900/90 to-purple-900/90 backdrop-blur-xl flex items-center justify-center text-slate-800">
+1526:            <div className="bg-white rounded-[50px] p-10 max-w-lg w-full text-center shadow-[0_0_100px_rgba(255,183,3,0.5)] animate-in zoom-in"><div className="w-20 h-20 bg-yellow-400 rounded-full border-4 border-white shadow-2xl flex items-center justify-center mx-auto mb-6 animate-bounce"><Award size={40} color="white" /></div><h2 className="text-3xl font-black text-slate-800 mb-8 tracking-tight">今日探险圆满达成！</h2><div className="grid grid-cols-3 gap-3 mb-10 text-center"><div className="bg-blue-50 p-4 rounded-2xl"><p className="text-xl font-black text-blue-600">30M</p><p className="text-[8px] font-bold opacity-40">时长</p></div><div className="bg-green-50 p-4 rounded-2xl"><p className="text-xl font-black text-green-600">45W</p><p className="text-[8px] font-bold opacity-40">单词</p></div><div className="bg-purple-50 p-4 rounded-2xl"><p className="text-xl font-black text-purple-600">+200</p><p className="text-[8px] font-bold opacity-40">奖励</p></div></div><button className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-lg font-black py-5 rounded-3xl shadow-xl flex items-center justify-center space-x-2 mb-3"><Camera size={20} /> <span>领取勋章并分享</span></button><button onClick={() => setShowGrandReward(false)} className="w-full py-1.5 text-slate-400 font-black text-xs uppercase tracking-widest">回到地图</button></div>
+1531:          <div className="absolute inset-0 z-[1000] bg-slate-950/80 backdrop-blur-xl flex items-center justify-center text-slate-800">
+1532:            <div className="bg-white rounded-[40px] p-12 max-w-md w-full text-center shadow-2xl animate-in zoom-in"><h3 className="text-2xl font-black text-slate-800 mb-8">家长验证</h3><div className="text-5xl font-black text-blue-600 mb-10 tracking-widest">{gateMath.q}</div><input type="number" placeholder="?" autoFocus value={gateInput} onChange={(e) => setGateInput(e.target.value)} className="w-full text-center text-4xl p-5 bg-slate-50 rounded-2xl mb-8 outline-none border-4 border-transparent focus:border-blue-100 transition-all" onKeyDown={(e) => { if (e.key === 'Enter') handleParentGateSubmit(); }} /><div className="flex space-x-4"><button onClick={() => setShowParentGate(false)} className="flex-1 py-4 bg-slate-100 rounded-2xl font-black text-slate-500 text-lg">取消</button><button onClick={handleParentGateSubmit} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black shadow-xl text-lg">确认</button></div></div>
+1536:        <div id="toast" className="absolute top-[10vw] left-1/2 bg-white px-10 py-5 rounded-full shadow-2xl border-4 border-yellow-400 opacity-0 transition-all duration-500 z-[1100] flex items-center space-x-4 pointer-events-none text-slate-700" style={{ transform: 'translate(-50%, 0) scale(0.5)' }}>
+1537:          <Gem className="text-blue-400" size={36} /><span className="text-3xl font-black text-blue-600">+10 钻石！</span>
+1541:      <div className="fixed inset-0 z-[9999] bg-slate-950 text-white flex flex-col items-center justify-center p-6 text-center landscape:hidden">
+1542:        <div className="text-6xl animate-bounce mb-6">🔄</div><h2 className="text-2xl font-black mb-2">请旋转您的设备</h2><p className="opacity-60 text-sm">横屏体验能够开启完整学习探险哦！</p>
