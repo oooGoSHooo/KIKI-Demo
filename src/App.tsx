@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
+import { EbookReader } from './components/EbookReader';
 import { 
   ChevronLeft, X, Gem, Settings, Trophy, 
   Calendar as CalendarIcon, Award, Play, 
@@ -16,7 +17,7 @@ import {
  * 核心任务配置数据
  */
 const TASK_DATA = [
-  { id: 'listen', name: '听 (LISTEN)', color: '#3b82f6', icon: '🎧', subs: ['视频', '单词卡', '听音', '互动'], rewardName: '听力能量包' },
+  { id: 'listen', name: '听 (LISTEN)', color: '#3b82f6', icon: '🎧', subs: ['视频', '单词卡', '电子书', '互动'], rewardName: '听力能量包' },
   { id: 'speak', name: '说 (SPEAK)', color: '#22c55e', icon: '🎙️', subs: ['跟读', 'AI评测'], rewardName: '口语奖励箱' },
   { id: 'read', name: '读 (READ)', color: '#f59e0b', icon: '📖', subs: ['认读', '拼读'], rewardName: '阅读宝藏库' },
   { id: 'write', name: '写 (WRITE)', color: '#a855f7', icon: '✍️', subs: ['排序', '拼写'], rewardName: '书写大师杯' }
@@ -149,7 +150,7 @@ const useVerticalDragToScroll = () => {
   return { ref, onMouseDown: handleMouseDown, onMouseLeave: handleMouseLeave, onMouseUp: handleMouseUp, onMouseMove: handleMouseMove };
 };
 
-const AwardCard = ({ ach }: { ach: any }) => {
+const AwardCard: React.FC<{ ach: any }> = ({ ach }) => {
   const [flipped, setFlipped] = useState(false);
 
   return (
@@ -315,106 +316,31 @@ const FlashcardLearning = ({ onFinish, onBack }: { onFinish: () => void, onBack:
 };
 
 const ReportGenerator = ({ onBack }: { onBack: () => void }) => {
-  const [status, setStatus] = useState<'idle' | 'generating' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'generating' | 'success' | 'error'>('generating');
   const [progress, setProgress] = useState(0);
   const [reportUrl, setReportUrl] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   
-  const [formData, setFormData] = useState({
-    title: '张明的学习报告',
-    templateId: 10009,
-    studentInfo: '姓名张明，性别男，2015年3月出生，家长张建国，联系方式138XXXX1234，特殊需求为对花粉轻微过敏，课堂尽量避免摆放鲜花类装饰',
-    learningContent: '学习领域为小学五年级数学，核心知识点是小数乘法与除法、简易方程、多边形面积计算；学习目标为掌握小数运算技巧，能独立解简易方程，熟练计算平行四边形/三角形面积；内容难度为五年级同步难度，使用人教版小学五年级数学（上册）学习材料',
-    learningSituation: '当前基础为小数加减法掌握较好，乘法计算易漏小数点；学习进度完成小数乘法章节（课本第1-3单元）；单元测试小数乘法部分得分82分；优势是对图形类题目理解较快；待提升小数除法的竖式计算准确率；已完成本周3节数学同步辅导课'
-  });
-
-  const handleGenerate = () => {
-    setStatus('generating');
-    setProgress(0);
-    
-    // Simulate polling
-    let currentProgress = 0;
-    const interval = setInterval(() => {
-      currentProgress += Math.floor(Math.random() * 15) + 5;
-      if (currentProgress >= 100) {
-        currentProgress = 100;
-        clearInterval(interval);
-        setStatus('success');
-        setReportUrl('https://cyberai.dev.xrunda.com/creator-review/cw_1769655106291_39479145/page_1769655912709_ebd8bc1a?version=2016709183749292033');
-      }
-      setProgress(currentProgress);
-    }, 800);
-  };
+  useEffect(() => {
+    if (status === 'generating') {
+      setProgress(0);
+      let currentProgress = 0;
+      const interval = setInterval(() => {
+        currentProgress += Math.floor(Math.random() * 15) + 5;
+        if (currentProgress >= 100) {
+          currentProgress = 100;
+          clearInterval(interval);
+          setStatus('success');
+          setReportUrl('https://cyberai.dev.xrunda.com/creator-review/cw_1769655106291_39479145/page_1769655912709_ebd8bc1a?version=2016709183749292033');
+        }
+        setProgress(currentProgress);
+      }, 800);
+      return () => clearInterval(interval);
+    }
+  }, [status]);
 
   return (
     <div className="max-w-4xl mx-auto py-[clamp(16px,4vw,24px)]">
-      <div className="flex items-center space-x-[clamp(12px,3vw,16px)] mb-[clamp(20px,5vw,32px)]">
-        <button onClick={onBack} className="w-[clamp(36px,10vw,48px)] h-[clamp(36px,10vw,48px)] bg-slate-100 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors">
-          <ArrowLeft size={24} />
-        </button>
-        <div>
-          <h1 className="text-[clamp(22px,5.5vw,28px)] font-black text-slate-800">模拟生成学习报告</h1>
-          <p className="text-slate-500 font-bold text-[clamp(14px,3.5vw,16px)]">测试 AIGC 报告生成流程</p>
-        </div>
-      </div>
-
-      {status === 'idle' && (
-        <div className="bg-white rounded-[32px] p-[clamp(20px,5vw,32px)] shadow-xl border border-slate-100 space-y-[clamp(16px,4vw,24px)]">
-          <div>
-            <label className="block text-[clamp(14px,3.5vw,16px)] font-black text-slate-700 mb-[clamp(6px,2vw,8px)]">报告标题</label>
-            <input 
-              type="text" 
-              value={formData.title}
-              onChange={e => setFormData({...formData, title: e.target.value})}
-              className="w-full bg-slate-50 border border-slate-200 rounded-[clamp(12px,3vw,16px)] px-[clamp(12px,3vw,16px)] py-[clamp(8px,2.5vw,12px)] text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-[clamp(14px,3.5vw,16px)] font-black text-slate-700 mb-[clamp(6px,2vw,8px)]">模板 ID</label>
-            <input 
-              type="number" 
-              value={formData.templateId}
-              onChange={e => setFormData({...formData, templateId: parseInt(e.target.value)})}
-              className="w-full bg-slate-50 border border-slate-200 rounded-[clamp(12px,3vw,16px)] px-[clamp(12px,3vw,16px)] py-[clamp(8px,2.5vw,12px)] text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-[clamp(14px,3.5vw,16px)] font-black text-slate-700 mb-[clamp(6px,2vw,8px)]">学生信息 (studentInfo)</label>
-            <textarea 
-              value={formData.studentInfo}
-              onChange={e => setFormData({...formData, studentInfo: e.target.value})}
-              rows={3}
-              className="w-full bg-slate-50 border border-slate-200 rounded-[clamp(12px,3vw,16px)] px-[clamp(12px,3vw,16px)] py-[clamp(8px,2.5vw,12px)] text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-            />
-          </div>
-          <div>
-            <label className="block text-[clamp(14px,3.5vw,16px)] font-black text-slate-700 mb-[clamp(6px,2vw,8px)]">学习内容 (learningContent)</label>
-            <textarea 
-              value={formData.learningContent}
-              onChange={e => setFormData({...formData, learningContent: e.target.value})}
-              rows={4}
-              className="w-full bg-slate-50 border border-slate-200 rounded-[clamp(12px,3vw,16px)] px-[clamp(12px,3vw,16px)] py-[clamp(8px,2.5vw,12px)] text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-            />
-          </div>
-          <div>
-            <label className="block text-[clamp(14px,3.5vw,16px)] font-black text-slate-700 mb-[clamp(6px,2vw,8px)]">学习情况 (learningSituation)</label>
-            <textarea 
-              value={formData.learningSituation}
-              onChange={e => setFormData({...formData, learningSituation: e.target.value})}
-              rows={4}
-              className="w-full bg-slate-50 border border-slate-200 rounded-[clamp(12px,3vw,16px)] px-[clamp(12px,3vw,16px)] py-[clamp(8px,2.5vw,12px)] text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-            />
-          </div>
-          <button 
-            onClick={handleGenerate}
-            className="w-full py-[clamp(12px,3vw,16px)] bg-blue-500 text-white rounded-[clamp(12px,3vw,16px)] font-black text-[clamp(20px,5vw,24px)] shadow-lg hover:bg-blue-600 active:scale-95 transition-all flex items-center justify-center space-x-[clamp(6px,2vw,8px)]"
-          >
-            <Sparkles size={24} />
-            <span>开始生成报告</span>
-          </button>
-        </div>
-      )}
-
       {status === 'generating' && (
         <div className="bg-white rounded-[32px] p-[clamp(32px,8vw,48px)] shadow-xl border border-slate-100 flex flex-col items-center justify-center text-center space-y-8">
           <div className="relative w-[clamp(96px,30vw,128px)] h-[clamp(96px,30vw,128px)] flex items-center justify-center">
@@ -450,7 +376,7 @@ const ReportGenerator = ({ onBack }: { onBack: () => void }) => {
             <Check size={48} strokeWidth={3} />
           </div>
           <h3 className="text-[clamp(24px,6vw,32px)] font-black text-slate-800">报告生成成功！</h3>
-          <p className="text-slate-500 font-bold text-[clamp(18px,4.5vw,20px)] max-w-md">
+          <p className="text-slate-500 font-bold text-[clamp(18px,4.5vw,20px)] max-w-xl">
             学习报告已成功生成，您可以点击下方按钮预览报告。
           </p>
           <div className="pt-6 w-full max-w-sm space-y-[clamp(12px,3vw,16px)]">
@@ -460,12 +386,6 @@ const ReportGenerator = ({ onBack }: { onBack: () => void }) => {
             >
               <FileText size={24} />
               <span>预览报告</span>
-            </button>
-            <button 
-              onClick={() => setStatus('idle')}
-              className="w-full py-[clamp(12px,3vw,16px)] bg-slate-100 text-slate-600 rounded-[clamp(12px,3vw,16px)] font-black text-[clamp(20px,5vw,24px)] hover:bg-slate-200 active:scale-95 transition-all"
-            >
-              重新生成
             </button>
           </div>
         </div>
@@ -1103,6 +1023,8 @@ export default function App() {
         {currentView === 'learning' && (
           learningTitle.includes('单词卡') ? (
             <FlashcardLearning onFinish={finishSubTask} onBack={() => setCurrentView('home')} />
+          ) : learningTitle.includes('电子书') ? (
+            <EbookReader onFinish={finishSubTask} onBack={() => setCurrentView('home')} />
           ) : (
             <div className="relative h-full w-full bg-white z-[100] flex flex-col animate-in slide-in-from-bottom duration-500 text-slate-800">
               <header className="h-[12%] px-[4%] flex items-center justify-between bg-slate-50 border-b border-slate-100 shadow-sm">
