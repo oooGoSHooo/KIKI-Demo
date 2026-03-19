@@ -101,8 +101,8 @@ export const EbookReader = ({ onFinish, onBack }: { onFinish: () => void, onBack
         <div className="w-[clamp(40px,12vw,56px)]" />
       </header>
 
-      <main className="flex-1 flex items-center justify-center relative overflow-hidden bg-slate-800/5">
-        <div className="w-full max-w-4xl aspect-[3/2] flex items-center justify-center">
+      <main className="flex-1 flex items-center justify-center relative overflow-hidden bg-slate-800/5 p-[4%]">
+        <div className="w-full h-full flex items-center justify-center">
           {/* @ts-ignore - react-pageflip types are sometimes missing or incomplete */}
           <HTMLFlipBook
             width={400}
@@ -111,7 +111,7 @@ export const EbookReader = ({ onFinish, onBack }: { onFinish: () => void, onBack
             minWidth={300}
             maxWidth={600}
             minHeight={400}
-            maxHeight={800}
+            maxHeight={1000}
             maxShadowOpacity={0.5}
             showCover={true}
             mobileScrollSupport={true}
@@ -145,7 +145,7 @@ export const EbookReader = ({ onFinish, onBack }: { onFinish: () => void, onBack
         {isLastPage && (
           <button 
             onClick={onFinish}
-            className="absolute top-1/2 -translate-y-1/2 right-[4%] bg-green-500 text-white px-8 py-4 rounded-2xl shadow-xl flex items-center space-x-3 hover:bg-green-600 transition-transform active:scale-95 z-20 animate-in fade-in slide-in-from-right-8 duration-500"
+            className="absolute top-1/2 left-[75%] -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-8 py-4 rounded-2xl shadow-xl flex items-center space-x-3 hover:bg-green-600 transition-transform active:scale-95 z-20 animate-in fade-in slide-in-from-bottom-8 duration-500"
           >
             <span className="font-black text-xl tracking-wider">完成环节</span>
             <CheckCircle size={28} />
