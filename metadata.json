@@ -1,5 +1,5 @@
 {
   "name": "KIKI Demo",
   "description": "做好功能和视觉。",
-  "requestFramePermissions": []
+  "requestFramePermissions": ["microphone"]
 }

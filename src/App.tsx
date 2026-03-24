@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { EbookReader } from './components/EbookReader';
+import { ReadAloud } from './components/ReadAloud';
 import { 
  ChevronLeft, X, Gem, Settings, Trophy, 
  Calendar as CalendarIcon, Award, Play, 
@@ -18,7 +19,7 @@ import {
  * 核心任务配置数据
  */
 const TASK_DATA = [
- { id: 'listen', name: '听 (LISTEN)', color: '#3b82f6', icon: '🎧', subs: ['视频', '单词卡', '电子书', '互动'], rewardName: '听力能量包' },
+ { id: 'listen', name: '听 (LISTEN)', color: '#3b82f6', icon: '🎧', subs: ['视频', '单词卡', '电子书', '绘本跟读'], rewardName: '听力能量包' },
  { id: 'speak', name: '说 (SPEAK)', color: '#22c55e', icon: '🎙️', subs: ['跟读', 'AI评测'], rewardName: '口语奖励箱' },
  { id: 'read', name: '读 (READ)', color: '#f59e0b', icon: '📖', subs: ['认读', '拼读'], rewardName: '阅读宝藏库' },
  { id: 'write', name: '写 (WRITE)', color: '#a855f7', icon: '✍️', subs: ['排序', '拼写'], rewardName: '书写大师杯' }
@@ -1026,6 +1027,8 @@ export default function App() {
  <FlashcardLearning onFinish={finishSubTask} onBack={() => setCurrentView('home')} />
  ) : learningTitle.includes('电子书') ? (
  <EbookReader onFinish={finishSubTask} onBack={() => setCurrentView('home')} />
+ ) : learningTitle.includes('绘本跟读') ? (
+ <ReadAloud onFinish={finishSubTask} onBack={() => setCurrentView('home')} />
  ) : (
  <div className="relative h-full w-full bg-white z-[100] flex flex-col animate-in slide-in-from-bottom duration-500 text-slate-800">
  <header className="h-[12%] px-[4%] flex items-center justify-between bg-slate-50 border-b border-slate-100 shadow-sm">

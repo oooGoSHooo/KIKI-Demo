@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import { Play, Pause, CheckCircle } from 'lucide-react';
 
-const EBOOK_PAGES = [
+export const EBOOK_PAGES = [
  { id: 'cover', image: '/U6%20L1%20D1/00.jpg', audio: '/U6%20L1%20D1/00.MP3', position: 'full' },
  { id: 'page1-left', image: '/U6%20L1%20D1/01.jpg', audio: null, position: 'left' },
  { id: 'page1-right', image: '/U6%20L1%20D1/01.jpg', audio: '/U6%20L1%20D1/01.MP3', position: 'right' },
@@ -229,7 +229,9 @@ export const EbookReader = ({ onFinish, onBack }: { onFinish: () => void, onBack
  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
  </button>
  <h2 className="font-black tracking-widest text-[clamp(20px,5vw,24px)] uppercase text-slate-600">阅读电子书</h2>
- <div className="w-[clamp(40px,12vw,56px)]" />
+ <button onClick={onFinish} className="px-3 py-2 bg-slate-100 text-slate-500 rounded-xl font-bold text-[clamp(12px,3vw,14px)] active:scale-95 transition-all whitespace-nowrap">
+   跳过本环节
+ </button>
  </header>
 
  <main ref={containerRef} className="flex-1 flex items-center justify-center relative overflow-hidden bg-slate-800/5 p-[4%]">
