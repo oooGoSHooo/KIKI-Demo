@@ -130,7 +130,7 @@ export const EbookFollowRead: React.FC<EbookFollowReadProps> = ({ onFinish, onBa
                     <button 
                       onClick={startRecording}
                       disabled={isRecording}
-                      className={`w-24 h-24 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-90 ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-blue-500 hover:bg-blue-600'}`}
+                      className={`w-24 h-24 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-90 ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-blue-500'}`}
                     >
                       <Mic size={40} color="white" />
                     </button>

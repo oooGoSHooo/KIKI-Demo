@@ -305,13 +305,13 @@ export const ReadAloud = ({ onFinish, onBack }: { onFinish: () => void, onBack: 
   return (
     <div className="relative h-full w-full bg-slate-50 z-[100] flex flex-col animate-in slide-in-from-bottom duration-500 text-slate-800 overflow-hidden">
       <header className="h-[10%] min-h-[60px] px-[4%] flex items-center justify-between bg-white shadow-sm border-b border-slate-100 shrink-0 z-10">
-        <button onClick={onBack} className="w-[clamp(36px,10vw,48px)] h-[clamp(36px,10vw,48px)] bg-slate-100 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center text-slate-600 transition-colors">
+        <button onClick={onBack} className="w-[clamp(36px,10vw,48px)] h-[clamp(36px,10vw,48px)] bg-slate-100 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center text-slate-600 transition-colors active:brightness-90">
           <X size={28} />
         </button>
         <h2 className="font-black tracking-widest text-[clamp(20px,5vw,24px)] uppercase text-slate-600">
           绘本跟读 ({currentIndex + 1}/{READ_ALOUD_PAGES.length})
         </h2>
-        <button onClick={onFinish} className="px-3 py-2 bg-slate-100 text-slate-500 rounded-xl font-bold text-[clamp(12px,3vw,14px)] active:scale-95 transition-all whitespace-nowrap">
+        <button onClick={onFinish} className="px-3 py-2 bg-slate-100 text-slate-500 rounded-xl font-bold text-[clamp(12px,3vw,14px)] active:scale-95 active:brightness-90 transition-all whitespace-nowrap">
           跳过本环节
         </button>
       </header>
@@ -338,7 +338,7 @@ export const ReadAloud = ({ onFinish, onBack }: { onFinish: () => void, onBack: 
               <div className="absolute bottom-4 right-4 flex flex-col space-y-3">
                 <button
                   onClick={playOriginalAudio}
-                  className="w-16 h-16 bg-white/90 backdrop-blur-sm text-purple-500 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all"
+                  className="w-16 h-16 bg-white/90 backdrop-blur-sm text-purple-500 rounded-full flex items-center justify-center shadow-lg active:scale-95 active:brightness-90 transition-all"
                 >
                   {isOriginalPlaying ? (
                     <motion.div
@@ -355,7 +355,7 @@ export const ReadAloud = ({ onFinish, onBack }: { onFinish: () => void, onBack: 
                   onClick={playUserAudio}
                   disabled={!userAudioUrl}
                   className={`w-16 h-16 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg transition-all ${
-                    userAudioUrl ? 'text-green-500 active:scale-95' : 'text-slate-300 opacity-50 cursor-not-allowed'
+                    userAudioUrl ? 'text-green-500 active:scale-95 active:brightness-90' : 'text-slate-300 opacity-50 cursor-not-allowed'
                   }`}
                 >
                   {isUserPlaying ? <Pause size={32} /> : <Play size={32} className="ml-1" />}
@@ -398,7 +398,7 @@ export const ReadAloud = ({ onFinish, onBack }: { onFinish: () => void, onBack: 
         <div className="w-full flex-1 mt-6 flex flex-col items-center justify-center relative">
           
           {/* Waveform Progress Bar */}
-          <div className="w-full max-w-sm mb-4 px-4 relative h-12">
+          <div className="w-full max-w-sm mb-4 -mt-8 px-4 relative h-12">
             <AnimatePresence>
               <motion.div 
                 key={currentIndex} 
@@ -452,7 +452,7 @@ export const ReadAloud = ({ onFinish, onBack }: { onFinish: () => void, onBack: 
             <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300">
               <button 
                 onClick={handleRecordClick}
-                className="w-[clamp(80px,20vw,100px)] h-[clamp(80px,20vw,100px)] bg-blue-500 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(59,130,246,0.4)] active:scale-95 transition-all"
+                className="w-[clamp(80px,20vw,100px)] h-[clamp(80px,20vw,100px)] bg-blue-500 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(59,130,246,0.4)] active:scale-95 active:brightness-90 transition-all"
               >
                 <Mic size={48} />
               </button>
@@ -465,7 +465,7 @@ export const ReadAloud = ({ onFinish, onBack }: { onFinish: () => void, onBack: 
                 <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-20" />
                 <button 
                   onClick={handleStopRecording}
-                  className="w-[clamp(80px,20vw,100px)] h-[clamp(80px,20vw,100px)] bg-red-500 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(239,68,68,0.4)] relative z-10 active:scale-95 transition-all"
+                  className="w-[clamp(80px,20vw,100px)] h-[clamp(80px,20vw,100px)] bg-red-500 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(239,68,68,0.4)] relative z-10 active:scale-95 active:brightness-90 transition-all"
                 >
                   <Square size={36} fill="currentColor" />
                 </button>
@@ -523,13 +523,13 @@ export const ReadAloud = ({ onFinish, onBack }: { onFinish: () => void, onBack: 
                     if (userAudioUrl && userAudioUrl.startsWith('blob:')) URL.revokeObjectURL(userAudioUrl);
                     setUserAudioUrl(null);
                   }}
-                  className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl active:scale-95 transition-all flex items-center justify-center"
+                  className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl active:scale-95 active:brightness-90 transition-all flex items-center justify-center"
                 >
                   <RotateCcw size={32} />
                 </button>
                 <button 
                   onClick={handleNext}
-                  className="flex-1 py-4 bg-green-500 text-white rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center"
+                  className="flex-1 py-4 bg-green-500 text-white rounded-2xl shadow-lg active:scale-95 active:brightness-90 transition-all flex items-center justify-center"
                 >
                   <ArrowRight size={32} strokeWidth={3} />
                 </button>
@@ -551,7 +551,7 @@ export const ReadAloud = ({ onFinish, onBack }: { onFinish: () => void, onBack: 
             <div className="flex w-full space-x-4">
               <button 
                 onClick={() => setShowPermissionModal(false)}
-                className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold active:scale-95 transition-all"
+                className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold active:scale-95 active:brightness-90 transition-all"
               >
                 稍后
               </button>
@@ -561,7 +561,7 @@ export const ReadAloud = ({ onFinish, onBack }: { onFinish: () => void, onBack: 
                   setHasMicPermission(true);
                   startRecordingProcess();
                 }}
-                className="flex-1 py-4 bg-blue-500 text-white rounded-2xl font-bold shadow-lg shadow-blue-500/30 active:scale-95 transition-all"
+                className="flex-1 py-4 bg-blue-500 text-white rounded-2xl font-bold shadow-lg shadow-blue-500/30 active:scale-95 active:brightness-90 transition-all"
               >
                 好的，允许
               </button>
@@ -569,6 +569,7 @@ export const ReadAloud = ({ onFinish, onBack }: { onFinish: () => void, onBack: 
           </div>
         </div>
       )}
+      <div className="absolute bottom-0 left-0 h-1.5 bg-blue-500 transition-all duration-500 z-50 rounded-r-full" style={{ width: `${((currentIndex + 1) / READ_ALOUD_PAGES.length) * 100}%` }} />
     </div>
   );
 };

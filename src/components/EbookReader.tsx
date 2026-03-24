@@ -225,12 +225,12 @@ export const EbookReader = ({ onFinish, onBack }: { onFinish: () => void, onBack
  return (
  <div className="relative h-full w-full bg-slate-100 z-[100] flex flex-col animate-in slide-in-from-bottom duration-500 text-slate-800">
  <header className="h-[12%] px-[4%] flex items-center justify-between bg-white border-b border-slate-200 shadow-sm z-10">
- <button onClick={onBack} className="w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] bg-slate-100 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center text-slate-600 transition-colors">
+ <button onClick={onBack} className="w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] bg-slate-100 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center text-slate-600 transition-colors active:brightness-90">
  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
  </button>
- <h2 className="font-black tracking-widest text-[clamp(20px,5vw,24px)] uppercase text-slate-600">阅读电子书</h2>
- <button onClick={onFinish} className="px-3 py-2 bg-slate-100 text-slate-500 rounded-xl font-bold text-[clamp(12px,3vw,14px)] active:scale-95 transition-all whitespace-nowrap">
-   跳过本环节
+ <h2 className="font-black tracking-widest text-[clamp(20px,5vw,24px)] uppercase text-slate-600">E-Book</h2>
+ <button onClick={onFinish} className="px-3 py-2 bg-slate-100 text-slate-500 rounded-xl font-bold text-[clamp(12px,3vw,14px)] active:scale-95 active:brightness-90 transition-all whitespace-nowrap">
+   Skip
  </button>
  </header>
 
@@ -281,13 +281,14 @@ export const EbookReader = ({ onFinish, onBack }: { onFinish: () => void, onBack
  {isLastPage && (
  <button 
  onClick={onFinish}
- className="absolute top-1/2 left-[75%] -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-8 py-4 rounded-2xl shadow-xl flex items-center space-x-3 transition-transform active:scale-95 z-20 animate-in fade-in slide-in-from-bottom-8 duration-500"
+ className="absolute top-1/2 left-[75%] -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-8 py-4 rounded-2xl shadow-xl flex items-center space-x-3 transition-transform active:scale-95 active:brightness-90 z-20 animate-in fade-in slide-in-from-bottom-8 duration-500"
  >
- <span className="font-black text-xl tracking-wider">完成环节</span>
+ <span className="font-black text-xl tracking-wider">Finish</span>
  <CheckCircle size={28} />
  </button>
  )}
  </main>
+ <div className="absolute bottom-0 left-0 h-1.5 bg-blue-500 transition-all duration-500 z-50 rounded-r-full" style={{ width: `${((currentPage + 1) / EBOOK_PAGES.length) * 100}%` }} />
  </div>
  );
 };

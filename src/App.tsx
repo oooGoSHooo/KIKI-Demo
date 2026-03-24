@@ -3,6 +3,7 @@ import confetti from 'canvas-confetti';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { EbookReader } from './components/EbookReader';
 import { ReadAloud } from './components/ReadAloud';
+import { ExerciseModule } from './components/ExerciseModule';
 import { 
  ChevronLeft, X, Gem, Settings, Trophy, 
  Calendar as CalendarIcon, Award, Play, 
@@ -20,7 +21,7 @@ import {
  */
 const TASK_DATA = [
  { id: 'listen', name: '听 (LISTEN)', color: '#3b82f6', icon: '🎧', subs: ['视频', '单词卡', '电子书', '绘本跟读'], rewardName: '听力能量包' },
- { id: 'speak', name: '说 (SPEAK)', color: '#22c55e', icon: '🎙️', subs: ['跟读', 'AI评测'], rewardName: '口语奖励箱' },
+ { id: 'speak', name: '说 (SPEAK)', color: '#22c55e', icon: '🎙️', subs: ['练习-单选', '练习-多选', '练习-判断', '练习-排序'], rewardName: '口语奖励箱' },
  { id: 'read', name: '读 (READ)', color: '#f59e0b', icon: '📖', subs: ['认读', '拼读'], rewardName: '阅读宝藏库' },
  { id: 'write', name: '写 (WRITE)', color: '#a855f7', icon: '✍️', subs: ['排序', '拼写'], rewardName: '书写大师杯' }
 ];
@@ -313,6 +314,7 @@ const FlashcardLearning = ({ onFinish, onBack }: { onFinish: () => void, onBack:
  </motion.div>
  </AnimatePresence>
  </div>
+ <div className="absolute bottom-0 left-0 h-1.5 bg-blue-500 transition-all duration-500 z-50 rounded-r-full" style={{ width: `${((currentIndex + 1) / FLASHCARDS_DATA.length) * 100}%` }} />
  </div>
  );
 };
@@ -419,7 +421,7 @@ const ReportGenerator = ({ onBack }: { onBack: () => void }) => {
 export default function App() {
  // --- 状态管理 ---
  const [currentView, setCurrentView] = useState('home');
- const [majorIdx, setMajorIdx] = useState(0); 
+ const [majorIdx, setMajorIdx] = useState(1); 
  const [subIdx, setSubIdx] = useState(0); 
  const [diamonds, setDiamonds] = useState(500); 
  const [selectedDate, setSelectedDate] = useState(new Date());
@@ -1029,14 +1031,17 @@ export default function App() {
  <EbookReader onFinish={finishSubTask} onBack={() => setCurrentView('home')} />
  ) : learningTitle.includes('绘本跟读') ? (
  <ReadAloud onFinish={finishSubTask} onBack={() => setCurrentView('home')} />
+ ) : learningTitle.includes('练习-') ? (
+ <ExerciseModule type={learningTitle.split(' · ')[1] || learningTitle} onFinish={finishSubTask} onBack={() => setCurrentView('home')} />
  ) : (
  <div className="relative h-full w-full bg-white z-[100] flex flex-col animate-in slide-in-from-bottom duration-500 text-slate-800">
- <header className="h-[12%] px-[4%] flex items-center justify-between bg-slate-50 border-b border-slate-100 shadow-sm">
+ <header className="h-[12%] px-[4%] flex items-center justify-between bg-slate-50 border-b border-slate-100 shadow-sm z-10 relative">
  <button onClick={() => setCurrentView('home')} className="w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] bg-slate-200 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center text-slate-600 transition-colors"><X size={32} /></button>
  <h2 className="font-black tracking-widest text-[clamp(20px,5vw,24px)] uppercase text-slate-600">{learningTitle}</h2><div className="w-[clamp(40px,12vw,56px)]" />
  </header>
  <div className="flex-1 flex items-center justify-center p-[clamp(16px,4vw,24px)] sm:p-[clamp(24px,6vw,40px)]"><div className="w-full h-full max-w-4xl aspect-video bg-slate-100 rounded-[40px] border-4 border-slate-200 shadow-xl flex items-center justify-center relative overflow-hidden"><Play size={80} className="text-slate-300 opacity-50" /><div className="absolute bottom-6 left-6 right-6 h-3 bg-slate-200 rounded-full overflow-hidden"><div className="h-full bg-blue-500 w-1/3" /></div></div></div>
  <div className="h-[16%] flex items-center justify-center px-[clamp(24px,6vw,40px)] pb-4"><button onClick={finishSubTask} className="bg-blue-600 text-white px-[clamp(32px,8vw,56px)] py-[clamp(12px,3vw,16px)] rounded-[clamp(12px,3vw,16px)] font-black text-[clamp(22px,5.5vw,28px)] shadow-lg active:scale-95">学完了！领取奖励</button></div>
+ <div className="absolute bottom-0 left-0 h-1.5 bg-blue-500 transition-all duration-500 z-50 rounded-r-full" style={{ width: '33%' }} />
  </div>
  )
  )}
