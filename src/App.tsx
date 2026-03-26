@@ -1336,11 +1336,11 @@ export default function App() {
                                 isCurrent;
 
                               if (!showNode)
-                                return <div key={level} className="w-0 h-0" />;
+                                return <div key={`progress-node-empty-${level}`} className="w-0 h-0" />;
 
                               return (
                                 <div
-                                  key={level}
+                                  key={`progress-node-${level}`}
                                   className="relative flex flex-col items-center"
                                 >
                                   {isCurrent && (

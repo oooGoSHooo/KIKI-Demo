@@ -27,7 +27,7 @@ export const CustomPolarGrid = ({ cx, cy, polarRadius, polarAngles }: any) => {
         const y = cy + maxRadius * Math.sin(rad);
         return (
           <line
-            key={index}
+            key={`radar-grid-line-${index}`}
             x1={cx}
             y1={cy}
             x2={x}

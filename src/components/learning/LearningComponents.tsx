@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, ArrowRight, Check, FileText, ChevronLeft } from "lucide-react";
+import { X, ArrowRight, Check, FileText, ChevronLeft, ChevronRight, Volume2 } from "lucide-react";
 
 const FLASHCARDS_DATA = [
   {
@@ -10,6 +10,7 @@ const FLASHCARDS_DATA = [
     meaning: "计算器",
     example: "I need a calculator for my math homework.",
     image: "/cards/calculator (noun 计算器).png",
+    audio: "/mp3/calculator.wav",
   },
   {
     word: "gel",
@@ -18,6 +19,7 @@ const FLASHCARDS_DATA = [
     meaning: "凝胶",
     example: "He uses hair gel every morning.",
     image: "/cards/gel (noun 凝胶).png",
+    audio: "/mp3/gel.wav",
   },
   {
     word: "hate",
@@ -26,6 +28,7 @@ const FLASHCARDS_DATA = [
     meaning: "讨厌，憎恨",
     example: "I hate waking up early on weekends.",
     image: "/cards/hate (verb 讨厌，憎恨).png",
+    audio: "/mp3/hate.wav",
   },
   {
     word: "invention",
@@ -34,6 +37,7 @@ const FLASHCARDS_DATA = [
     meaning: "发明；发明物",
     example: "The telephone is a great invention.",
     image: "/cards/invention (noun 发明；发明物).png",
+    audio: "/mp3/invention.wav",
   },
   {
     word: "remote control",
@@ -42,6 +46,7 @@ const FLASHCARDS_DATA = [
     meaning: "遥控器",
     example: "Where is the TV remote control?",
     image: "/cards/remote control (noun 遥控器).png",
+    audio: "/mp3/remote control.wav",
   },
 ];
 
@@ -54,11 +59,35 @@ export const FlashcardLearning = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(1);
+  const [showLearnModal, setShowLearnModal] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  const playAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch((e) => console.log("Audio play failed:", e));
+      setIsPlaying(true);
+    }
+  };
+
+  useEffect(() => {
+    playAudio();
+  }, [currentIndex]);
 
   const handleNext = () => {
     if (currentIndex < FLASHCARDS_DATA.length - 1) {
       setDirection(1);
       setCurrentIndex(currentIndex + 1);
+    } else {
+      onFinish();
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentIndex > 0) {
+      setDirection(-1);
+      setCurrentIndex(currentIndex - 1);
     }
   };
 
@@ -92,7 +121,13 @@ export const FlashcardLearning = ({
   };
 
   return (
-    <div className="relative h-full w-full bg-slate-50 z-[100] flex flex-col animate-in slide-in-from-bottom duration-500 text-slate-800 overflow-hidden">
+    <div className="relative h-full w-full bg-[#f8f9fa] z-[100] flex flex-col animate-in slide-in-from-bottom duration-500 text-slate-800 overflow-hidden">
+      <audio
+        ref={audioRef}
+        src={FLASHCARDS_DATA[currentIndex].audio}
+        onEnded={() => setIsPlaying(false)}
+        onError={() => setIsPlaying(false)}
+      />
       <header className="h-[10%] min-h-[60px] px-[4%] flex items-center justify-between bg-white shadow-sm border-b border-slate-100 shrink-0 z-10">
         <button
           onClick={onBack}
@@ -100,93 +135,140 @@ export const FlashcardLearning = ({
         >
           <X size={28} />
         </button>
-        <h2 className="font-black tracking-widest text-[clamp(20px,5vw,24px)] uppercase text-slate-600">
+        <h2 className="font-black tracking-widest text-[clamp(20px,5vw,24px)] text-slate-600">
           单词卡 ({currentIndex + 1}/{FLASHCARDS_DATA.length})
         </h2>
         <div className="w-[clamp(36px,10vw,48px)]" />
       </header>
 
-      <div className="flex-1 flex items-center justify-center p-[clamp(12px,3vw,16px)] sm:p-[clamp(20px,5vw,32px)] relative">
-        <AnimatePresence initial={false} custom={direction}>
-          <motion.div
-            key={currentIndex}
-            custom={direction}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            className="w-full max-w-4xl bg-white rounded-[40px] shadow-2xl border border-slate-100 flex flex-col md:flex-row overflow-hidden absolute"
+      <div className="flex-1 flex flex-col items-center justify-center p-[clamp(12px,3vw,16px)] sm:p-[clamp(20px,5vw,32px)] relative">
+        {/* Navigation Buttons and Card Container */}
+        <div className="relative w-full max-w-5xl flex items-center justify-center h-full">
+          {/* Prev Button */}
+          <button
+            onClick={handlePrev}
+            className={`absolute left-0 md:-left-6 z-20 w-12 h-12 text-white rounded-full flex items-center justify-center shadow-md transition-all ${currentIndex === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#ff3b30] active:bg-[#d32f2f]'}`}
+            disabled={currentIndex === 0}
           >
-            <div className="w-full md:w-1/2 aspect-square md:aspect-auto bg-slate-100 relative">
-              <img
-                src={FLASHCARDS_DATA[currentIndex].image}
-                alt={FLASHCARDS_DATA[currentIndex].word}
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-            </div>
+            <ChevronLeft size={32} strokeWidth={3} />
+          </button>
 
-            <div className="w-full md:w-1/2 p-[clamp(20px,5vw,32px)] sm:p-[clamp(32px,8vw,48px)] flex flex-col justify-center relative bg-white">
-              <div className="space-y-[clamp(16px,4vw,24px)]">
-                <div>
-                  <h1 className="text-[clamp(32px,8vw,48px)] sm:text-6xl font-black text-slate-800 mb-[clamp(6px,2vw,8px)]">
-                    {FLASHCARDS_DATA[currentIndex].word}
-                  </h1>
-                  <div className="flex items-center space-x-[clamp(8px,2.5vw,12px)] text-[clamp(18px,4.5vw,20px)] sm:text-[clamp(20px,5vw,24px)] font-bold text-slate-500">
-                    <span className="bg-blue-100 text-blue-600 px-[clamp(8px,2.5vw,12px)] py-1 rounded-[clamp(6px,1.5vw,8px)]">
-                      {FLASHCARDS_DATA[currentIndex].pos}
-                    </span>
-                    <span>{FLASHCARDS_DATA[currentIndex].pron}</span>
+          {/* Card and Button Container */}
+          <div className="w-full max-w-4xl relative flex items-center justify-center mx-8 md:mx-12 h-full">
+            <AnimatePresence initial={false} custom={direction}>
+              <motion.div
+                key={currentIndex}
+                custom={direction}
+                variants={variants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="absolute inset-0 flex flex-col items-center justify-center"
+              >
+                {/* Card */}
+                <div className="w-full aspect-[4/5] md:aspect-[1.8/1] bg-white rounded-[40px] shadow-xl flex flex-col md:flex-row overflow-hidden p-[clamp(16px,4vw,32px)] gap-[clamp(20px,5vw,40px)] shrink-0">
+                  {/* Image Container */}
+                  <div className="w-full md:w-1/2 flex items-center justify-center shrink-0 h-full">
+                    <div className="relative h-full aspect-[500/640] rounded-[24px] overflow-hidden bg-slate-100">
+                      <img
+                        src={FLASHCARDS_DATA[currentIndex].image}
+                        alt={FLASHCARDS_DATA[currentIndex].word}
+                        className="w-full h-full object-contain"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Text Container */}
+                  <div className="w-full md:w-1/2 h-full flex flex-col justify-center py-4 pr-4">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <button
+                        onClick={playAudio}
+                        className={`w-10 h-8 bg-[#e63946] rounded-lg flex items-center justify-center text-white shrink-0 active:bg-[#d32f2f] transition-colors ${isPlaying ? 'animate-pulse' : ''}`}
+                      >
+                        <Volume2 size={20} fill="currentColor" />
+                      </button>
+                      <h1 className="text-[clamp(32px,6vw,48px)] font-black text-[#1c1c1e] leading-none tracking-tight">
+                        {FLASHCARDS_DATA[currentIndex].word}
+                      </h1>
+                    </div>
+                    
+                    <div className="pl-[52px]">
+                      <p className="text-[clamp(18px,4vw,22px)] font-bold text-slate-500 mb-6">
+                        {FLASHCARDS_DATA[currentIndex].pron}
+                      </p>
+
+                      <p className="text-[clamp(20px,4.5vw,26px)] font-black text-[#1c1c1e] mb-10">
+                        ({FLASHCARDS_DATA[currentIndex].pos === 'n.' ? '名词' : FLASHCARDS_DATA[currentIndex].pos === 'v.' ? '动词' : FLASHCARDS_DATA[currentIndex].pos}) {FLASHCARDS_DATA[currentIndex].meaning}
+                      </p>
+
+                      <p className="text-[clamp(16px,3.5vw,20px)] font-medium text-slate-600 italic leading-relaxed">
+                        "{FLASHCARDS_DATA[currentIndex].example}"
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="text-[clamp(14px,3.5vw,16px)] font-black text-slate-400 uppercase tracking-widest mb-1">
-                    中文意思
-                  </h3>
-                  <p className="text-[clamp(22px,5.5vw,28px)] font-bold text-slate-700">
-                    {FLASHCARDS_DATA[currentIndex].meaning}
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="text-[clamp(14px,3.5vw,16px)] font-black text-slate-400 uppercase tracking-widest mb-1">
-                    例句
-                  </h3>
-                  <p className="text-[clamp(18px,4.5vw,20px)] font-medium text-slate-600 italic leading-relaxed">
-                    "{FLASHCARDS_DATA[currentIndex].example}"
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-12 flex justify-end">
-                {currentIndex < FLASHCARDS_DATA.length - 1 ? (
+                {/* Learn Word Button */}
+                <div className="mt-[clamp(16px,4vw,24px)] z-10 flex flex-col items-center shrink-0">
                   <button
-                    onClick={handleNext}
-                    className="w-[clamp(48px,14vw,64px)] h-[clamp(48px,14vw,64px)] bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all"
+                    onClick={() => setShowLearnModal(true)}
+                    className="active:brightness-75 transition-all"
                   >
-                    <ArrowRight size={32} />
+                    <img src="/学单词.png" alt="学单词" className="h-[clamp(60px,15vw,80px)] object-contain drop-shadow-md" />
                   </button>
-                ) : (
-                  <button
-                    onClick={onFinish}
-                    className="px-[clamp(20px,5vw,32px)] py-[clamp(12px,3vw,16px)] bg-green-500 text-white rounded-full font-black text-[clamp(20px,5vw,24px)] shadow-lg active:scale-95 transition-all flex items-center space-x-[clamp(6px,2vw,8px)]"
-                  >
-                    <Check size={28} strokeWidth={3} />
-                    <span>完成学习</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        </AnimatePresence>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Next Button */}
+          <button
+            onClick={handleNext}
+            className="absolute right-0 md:-right-6 z-20 w-12 h-12 bg-[#ff3b30] text-white rounded-full flex items-center justify-center shadow-md active:bg-[#d32f2f] transition-all"
+          >
+            {currentIndex < FLASHCARDS_DATA.length - 1 ? (
+              <ChevronRight size={32} strokeWidth={3} />
+            ) : (
+              <Check size={32} strokeWidth={3} />
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* Progress Bar */}
       <div
         className="absolute bottom-0 left-0 h-1.5 bg-blue-500 transition-all duration-500 z-50 rounded-r-full"
         style={{
           width: `${((currentIndex + 1) / FLASHCARDS_DATA.length) * 100}%`,
         }}
       />
+
+      {/* Learn Modal */}
+      <AnimatePresence>
+        {showLearnModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setShowLearnModal(false)}
+          >
+            <div 
+              className="relative w-full max-w-4xl flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img src="/学单词弹窗.png" alt="学习卡片" className="w-full h-auto object-contain" />
+              <button
+                onClick={() => setShowLearnModal(false)}
+                className="absolute -top-4 -right-4 md:-top-8 md:-right-8 w-10 h-10 md:w-12 md:h-12 bg-[#ff3b30] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all border-2 border-white"
+              >
+                <X size={24} strokeWidth={3} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

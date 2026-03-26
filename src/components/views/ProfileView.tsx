@@ -86,14 +86,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userProfile, onEditCli
         </div>
       </div>
 
-      {/* 3. 雷达图与等级进度 */}
-      <div className="flex-1 min-h-[350px] bg-white rounded-[32px] p-[clamp(16px,4vw,24px)] shadow-sm border-2 border-slate-100 flex flex-col">
-        <h3 className="font-black text-slate-800 text-[clamp(18px,4.5vw,20px)] mb-[clamp(12px,3vw,16px)]">
-          能力雷达图
-        </h3>
-        <div className="flex-1 flex flex-col md:flex-row items-center gap-[clamp(16px,4vw,24px)]">
-          {/* Radar Chart */}
-          <div className="w-full md:w-1/2 h-full min-h-[250px] relative">
+      {/* 3. 下方图表区 */}
+      <div className="flex-1 flex flex-col md:flex-row gap-[clamp(12px,3vw,16px)] shrink-0 min-h-[350px]">
+        {/* 雷达图 */}
+        <div className="flex-1 bg-white rounded-[32px] p-[clamp(16px,4vw,24px)] shadow-sm border-2 border-slate-100 flex flex-col">
+          <h3 className="font-black text-slate-800 text-[clamp(18px,4.5vw,20px)] mb-[clamp(12px,3vw,16px)]">
+            能力雷达图
+          </h3>
+          <div className="flex-1 relative min-h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={RADAR_DATA}>
                 <PolarGrid content={<CustomPolarGrid />} />
@@ -109,66 +109,66 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userProfile, onEditCli
               </RadarChart>
             </ResponsiveContainer>
           </div>
+        </div>
 
-          {/* 13 Levels Progress */}
-          <div className="flex-1 flex flex-col justify-center bg-slate-50 rounded-[24px] p-[clamp(16px,4vw,24px)] border-2 border-slate-100">
-            <div className="mb-[clamp(24px,6vw,32px)] text-center">
-              <h3 className="font-black text-[clamp(20px,5vw,24px)] text-slate-700 mb-2">
-                当前级别:{" "}
-                <span className="text-purple-600">Lv.2 启蒙期</span>
-              </h3>
-              <p className="text-slate-500 font-bold text-[clamp(14px,3.5vw,16px)]">
-                再获得 150 经验值即可升级到 Lv.3！
-              </p>
+        {/* 13 Levels Progress */}
+        <div className="flex-1 bg-white rounded-[32px] p-[clamp(16px,4vw,24px)] shadow-sm border-2 border-slate-100 flex flex-col justify-center">
+          <div className="mb-[clamp(24px,6vw,32px)] text-center">
+            <h3 className="font-black text-[clamp(20px,5vw,24px)] text-slate-700 mb-2">
+              当前级别:{" "}
+              <span className="text-purple-600">Lv.2 启蒙期</span>
+            </h3>
+            <p className="text-slate-500 font-bold text-[clamp(14px,3.5vw,16px)]">
+              再获得 150 经验值即可升级到 Lv.3！
+            </p>
+          </div>
+
+          <div className="relative py-12 px-4 w-full max-w-md mx-auto">
+            {/* Progress Line */}
+            <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-4 bg-slate-200 rounded-full overflow-hidden">
+              <div className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full w-[15%]"></div>
             </div>
 
-            <div className="relative py-12 px-4 w-full max-w-md mx-auto">
-              {/* Progress Line */}
-              <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-4 bg-slate-200 rounded-full overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full w-[15%]"></div>
-              </div>
+            {/* 13 Level Nodes */}
+            <div className="relative flex justify-between items-center z-10">
+              {Array.from({ length: 13 }).map((_, i) => {
+                const level = i + 1;
+                const isCurrent = level === 2;
+                const isPassed = level < 2;
+                const showNode =
+                  level === 1 ||
+                  level === 13 ||
+                  level % 3 === 1 ||
+                  isCurrent;
 
-              {/* 13 Level Nodes */}
-              <div className="relative flex justify-between items-center z-10">
-                {Array.from({ length: 13 }).map((_, i) => {
-                  const level = i + 1;
-                  const isCurrent = level === 2;
-                  const isPassed = level < 2;
-                  const showNode =
-                    level === 1 ||
-                    level === 13 ||
-                    level % 3 === 1 ||
-                    isCurrent;
+                if (!showNode)
+                  return <div key={`progress-node-empty-${level}`} className="w-0 h-0" />;
 
-                  if (!showNode)
-                    return <div key={level} className="w-0 h-0" />;
-
-                  return (
+                return (
+                  <div
+                    key={`progress-node-${level}`}
+                    className="relative flex flex-col items-center"
+                  >
+                    {isCurrent && (
+                      <div className="absolute -top-14 w-12 h-12 bg-white rounded-full p-1 shadow-lg border-2 border-purple-500 z-20 animate-bounce">
+                        <img
+                          src={userProfile.avatar}
+                          alt="avatar"
+                          className="w-full h-full object-cover bg-blue-50 rounded-full"
+                        />
+                      </div>
+                    )}
                     <div
-                      key={level}
-                      className="relative flex flex-col items-center"
+                      className={`w-5 h-5 rounded-full border-4 ${isPassed ? "bg-purple-500 border-purple-500" : isCurrent ? "bg-white border-purple-500 scale-125 shadow-md" : "bg-slate-200 border-slate-300"} transition-all`}
+                    ></div>
+                    <span
+                      className={`absolute top-8 text-[12px] font-black ${isPassed || isCurrent ? "text-purple-600" : "text-slate-400"}`}
                     >
-                      {isCurrent && (
-                        <div className="absolute -top-14 w-12 h-12 bg-white rounded-full p-1 shadow-lg border-2 border-purple-500 z-20 animate-bounce">
-                          <img
-                            src={userProfile.avatar}
-                            alt="avatar"
-                            className="w-full h-full object-cover bg-blue-50 rounded-full"
-                          />
-                        </div>
-                      )}
-                      <div
-                        className={`w-5 h-5 rounded-full border-4 ${isPassed ? "bg-purple-500 border-purple-500" : isCurrent ? "bg-white border-purple-500 scale-125 shadow-md" : "bg-slate-200 border-slate-300"} transition-all`}
-                      ></div>
-                      <span
-                        className={`absolute top-8 text-[12px] font-black ${isPassed || isCurrent ? "text-purple-600" : "text-slate-400"}`}
-                      >
-                        Lv.{level}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+                      Lv.{level}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
