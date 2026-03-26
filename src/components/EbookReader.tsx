@@ -271,7 +271,7 @@ export const EbookReader = ({ onFinish, onBack }: { onFinish: () => void, onBack
  {currentAudioSrc && (
  <button 
  onClick={toggleAudio}
- className="absolute bottom-[8%] right-[8%] -translate-x-10 w-[clamp(56px,15vw,72px)] h-[clamp(56px,15vw,72px)] bg-blue-500 text-white rounded-full shadow-xl flex items-center justify-center transition-transform active:scale-95 z-20"
+ className="absolute bottom-[8%] right-[8%] -translate-x-10 w-[clamp(56px,15vw,72px)] h-[clamp(56px,15vw,72px)] bg-blue-500 text-white rounded-full shadow-xl flex items-center justify-center transition-transform active:scale-95 active:brightness-90 z-20"
  >
  {isPlaying ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-2" />}
  </button>
