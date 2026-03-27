@@ -2,27 +2,32 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { EbookReader } from './components/EbookReader';
+import { ReadAloud } from './components/ReadAloud';
+import { ExerciseModule } from './components/ExerciseModule';
+import { EnglishProficiencyTest } from './components/EnglishProficiencyTest/EnglishProficiencyTest';
+import type { AbilityTestResult } from './components/EnglishProficiencyTest/types';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ChevronLeft, X, Gem, Settings, Trophy, 
   Calendar as CalendarIcon, Award, Play, 
   ArrowLeft, ArrowRight, Check, Lock, Camera,
-  Footprints, Sunrise, Gift, Ear, Mic, BookOpen, 
+  Footprints, Sunrise, Gift, Ear, Mic, BookOpen, GraduationCap,
   Repeat, CalendarCheck, ShoppingBag, Palette, 
   Zap, Star, Medal, Crown, Target, Rocket,
   ShieldCheck, BarChart3, Bell, Sliders, User,
   Clock, Map, ChevronRight, LogOut, FileText, Headphones, Sparkles, Loader2,
-  Store, PackageX, Hourglass, FlaskConical, Shield, Clover, Ghost, History, Flame
+  Store, PackageX, Hourglass, FlaskConical, Shield, Clover, Ghost, History, Flame,
+  Pause, Volume2, VolumeX, Expand
 } from 'lucide-react';
 
 /**
  * 核心任务配置数据
  */
 const TASK_DATA = [
-  { id: 'listen', name: '听 (LISTEN)', color: '#3b82f6', icon: '🎧', subs: ['视频', '单词卡', '电子书', '听音', '互动'], rewardName: '听力能量包' },
-  { id: 'speak', name: '说 (SPEAK)', color: '#22c55e', icon: '🎙️', subs: ['跟读', 'AI评测'], rewardName: '口语奖励箱' },
-  { id: 'read', name: '读 (READ)', color: '#f59e0b', icon: '📖', subs: ['认读', '拼读'], rewardName: '阅读宝藏库' },
-  { id: 'write', name: '写 (WRITE)', color: '#a855f7', icon: '✍️', subs: ['排序', '拼写'], rewardName: '书写大师杯' }
+  { id: 'listen', name: '听 (LISTEN)', color: '#3b82f6', icon: '🎧', subs: ['视频', '单词卡', '电子书', '跟读'], rewardName: '听力能量包' },
+  { id: 'speak', name: '说 (SPEAK)', color: '#22c55e', icon: '🎙️', subs: ['练习-单选', '练习-多选', '练习-判断', '练习-排序'], rewardName: '口语奖励箱' },
+  { id: 'read', name: '读 (READ)', color: '#f59e0b', icon: '📖', subs: ['认读', '拼读', '理解'], rewardName: '阅读宝藏库' },
+  { id: 'write', name: '写 (WRITE)', color: '#a855f7', icon: '✍️', subs: ['排序', '拼写', '句子'], rewardName: '书写大师杯' }
 ];
 
 /**
@@ -79,12 +84,14 @@ const MOCK_HISTORY_STATUS: Record<number, number> = {
   1: 2, 2: 2, 3: 1, 4: 0, 5: 2, 6: 2, 7: 2, 8: 1, 9: 0, 10: 2, 11: 2, 12: 2, 13: 1
 };
 
-const RADAR_DATA = [
+const DEFAULT_RADAR_DATA = [
   { subject: '说', grade: 'A', A: 80, fullMark: 100 },
   { subject: '写', grade: 'B', A: 40, fullMark: 100 },
   { subject: '读', grade: 'B-', A: 30, fullMark: 100 },
   { subject: '听', grade: 'C', A: 20, fullMark: 100 },
 ];
+
+type RadarDatum = (typeof DEFAULT_RADAR_DATA)[number];
 
 const CustomPolarGrid = ({ cx, cy, polarRadius, polarAngles }: any) => {
   if (!polarRadius || !polarAngles) return null;
@@ -108,8 +115,8 @@ const CustomPolarGrid = ({ cx, cy, polarRadius, polarAngles }: any) => {
   );
 };
 
-const CustomTick = ({ payload, x, y, textAnchor, stroke, radius }: any) => {
-  const dataItem = RADAR_DATA.find(item => item.subject === payload.value);
+const CustomTick = ({ payload, x, y, textAnchor, stroke, radius, radarData }: any) => {
+  const dataItem = (radarData as RadarDatum[]).find(item => item.subject === payload.value);
   return (
     <g className="recharts-layer recharts-polar-angle-axis-tick">
       <text radius={radius} stroke={stroke} x={x} y={y} className="recharts-text recharts-polar-angle-axis-tick-value" textAnchor={textAnchor}>
@@ -202,122 +209,468 @@ const publicAssetUrl = (path: string) => {
 };
 
 const FLASHCARDS_DATA = [
-  { word: 'calculator', pos: 'n.', pron: '/ˈkæl.kjə.leɪ.tər/', meaning: '计算器', example: 'I need a calculator for my math homework.', image: '/cards/calculator.png' },
-  { word: 'gel', pos: 'n.', pron: '/dʒel/', meaning: '凝胶', example: 'He uses hair gel every morning.', image: '/cards/gel.png' },
-  { word: 'hate', pos: 'v.', pron: '/heɪt/', meaning: '讨厌，憎恨', example: 'I hate waking up early on weekends.', image: '/cards/hate.png' },
-  { word: 'invention', pos: 'n.', pron: '/ɪnˈven.ʃən/', meaning: '发明；发明物', example: 'The telephone is a great invention.', image: '/cards/invention.png' },
-  { word: 'remote control', pos: 'n.', pron: '/rɪˌmoʊt kənˈtroʊl/', meaning: '遥控器', example: 'Where is the TV remote control?', image: '/cards/remote control.png' },
+  {
+    word: 'calculator',
+    pronunciation: "/'kæl.kjə.leɪ.tər/",
+    pos: '(名词)',
+    meaning: '计算器',
+    example: '"I need a calculator for my math homework."',
+    image: '/cards/calculator.png',
+    audio: '/cards/calculator.wav',
+    bgColor: '#fcdbb5'
+  },
+  {
+    word: 'gel',
+    pronunciation: '/dʒel/',
+    pos: '(名词)',
+    meaning: '凝胶',
+    example: '"Use a little hair gel."',
+    image: '/cards/gel.png',
+    audio: '/cards/gel.wav',
+    bgColor: '#ffcdd2'
+  },
+  {
+    word: 'hate',
+    pronunciation: '/heɪt/',
+    pos: '(动词)',
+    meaning: '讨厌',
+    example: '"I hate rainy days."',
+    image: '/cards/hate.png',
+    audio: '/cards/hate.wav',
+    bgColor: '#c8e6c9'
+  },
+  {
+    word: 'invention',
+    pronunciation: '/ɪnˈven.ʃən/',
+    pos: '(名词)',
+    meaning: '发明',
+    example: '"The telephone was a great invention."',
+    image: '/cards/invention.png',
+    audio: '/cards/invention.wav',
+    bgColor: '#b3e5fc'
+  },
+  {
+    word: 'remote control',
+    pronunciation: '/rɪˈmoʊt kənˈtroʊl/',
+    pos: '(名词)',
+    meaning: '遥控器',
+    example: '"Where is the remote control?"',
+    image: '/cards/remote control.png',
+    audio: '/cards/remote control.wav',
+    bgColor: '#e1bee7'
+  }
 ];
 
-const FlashcardLearning = ({ onFinish, onBack }: { onFinish: () => void, onBack: () => void }) => {
+const FlashcardLearning = ({ onFinish, onBack, onSkip }: { onFinish: () => void, onBack: () => void, onSkip: () => void }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [direction, setDirection] = useState(1);
+  const [showModal, setShowModal] = useState(false);
+  const [direction, setDirection] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showFinishScreen, setShowFinishScreen] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const handleNext = () => {
+  const playAudio = (audioPath: string) => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+
+    const audio = new Audio(publicAssetUrl(audioPath));
+    audioRef.current = audio;
+    setIsPlaying(true);
+    audio.onended = () => setIsPlaying(false);
+    audio.play().catch(() => {
+      setIsPlaying(false);
+    });
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      playAudio(FLASHCARDS_DATA[currentIndex].audio);
+    }, 500);
+    return () => {
+      clearTimeout(timer);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex]);
+
+  const nextCard = () => {
     if (currentIndex < FLASHCARDS_DATA.length - 1) {
       setDirection(1);
-      setCurrentIndex(currentIndex + 1);
+      setCurrentIndex((prev) => prev + 1);
+    } else {
+      setDirection(1);
+      setShowFinishScreen(true);
     }
   };
 
-  const variants = {
-    enter: (direction: number) => {
-      return {
-        x: direction > 0 ? 1000 : -1000,
-        opacity: 0
-      };
-    },
-    center: {
-      zIndex: 1,
-      x: 0,
-      opacity: 1,
-      transition: {
-        x: { type: "spring", stiffness: 300, damping: 30, delay: 0.08 },
-        opacity: { duration: 0.2, delay: 0.08 }
-      }
-    },
-    exit: (direction: number) => {
-      return {
-        zIndex: 0,
-        x: direction < 0 ? 1000 : -1000,
-        opacity: 0,
-        transition: {
-          x: { type: "spring", stiffness: 300, damping: 30 },
-          opacity: { duration: 0.2 }
-        }
-      };
+  const prevCard = () => {
+    if (currentIndex > 0) {
+      setDirection(-1);
+      setCurrentIndex((prev) => prev - 1);
     }
+  };
+
+  const currentCard = FLASHCARDS_DATA[currentIndex];
+
+  return (
+    <div className="flex flex-col h-screen bg-[#f4f6f8] font-sans relative overflow-hidden select-none z-[100] animate-in slide-in-from-bottom duration-500">
+      <header className="h-[10%] min-h-[60px] px-[4%] flex items-center justify-between bg-white shadow-sm border-b border-slate-100 shrink-0 z-10 relative">
+        <button
+          onClick={onBack}
+          className="w-[clamp(36px,10vw,48px)] h-[clamp(36px,10vw,48px)] bg-slate-100 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center text-slate-600 active:scale-90 transition-transform"
+        >
+          <X size={28} />
+        </button>
+        <h2 className="font-black tracking-widest text-[clamp(20px,5vw,24px)] uppercase text-slate-600">
+          单词卡 ({currentIndex + 1}/{FLASHCARDS_DATA.length})
+        </h2>
+        <button
+          onClick={onSkip}
+          className="px-[clamp(10px,2.5vw,14px)] h-[clamp(36px,10vw,48px)] bg-amber-100 text-amber-700 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center font-black text-[clamp(12px,3vw,14px)] whitespace-nowrap hover:bg-amber-200 transition-colors"
+        >
+          跳过本环节
+        </button>
+      </header>
+
+      {/* Left nav button — fixed to screen left edge */}
+      {!showFinishScreen && (
+        <button
+          onClick={prevCard}
+          disabled={currentIndex === 0}
+          className={`fixed left-3 sm:left-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-md transition-all ${
+            currentIndex === 0 ? 'bg-gray-300 text-gray-100 cursor-not-allowed' : 'bg-[#ff4757] text-white hover:scale-110 active:scale-95'
+          }`}
+        >
+          <ChevronLeft size={28} strokeWidth={3} />
+        </button>
+      )}
+
+      {/* Right nav button — fixed to screen right edge */}
+      {!showFinishScreen && (
+        <button
+          onClick={nextCard}
+          className="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-md transition-all bg-[#ff4757] text-white hover:scale-110 active:scale-95"
+        >
+          <ChevronRight size={28} strokeWidth={3} />
+        </button>
+      )}
+
+      <main className="flex-1 flex flex-col items-center justify-center relative w-full max-w-5xl mx-auto px-14 sm:px-16 py-8">
+        <div className="w-full">
+          <div className="w-full max-w-3xl mx-auto relative h-[calc(60vh+7rem)] overflow-hidden">
+            <AnimatePresence initial={false} custom={direction}>
+              <motion.div
+                key={showFinishScreen ? 'finish' : currentIndex}
+                custom={direction}
+                variants={{
+                  enter: (moveDirection: number) => ({
+                    x: moveDirection > 0 ? 300 : -300,
+                    opacity: 0
+                  }),
+                  center: {
+                    x: 0,
+                    opacity: 1
+                  },
+                  exit: (moveDirection: number) => ({
+                    x: moveDirection < 0 ? 300 : -300,
+                    opacity: 0
+                  })
+                }}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                drag={showFinishScreen ? false : 'x'}
+                dragConstraints={{ left: 0, right: 0 }}
+                onDragEnd={(_event, info) => {
+                  if (info.offset.x > 100) prevCard();
+                  else if (info.offset.x < -100) nextCard();
+                }}
+                className="absolute inset-0 w-full flex flex-col items-center justify-center"
+              >
+                {!showFinishScreen ? (
+                  <>
+                    <div className="w-full h-[60vh] bg-white rounded-[6vh] shadow-[0_12px_40px_rgba(0,0,0,0.08)] p-[2vh] flex flex-col sm:flex-row gap-[3vh] relative z-10 items-center">
+                      <div className="aspect-[500/640] h-full rounded-l-[6vh] overflow-hidden flex-shrink-0">
+                        <img
+                          src={publicAssetUrl(currentCard.image)}
+                          alt={currentCard.word}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+
+                      <div className="flex-1 flex flex-col justify-between py-[2vh] px-[3vh] w-full h-full">
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-[1.5vh] mb-[1.5vh]">
+                            <button
+                              onClick={() => playAudio(currentCard.audio)}
+                              className="w-[6vh] h-[6vh] bg-[#ff4757] rounded-2xl text-white flex items-center justify-center shadow-sm hover:scale-105 active:scale-95 transition-transform flex-shrink-0"
+                            >
+                              <motion.div
+                                animate={isPlaying ? { scale: [1, 1.1, 1] } : { scale: 1 }}
+                                transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
+                              >
+                                <Volume2 size={24} strokeWidth={2.5} />
+                              </motion.div>
+                            </button>
+                            <h2 className="text-[6vh] font-black text-[#1a202c] tracking-tight leading-none">
+                              {currentCard.word}
+                            </h2>
+                          </div>
+                          <p className="text-gray-500 text-[2.5vh] mb-[1.5vh] font-medium tracking-wide">
+                            {currentCard.pronunciation}
+                          </p>
+                          <p className="text-[3.5vh] font-bold text-[#2d3748]">
+                            <span className="text-gray-400 mr-[1.5vh] font-medium">{currentCard.pos}</span>
+                            {currentCard.meaning}
+                          </p>
+                        </div>
+
+                        <p className="text-gray-600 text-[2.2vh] italic leading-relaxed font-medium mt-auto pt-[1.5vh]">
+                          {currentCard.example}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-8 sm:mt-12 relative z-20 cursor-pointer active:brightness-75 transition-all" onClick={() => setShowModal(true)}>
+                      <img
+                        src={publicAssetUrl('/学单词.png')}
+                        alt="学单词"
+                        className="h-16 sm:h-20 object-contain drop-shadow-xl"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <motion.button
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 18, delay: 0.25 }}
+                      onClick={onFinish}
+                      className="px-12 py-6 bg-emerald-500 text-white rounded-full font-black text-[clamp(20px,5vw,28px)] shadow-2xl hover:bg-emerald-600 active:scale-95 transition-colors"
+                    >
+                      完成学习并继续
+                    </motion.button>
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      </main>
+
+      <div className="absolute bottom-0 left-0 w-full h-1.5 sm:h-2 bg-gray-200 z-20">
+        <div
+          className="h-full bg-[#3b82f6] transition-all duration-300 ease-out rounded-r-full"
+          style={{ width: `${((currentIndex + 1) / FLASHCARDS_DATA.length) * 100}%` }}
+        />
+      </div>
+
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => setShowModal(false)}
+          />
+
+          <div className="relative z-10 w-[95%] sm:w-[80%] max-w-4xl aspect-[4/3] sm:aspect-[16/9] flex items-center justify-center animate-in fade-in zoom-in duration-200">
+            <button
+              className="absolute -top-4 -right-4 sm:-top-6 sm:-right-6 w-10 h-10 sm:w-12 sm:h-12 bg-[#ff4757] border-2 sm:border-4 border-white rounded-full text-white flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-transform z-20"
+              onClick={() => setShowModal(false)}
+            >
+              <X size={24} strokeWidth={3} />
+            </button>
+
+            <img
+              src={publicAssetUrl('/study-card.png')}
+              alt="学习卡片"
+              className="w-full h-full object-contain drop-shadow-2xl"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                e.currentTarget.nextElementSibling?.classList.add('flex');
+              }}
+            />
+
+            <div className="hidden w-full h-full bg-[#ff6b6b] rounded-[2rem] shadow-2xl flex-col overflow-hidden border-4 border-[#ff4757]">
+              <div className="flex px-4 pt-4 gap-2">
+                <div className="bg-white px-6 py-3 rounded-t-2xl text-[#ff4757] font-bold text-sm sm:text-base shadow-sm">视频讲解</div>
+                <div className="bg-black/20 px-6 py-3 rounded-t-2xl text-white font-bold text-sm sm:text-base">图文释义</div>
+                <div className="bg-black/20 px-6 py-3 rounded-t-2xl text-white font-bold text-sm sm:text-base">掌握情况</div>
+              </div>
+              <div className="flex-1 bg-white m-3 sm:m-4 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden shadow-inner">
+                <div className="absolute inset-4 bg-[#4fc3f7] rounded-xl flex flex-col items-center justify-center text-white">
+                  <p className="text-lg sm:text-xl font-medium mb-4">Can you say <span className="font-bold text-[#ff4757]">whistle</span>?</p>
+                  <h2 className="text-5xl sm:text-7xl font-black mb-8 drop-shadow-md">whistle</h2>
+                  <Volume2 size={48} className="opacity-80" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const MobileVideoLearning = ({ onFinish, onBack, onSkip }: { onFinish: () => void, onBack: () => void, onSkip: () => void }) => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  const videoSrc = publicAssetUrl('/Mia_的环球旅行动画.mp4');
+
+  const togglePlay = async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.paused) {
+      try {
+        await video.play();
+        setIsPlaying(true);
+      } catch {
+        setIsPlaying(false);
+      }
+    } else {
+      video.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const toggleMute = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = !video.muted;
+    setIsMuted(video.muted);
+  };
+
+  const rewindTenSeconds = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime = Math.max(0, video.currentTime - 10);
+  };
+
+  const handleSeek = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const video = videoRef.current;
+    if (!video) return;
+    const nextTime = Number(event.target.value);
+    video.currentTime = nextTime;
+    setCurrentTime(nextTime);
+  };
+
+  const enterFullscreen = async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const requestFullscreen = video.requestFullscreen?.bind(video) ?? (video.parentElement as any)?.requestFullscreen?.bind(video.parentElement);
+    if (requestFullscreen) {
+      try {
+        await requestFullscreen();
+        return;
+      } catch {
+        // fall through to iOS video fullscreen
+      }
+    }
+
+    const webkitVideo = video as HTMLVideoElement & { webkitEnterFullscreen?: () => void };
+    webkitVideo.webkitEnterFullscreen?.();
   };
 
   return (
-    <div className="relative h-full w-full bg-slate-50 z-[100] flex flex-col animate-in slide-in-from-bottom duration-500 text-slate-800 overflow-hidden">
-      <header className="h-[10%] min-h-[60px] px-[4%] flex items-center justify-between bg-white shadow-sm border-b border-slate-100 shrink-0 z-10">
-        <button onClick={onBack} className="w-[clamp(36px,10vw,48px)] h-[clamp(36px,10vw,48px)] bg-slate-100 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors"><X size={28} /></button>
-        <h2 className="font-black tracking-widest text-[clamp(20px,5vw,24px)] uppercase text-slate-600">单词卡 ({currentIndex + 1}/{FLASHCARDS_DATA.length})</h2>
-        <div className="w-[clamp(36px,10vw,48px)]" />
+    <div className="relative h-screen w-full bg-gradient-to-b from-sky-50 via-white to-amber-50 z-[100] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-500 text-slate-800">
+      <header className="h-[12%] min-h-[64px] px-[4%] flex items-center justify-between bg-white/90 backdrop-blur-sm border-b border-sky-100 shadow-sm shrink-0">
+        <button onClick={onBack} className="w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] bg-slate-100 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors"><X size={32} /></button>
+        <div className="w-[clamp(40px,12vw,56px)]" />
+        <button
+          onClick={onSkip}
+          className="px-[clamp(10px,2.5vw,16px)] h-[clamp(40px,12vw,56px)] bg-amber-100 text-amber-700 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center font-black text-[clamp(12px,3vw,16px)] whitespace-nowrap hover:bg-amber-200 transition-colors"
+        >
+          跳过本环节
+        </button>
       </header>
-      
-      <div className="flex-1 flex items-center justify-center p-[clamp(12px,3vw,16px)] sm:p-[clamp(20px,5vw,32px)] relative">
-        <AnimatePresence initial={false} custom={direction}>
-          <motion.div
-            key={currentIndex}
-            custom={direction}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            className="w-full max-w-4xl bg-white rounded-[40px] shadow-2xl border border-slate-100 flex flex-col md:flex-row overflow-hidden absolute"
-          >
-            {/* Image Section */}
-            <div className="w-full md:w-1/2 aspect-square md:aspect-auto bg-slate-100 relative">
-              <img src={publicAssetUrl(FLASHCARDS_DATA[currentIndex].image)} alt={FLASHCARDS_DATA[currentIndex].word} className="w-full h-full object-cover" />
-            </div>
-            
-            {/* Content Section */}
-            <div className="w-full md:w-1/2 p-[clamp(20px,5vw,32px)] sm:p-[clamp(32px,8vw,48px)] flex flex-col justify-center relative bg-white">
-              <div className="space-y-[clamp(16px,4vw,24px)]">
-                <div>
-                  <h1 className="text-[clamp(32px,8vw,48px)] sm:text-6xl font-black text-slate-800 mb-[clamp(6px,2vw,8px)]">{FLASHCARDS_DATA[currentIndex].word}</h1>
-                  <div className="flex items-center space-x-[clamp(8px,2.5vw,12px)] text-[clamp(18px,4.5vw,20px)] sm:text-[clamp(20px,5vw,24px)] font-bold text-slate-500">
-                    <span className="bg-blue-100 text-blue-600 px-[clamp(8px,2.5vw,12px)] py-1 rounded-[clamp(6px,1.5vw,8px)]">{FLASHCARDS_DATA[currentIndex].pos}</span>
-                    <span>{FLASHCARDS_DATA[currentIndex].pron}</span>
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="text-[clamp(14px,3.5vw,16px)] font-black text-slate-400 uppercase tracking-widest mb-1">中文意思</h3>
-                  <p className="text-[clamp(22px,5.5vw,28px)] font-bold text-slate-700">{FLASHCARDS_DATA[currentIndex].meaning}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-[clamp(14px,3.5vw,16px)] font-black text-slate-400 uppercase tracking-widest mb-1">例句</h3>
-                  <p className="text-[clamp(18px,4.5vw,20px)] font-medium text-slate-600 italic leading-relaxed">"{FLASHCARDS_DATA[currentIndex].example}"</p>
-                </div>
+
+      <div className="flex-1 min-h-0 flex items-center justify-center px-[clamp(14px,4vw,24px)] py-[clamp(12px,3vw,18px)]">
+        <div
+          className="w-full flex flex-col rounded-[32px] border-4 border-white shadow-[0_20px_60px_rgba(59,130,246,0.16)] bg-white overflow-hidden"
+          style={{ width: 'min(calc(50vh * 16 / 9), calc(100vw - 2rem))' }}
+        >
+          <div className="relative w-full aspect-video bg-gradient-to-br from-sky-100 to-cyan-50 shrink-0">
+            <video
+              ref={videoRef}
+              src={videoSrc}
+              className="w-full h-full object-contain bg-slate-900"
+              playsInline
+              preload="metadata"
+              controls={false}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onEnded={() => setIsPlaying(false)}
+              onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
+              onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+            />
+
+            <button
+              onClick={toggleMute}
+              className="absolute top-5 left-5 w-12 h-12 rounded-full bg-gradient-to-br from-emerald-300 to-teal-400 border-[3px] border-emerald-100 shadow-[0_10px_20px_rgba(52,211,153,0.28)] flex items-center justify-center active:scale-95 transition-transform"
+              aria-label={isMuted ? '开启声音' : '静音'}
+            >
+              {isMuted ? <VolumeX size={20} className="text-white" /> : <Volume2 size={20} className="text-white" />}
+            </button>
+
+            <button
+              onClick={enterFullscreen}
+              className="absolute top-5 right-5 w-12 h-12 rounded-full bg-gradient-to-br from-amber-300 to-orange-400 border-[3px] border-amber-100 shadow-[0_10px_20px_rgba(251,191,36,0.28)] flex items-center justify-center active:scale-95 transition-transform"
+              aria-label="全屏播放"
+            >
+              <Expand size={20} className="text-white" />
+            </button>
+
+          </div>
+
+          <div className="p-[clamp(14px,3.5vw,20px)] bg-gradient-to-r from-sky-50 to-amber-50 border-t border-sky-100 shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="relative shrink-0">
+                <button
+                  onClick={togglePlay}
+                  className="relative w-14 h-14 shrink-0 rounded-full bg-gradient-to-br from-pink-400 to-orange-400 border-[3px] border-pink-200 shadow-[0_10px_20px_rgba(244,114,182,0.35)] flex items-center justify-center active:scale-95 transition-transform"
+                  aria-label={isPlaying ? '暂停播放' : '开始播放'}
+                >
+                  {isPlaying ? (
+                    <Pause size={24} className="text-white fill-white" />
+                  ) : (
+                    <Play size={24} className="text-white fill-white ml-0.5" />
+                  )}
+                </button>
               </div>
-              
-              {/* Next Button */}
-              <div className="mt-12 flex justify-end">
-                {currentIndex < FLASHCARDS_DATA.length - 1 ? (
-                  <button 
-                    onClick={handleNext}
-                    className="w-[clamp(48px,14vw,64px)] h-[clamp(48px,14vw,64px)] bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-blue-600 active:scale-90 transition-all"
-                  >
-                    <ArrowRight size={32} />
-                  </button>
-                ) : (
-                  <button 
-                    onClick={onFinish}
-                    className="px-[clamp(20px,5vw,32px)] py-[clamp(12px,3vw,16px)] bg-green-500 text-white rounded-full font-black text-[clamp(20px,5vw,24px)] shadow-lg hover:bg-green-600 active:scale-95 transition-all flex items-center space-x-[clamp(6px,2vw,8px)]"
-                  >
-                    <Check size={28} strokeWidth={3} />
-                    <span>完成学习</span>
-                  </button>
-                )}
-              </div>
+
+              <input
+                type="range"
+                min={0}
+                max={Math.max(duration, 0)}
+                step={0.1}
+                value={Math.min(currentTime, duration || 0)}
+                onChange={handleSeek}
+                className="kid-progress-slider w-full"
+              />
             </div>
-          </motion.div>
-        </AnimatePresence>
+          </div>
+        </div>
       </div>
+
+      <button
+        onClick={onFinish}
+        className="absolute right-[clamp(16px,4vw,24px)] bottom-[clamp(16px,4vw,24px)] z-20 w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-[0_12px_24px_rgba(59,130,246,0.32)] border-4 border-white flex items-center justify-center active:scale-95 transition-transform"
+        aria-label="完成视频学习"
+      >
+        <ArrowRight size={28} strokeWidth={3} />
+      </button>
     </div>
   );
 };
@@ -422,6 +775,24 @@ const ReportGenerator = ({ onBack }: { onBack: () => void }) => {
 };
 
 export default function App() {
+  // --- 登录状态 ---
+  const [hasLoggedIn, setHasLoggedIn] = useState(false);
+  const [loginView, setLoginView] = useState<'form' | 'prefix'>('form');
+  const [phonePrefix, setPhonePrefix] = useState('+86 中国大陆');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [isPhoneInputFocused, setIsPhoneInputFocused] = useState(false);
+  const phoneInputRef = useRef<HTMLInputElement | null>(null);
+  const phoneBlurTimerRef = useRef<number | null>(null);
+  const [otpMode, setOtpMode] = useState(false);
+  const [otpCountdown, setOtpCountdown] = useState(0);
+  const [otpCode, setOtpCode] = useState('');
+  const otpInputRef = useRef<HTMLInputElement | null>(null);
+  const otpCountdownTimerRef = useRef<number | null>(null);
+  // 一旦数字键盘出现后，不再允许登录卡片回到未展开宽度
+  const [keyboardOpened, setKeyboardOpened] = useState(false);
+  const [loginEnterAnim, setLoginEnterAnim] = useState(false);
+  const prevLoggedInRef = useRef(false);
+
   // --- 状态管理 ---
   const [currentView, setCurrentView] = useState('home');
   const [majorIdx, setMajorIdx] = useState(0); 
@@ -431,12 +802,24 @@ export default function App() {
   const [showCalendar, setShowCalendar] = useState(false);
   const [showModuleReward, setShowModuleReward] = useState<number | null>(null); 
   const [showGrandReward, setShowGrandReward] = useState(false);
+  const [highlightedStageIdx, setHighlightedStageIdx] = useState<number | null>(null);
   const [showParentGate, setShowParentGate] = useState(false);
   const [gateMath, setGateMath] = useState({ q: '', a: 0 });
   const [gateInput, setGateInput] = useState(''); 
   const [gateError, setGateError] = useState(false);
   const [learningTitle, setLearningTitle] = useState('');
   const [studyTime, setStudyTime] = useState(0);
+
+  // --- 能力测试（English Proficiency Test）---
+  const ABILITY_TEST_STORAGE_KEY = 'abilityTestResult_v1';
+  const ABILITY_TEST_PROMPT_SHOWN_KEY = 'abilityTestPromptShown_v1';
+
+  const [abilityTestResult, setAbilityTestResult] = useState<AbilityTestResult | null>(null);
+  const [abilityTestLoaded, setAbilityTestLoaded] = useState(false);
+  const [showAbilityTestPrompt, setShowAbilityTestPrompt] = useState(false);
+
+  // 首页“能力雷达”数据源：根据能力测试结果刷新
+  const [radarData, setRadarData] = useState<RadarDatum[]>(DEFAULT_RADAR_DATA);
 
   const verticalDragProps = useVerticalDragToScroll();
   const calendarDragProps = useVerticalDragToScroll();
@@ -449,6 +832,134 @@ export default function App() {
       }
     }
   }, [selectedDate, showCalendar]);
+
+  useEffect(() => {
+    if (highlightedStageIdx === null) return;
+    const timeoutId = window.setTimeout(() => setHighlightedStageIdx(null), 1800);
+    return () => window.clearTimeout(timeoutId);
+  }, [highlightedStageIdx]);
+
+  // 登录后进入首页：从模糊到清晰
+  useEffect(() => {
+    const prev = prevLoggedInRef.current;
+    if (hasLoggedIn && !prev) {
+      setLoginEnterAnim(true);
+      const t = window.setTimeout(() => setLoginEnterAnim(false), 1200);
+      return () => window.clearTimeout(t);
+    }
+    prevLoggedInRef.current = hasLoggedIn;
+  }, [hasLoggedIn]);
+
+  const calcGrade = (a: number) => {
+    if (a >= 75) return 'A';
+    if (a >= 50) return 'B';
+    if (a >= 25) return 'B-';
+    return 'C';
+  };
+
+  const buildRadarDataFromAbilityTest = (result: AbilityTestResult): RadarDatum[] => {
+    const listenA = Math.round(Math.max(0, Math.min(5, result.testState.listeningScore)) / 5 * 100);
+    const speakA =
+      result.testState.oralScore !== null
+        ? Math.round(Math.max(0, Math.min(1, result.testState.oralScore)) * 100)
+        : Math.round((listenA / 100) * 50);
+    const readA =
+      result.testState.readingScore !== null
+        ? Math.round(Math.max(0, Math.min(1, result.testState.readingScore)) * 100)
+        : Math.round(Math.max(0, Math.min(1, result.testState.vocabScore)) * 70);
+    const writeA =
+      result.testState.grammarScore !== null
+        ? Math.round(Math.max(0, Math.min(1, result.testState.grammarScore)) * 100)
+        : Math.round(Math.max(0, Math.min(1, result.testState.vocabScore)) * 60);
+
+    return [
+      { subject: '说', grade: calcGrade(speakA), A: speakA, fullMark: 100 },
+      { subject: '写', grade: calcGrade(writeA), A: writeA, fullMark: 100 },
+      { subject: '读', grade: calcGrade(readA), A: readA, fullMark: 100 },
+      { subject: '听', grade: calcGrade(listenA), A: listenA, fullMark: 100 },
+    ];
+  };
+
+  const applyAbilityPlan = (result: AbilityTestResult) => {
+    const safeLevel = Math.max(1, Math.min(7, result.finalLevel));
+    setAbilityTestResult(result);
+    setRadarData(buildRadarDataFromAbilityTest({ ...result, finalLevel: safeLevel }));
+
+    const totalSubs = TASK_DATA.reduce((acc, task) => acc + task.subs.length, 0);
+    const doneSteps = Math.round(((safeLevel - 1) / 6) * totalSubs);
+
+    let remaining = Math.max(0, Math.min(totalSubs, doneSteps));
+    for (let mIdx = 0; mIdx < TASK_DATA.length; mIdx++) {
+      const len = TASK_DATA[mIdx].subs.length;
+      if (remaining <= len) {
+        setMajorIdx(mIdx);
+        setSubIdx(remaining);
+        setShowModuleReward(null);
+        setShowGrandReward(false);
+        return;
+      }
+      remaining -= len;
+    }
+
+    // 完成所有环节
+    setMajorIdx(TASK_DATA.length - 1);
+    setSubIdx(TASK_DATA[TASK_DATA.length - 1].subs.length);
+    setShowModuleReward(null);
+    setShowGrandReward(false);
+  };
+
+  // 从本地恢复“能力测试结果”，从而在刷新后也能保持首页刷新后的学习进度
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(ABILITY_TEST_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as AbilityTestResult;
+        if (parsed && typeof parsed.finalLevel === 'number' && parsed.testState) {
+          applyAbilityPlan(parsed);
+        }
+      }
+    } catch {
+      // ignore
+    } finally {
+      setAbilityTestLoaded(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 登录后 0.5 秒弹窗引导：进入能力测试
+  useEffect(() => {
+    if (!hasLoggedIn) return;
+    if (!abilityTestLoaded) return;
+    if (currentView !== 'home') return;
+    if (abilityTestResult) return;
+    if (showAbilityTestPrompt) return;
+
+    try {
+      // 用本地存储做兜底，避免“load 本地结果还没来得及写入 state”时误弹窗
+      const hasStoredResult = window.localStorage.getItem(ABILITY_TEST_STORAGE_KEY);
+      if (hasStoredResult) return;
+    } catch {
+      // ignore
+    }
+
+    try {
+      // 首次进入首页只弹一次
+      const hasShownPrompt = window.localStorage.getItem(ABILITY_TEST_PROMPT_SHOWN_KEY);
+      if (hasShownPrompt) return;
+    } catch {
+      // ignore
+    }
+
+    const t = window.setTimeout(() => {
+      setShowAbilityTestPrompt(true);
+      try {
+        window.localStorage.setItem(ABILITY_TEST_PROMPT_SHOWN_KEY, '1');
+      } catch {
+        // ignore
+      }
+    }, 500);
+    return () => window.clearTimeout(t);
+  }, [abilityTestLoaded, abilityTestResult, currentView, hasLoggedIn]);
 
   const mapScrollRef = useRef<number>(0);
   const mainRef = useRef<HTMLElement>(null);
@@ -539,10 +1050,97 @@ export default function App() {
     return selectedDate.toDateString() === new Date().toDateString();
   }, [selectedDate]);
 
+  const kikiLevel = abilityTestResult?.finalLevel ?? 2;
+  const kikiLevelLabels = [
+    'Lv.1 启蒙',
+    'Lv.2 入门',
+    'Lv.3 学徒',
+    'Lv.4 进阶',
+    'Lv.5 提升',
+    'Lv.6 冲刺',
+    'Lv.7 大师',
+  ];
+  const kikiLevelIdx = Math.max(0, Math.min(6, kikiLevel - 1));
+  const kikiCurrentLabel = kikiLevelLabels[kikiLevelIdx] ?? 'Lv.2 入门';
+  const kikiNextLabel = kikiLevelLabels[Math.min(6, kikiLevelIdx + 1)] ?? 'Lv.3 学徒';
+
+  const skillCards = useMemo(() => {
+    const getA = (subject: string) => radarData.find((d) => d.subject === subject)?.A ?? 0;
+
+    const mk = (id: string, name: string, subject: string, icon: string, color: string, light: string, text: string) => {
+      const progress = Math.max(0, Math.min(100, getA(subject)));
+      const level = Math.max(1, Math.round(progress / 10));
+      return { id, name, level, progress, subject, icon, color, light, text };
+    };
+
+    return [
+      mk('listen', '听', '听', '🎧', 'bg-blue-500', 'bg-blue-100', 'text-blue-600'),
+      mk('speak', '说', '说', '🎙️', 'bg-green-500', 'bg-green-100', 'text-green-600'),
+      mk('read', '读', '读', '📖', 'bg-amber-500', 'bg-amber-100', 'text-amber-600'),
+      mk('write', '写', '写', '✍️', 'bg-purple-500', 'bg-purple-100', 'text-purple-600'),
+    ];
+  }, [radarData]);
+
   // --- 逻辑处理 ---
+  const handleAbilityTestComplete = (result: AbilityTestResult) => {
+    try {
+      window.localStorage.setItem(ABILITY_TEST_STORAGE_KEY, JSON.stringify(result));
+    } catch {
+      // ignore
+    }
+    setShowAbilityTestPrompt(false);
+    setShowCalendar(false);
+    setShowParentGate(false);
+    setShowModuleReward(null);
+    setShowGrandReward(false);
+    setSelectedDate(new Date());
+    setCurrentView('home');
+    setLearningTitle('');
+    applyAbilityPlan(result);
+  };
+
+  const dismissAbilityTestPrompt = () => {
+    setShowAbilityTestPrompt(false);
+  };
+
+  const goAbilityTest = () => {
+    setShowAbilityTestPrompt(false);
+    setShowCalendar(false);
+    setShowParentGate(false);
+    setShowModuleReward(null);
+    setShowGrandReward(false);
+    setCurrentView('ability-test');
+  };
+
+  const restartAbilityTest = () => {
+    setShowAbilityTestPrompt(false);
+    setShowCalendar(false);
+    setShowParentGate(false);
+    setShowModuleReward(null);
+    setShowGrandReward(false);
+
+    // 清掉旧结果，确保“未完成定级测试”的弹窗规则成立
+    try {
+      window.localStorage.removeItem(ABILITY_TEST_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+    setAbilityTestResult(null);
+    setRadarData(DEFAULT_RADAR_DATA);
+    setMajorIdx(0);
+    setSubIdx(0);
+
+    setCurrentView('ability-test');
+  };
+
   const startLearning = (title: string) => {
     setLearningTitle(title);
     setCurrentView('learning');
+  };
+
+  const skipSubTask = () => {
+    setSubIdx(prev => prev + 1);
+    setCurrentView('home');
   };
 
   const finishSubTask = () => {
@@ -695,6 +1293,7 @@ export default function App() {
       const nextIdx = majorIdx + 1;
       setMajorIdx(nextIdx);
       setSubIdx(0);
+      setHighlightedStageIdx(nextIdx);
       
       // Auto-scroll to the next module after a short delay to allow rendering
       setTimeout(() => {
@@ -713,6 +1312,13 @@ export default function App() {
   };
 
   const handleConfirmDate = () => {
+    // 已完成定级后：开始学习时不要再用 mock 历史状态覆盖进度
+    // 否则会把通过定级计算出来的 majorIdx/subIdx 重置回 0。
+    if (abilityTestResult) {
+      setShowCalendar(false);
+      return;
+    }
+
     const day = selectedDate.getDate();
     const status = MOCK_HISTORY_STATUS[day] ?? 0;
     if (isToday) {
@@ -771,6 +1377,238 @@ export default function App() {
     }
   };
 
+  // --- 登录相关 ---
+  const handleConfirmLogin = () => {
+    const digits = phoneNumber.replace(/\D/g, '');
+    if (!/^1\d{10}$/.test(digits)) return;
+    // 请求验证码：进入验证码输入模式并启动倒计时
+    if (otpCountdownTimerRef.current) {
+      window.clearInterval(otpCountdownTimerRef.current);
+      otpCountdownTimerRef.current = null;
+    }
+
+    setOtpMode(true);
+    setOtpCode('');
+    setOtpCountdown(60);
+
+    // 保持键盘不收起：清掉失焦延迟并把焦点切到验证码输入（隐藏）
+    if (phoneBlurTimerRef.current) {
+      window.clearTimeout(phoneBlurTimerRef.current);
+      phoneBlurTimerRef.current = null;
+    }
+    setKeyboardOpened(true);
+    setIsPhoneInputFocused(true);
+
+    // 等页面切换到 otpMode 后再聚焦
+    window.setTimeout(() => {
+      otpInputRef.current?.focus();
+    }, 0);
+  };
+
+  const handleSkipLogin = () => {
+    if (otpCountdownTimerRef.current) {
+      window.clearInterval(otpCountdownTimerRef.current);
+      otpCountdownTimerRef.current = null;
+    }
+    if (phoneBlurTimerRef.current) {
+      window.clearTimeout(phoneBlurTimerRef.current);
+      phoneBlurTimerRef.current = null;
+    }
+
+    setLoginView('form');
+    setOtpMode(false);
+    setOtpCode('');
+    setOtpCountdown(60);
+    setKeyboardOpened(false);
+    setIsPhoneInputFocused(false);
+    setHasLoggedIn(true);
+    setCurrentView('home');
+  };
+
+  const phoneDigits = phoneNumber.replace(/\D/g, '');
+  const isValidPhoneNumber = /^1\d{10}$/.test(phoneDigits);
+
+  const PREFIX_OPTIONS = [
+    '+86 中国大陆',
+    '+852 中国香港',
+    '+853 中国澳门',
+    '+886 中国台湾',
+
+    '+1 美国',
+    '+1 Canada',
+
+    '+7 俄罗斯',
+    '+380 乌克兰',
+
+    '+20 埃及',
+    '+27 南非',
+    '+234 尼日利亚',
+    '+254 肯尼亚',
+    '+233 加纳',
+    '+212 摩洛哥',
+    '+213 阿尔及利亚',
+
+    '+44 英国',
+    '+353 爱尔兰',
+    '+33 法国',
+    '+49 德国',
+    '+39 意大利',
+    '+34 西班牙',
+    '+31 荷兰',
+    '+32 比利时',
+    '+352 卢森堡',
+    '+41 瑞士',
+    '+43 奥地利',
+    '+45 丹麦',
+    '+46 瑞典',
+    '+47 挪威',
+    '+358 芬兰',
+    '+30 希腊',
+    '+36 匈牙利',
+    '+48 波兰',
+    '+40 罗马尼亚',
+    '+359 保加利亚',
+    '+420 捷克',
+    '+421 斯洛伐克',
+    '+351 葡萄牙',
+    '+370 立陶宛',
+    '+371 拉脱维亚',
+    '+372 爱沙尼亚',
+    '+385 克罗地亚',
+    '+381 塞尔维亚',
+
+    '+971 阿联酋',
+    '+966 沙特阿拉伯',
+    '+974 卡塔尔',
+    '+965 科威特',
+    '+973 巴林',
+    '+968 阿曼',
+    '+972 以色列',
+    '+90 土耳其',
+
+    '+91 印度',
+    '+92 巴基斯坦',
+    '+880 孟加拉国',
+    '+94 斯里兰卡',
+    '+95 缅甸',
+    '+84 越南',
+
+    '+60 马来西亚',
+    '+61 澳大利亚',
+    '+62 印尼',
+    '+63 菲律宾',
+    '+64 新西兰',
+    '+65 新加坡',
+    '+66 泰国',
+    '+81 日本',
+    '+82 韩国',
+
+    '+52 墨西哥',
+    '+53 古巴',
+    '+54 阿根廷',
+    '+55 巴西',
+    '+56 智利',
+    '+57 哥伦比亚',
+    '+58 委内瑞拉',
+    '+51 秘鲁',
+
+  ];
+
+  const handlePhoneInputFocus = () => {
+    if (phoneBlurTimerRef.current) {
+      window.clearTimeout(phoneBlurTimerRef.current);
+      phoneBlurTimerRef.current = null;
+    }
+    setKeyboardOpened(true);
+    setIsPhoneInputFocused(true);
+  };
+
+  const handlePhoneInputBlur = () => {
+    if (otpMode) return;
+    if (keyboardOpened) return;
+    // 给右侧数字键点击留出时间，避免立刻收起键盘
+    phoneBlurTimerRef.current = window.setTimeout(() => {
+      setIsPhoneInputFocused(false);
+      phoneBlurTimerRef.current = null;
+    }, 140);
+  };
+
+  const appendDigit = (d: string) => {
+    if (otpMode) {
+      setOtpCode((prev) => {
+        if (prev.length >= 4) return prev;
+        return `${prev}${d}`;
+      });
+      return;
+    }
+    setPhoneNumber((prev) => {
+      if (prev.length >= 20) return prev;
+      return `${prev}${d}`;
+    });
+  };
+
+  const deleteDigit = () => {
+    if (otpMode) {
+      setOtpCode((prev) => prev.slice(0, -1));
+      return;
+    }
+    setPhoneNumber((prev) => prev.slice(0, -1));
+  };
+
+  // 验证码倒计时
+  useEffect(() => {
+    if (!otpMode) return;
+    if (otpCountdown <= 0) return;
+
+    if (otpCountdownTimerRef.current) {
+      window.clearInterval(otpCountdownTimerRef.current);
+      otpCountdownTimerRef.current = null;
+    }
+
+    otpCountdownTimerRef.current = window.setInterval(() => {
+      setOtpCountdown((prev) => {
+        if (prev <= 1) return 0;
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (otpCountdownTimerRef.current) {
+        window.clearInterval(otpCountdownTimerRef.current);
+        otpCountdownTimerRef.current = null;
+      }
+    };
+  }, [otpMode, otpCountdown]);
+
+  // 输入满 4 位验证码后自动进入页面
+  useEffect(() => {
+    if (!otpMode) return;
+    if (otpCode.length !== 4) return;
+
+    // 清掉倒计时，避免继续 setInterval
+    if (otpCountdownTimerRef.current) {
+      window.clearInterval(otpCountdownTimerRef.current);
+      otpCountdownTimerRef.current = null;
+    }
+
+    setHasLoggedIn(true);
+    setCurrentView('home');
+  }, [otpMode, otpCode]);
+
+  // 进入验证码模式后，把焦点切到隐藏输入，保证键盘不收起
+  useEffect(() => {
+    if (!otpMode) return;
+    window.setTimeout(() => {
+      otpInputRef.current?.focus();
+    }, 0);
+  }, [otpMode]);
+
+  const otpButtonLabel = otpMode
+    ? (otpCountdown > 0 ? `重新发送（${otpCountdown}秒）` : '重新发送')
+    : '接收验证码';
+
+  const otpButtonDisabled = otpCountdown > 0;
+
   const handleParentGateCancel = () => {
     setShowParentGate(false);
     setCurrentView('home');
@@ -793,6 +1631,7 @@ export default function App() {
       // Define background styles based on state
       let bgClass = '';
       let borderClass = '';
+      let stageCardShadow = 'none';
       
       if (isMajorDone) {
         // Finished: Soft theme color, solid but calm
@@ -802,10 +1641,11 @@ export default function App() {
         else if (mIdx === 3) { bgClass = 'bg-purple-100/80'; borderClass = 'border-purple-300/50'; }
       } else if (isMajorCurrent) {
         // Current: Bright, glowing, active
-        if (mIdx === 0) { bgClass = 'bg-blue-50/90 shadow-[0_0_30px_rgba(59,130,246,0.3)]'; borderClass = 'border-blue-500'; }
-        else if (mIdx === 1) { bgClass = 'bg-green-50/90 shadow-[0_0_30px_rgba(34,197,94,0.3)]'; borderClass = 'border-green-500'; }
-        else if (mIdx === 2) { bgClass = 'bg-amber-50/90 shadow-[0_0_30px_rgba(245,158,11,0.3)]'; borderClass = 'border-amber-500'; }
-        else if (mIdx === 3) { bgClass = 'bg-purple-50/90 shadow-[0_0_30px_rgba(168,85,247,0.3)]'; borderClass = 'border-purple-500'; }
+        stageCardShadow = '0 28px 72px rgba(0,121,160,0.25)';
+        if (mIdx === 0) { bgClass = 'bg-blue-50/90'; borderClass = 'border-blue-500'; }
+        else if (mIdx === 1) { bgClass = 'bg-green-50/90'; borderClass = 'border-green-500'; }
+        else if (mIdx === 2) { bgClass = 'bg-amber-50/90'; borderClass = 'border-amber-500'; }
+        else if (mIdx === 3) { bgClass = 'bg-purple-50/90'; borderClass = 'border-purple-500'; }
       } else {
         // Unfinished: Muted, glassmorphism, gray
         bgClass = 'bg-white/20 grayscale opacity-60';
@@ -813,101 +1653,171 @@ export default function App() {
       }
 
       const stageContent: React.ReactNode[] = [];
+      const isStageUnlocking = highlightedStageIdx === mIdx;
 
-      // 1. 大站
-      stageContent.push(
-        <div key={`major-${mIdx}`} className="flex flex-col items-center relative group">
-          {isMajorCurrent && <div className="absolute -inset-4 bg-white/40 rounded-full blur-xl animate-pulse z-0" />}
-          <div 
-            className={`w-[clamp(64px,20vw,96px)] h-[clamp(64px,20vw,96px)] rounded-[40%] flex items-center justify-center border-4 border-white shadow-xl transition-all duration-500 relative z-10
-              ${isMajorDone ? 'bg-slate-300 opacity-90' : isMajorCurrent ? 'bg-white text-blue-500 scale-110 shadow-blue-500/50' : 'bg-white/80 opacity-60 grayscale hover:grayscale-0 hover:scale-105'}
-            `}
-            style={{ 
-              backgroundColor: isMajorDone ? '#cbd5e1' : isMajorCurrent ? 'white' : major.color,
-              boxShadow: isMajorCurrent ? `0 10px 25px -5px ${major.color}80, inset 0 -4px 0 0 rgba(0,0,0,0.1)` : 'inset 0 -4px 0 0 rgba(0,0,0,0.1)'
-            }}
-          >
-            {isMajorDone ? <Check size={48} color="white" /> : <span className="text-[clamp(28px,7vw,40px)] drop-shadow-md">{major.icon}</span>}
-          </div>
-          <div className="mt-[clamp(12px,3vw,16px)] bg-white/90 backdrop-blur-sm px-[clamp(12px,3vw,16px)] py-1.5 rounded-full shadow-sm border border-white/50">
-            <span className="font-black text-[12px] text-slate-700 tracking-wider">{major.name}</span>
-          </div>
-        </div>
-      );
-
-      // 2. 子点
+      // 1. 子点
       major.subs.forEach((sub, sIdx) => {
         const isSubDone = isMajorDone || (isMajorCurrent && sIdx < subIdx);
         const isSubActive = isMajorCurrent && sIdx === subIdx;
-        
-        stageContent.push(
-          <div key={`line-sub-${mIdx}-${sIdx}`} className="w-[clamp(32px,8vw,40px)] h-2.5 bg-white/30 mx-1 rounded-full overflow-hidden shadow-inner relative">
-            <div 
-              className={`h-full transition-all duration-700 ease-out rounded-full relative ${isSubDone ? 'bg-gradient-to-r from-green-400 to-emerald-500' : 'bg-transparent'}`} 
-              style={{ width: isSubDone ? '100%' : '0%' }} 
-            />
-          </div>
-        );
+        const isSubPathActive = isMajorDone || (isMajorCurrent && sIdx <= subIdx);
+
+        if (sIdx > 0) {
+          stageContent.push(
+            <div key={`line-sub-${mIdx}-${sIdx}`} className="w-[clamp(32px,8vw,40px)] h-2.5 bg-white/30 mx-1 rounded-full overflow-hidden shadow-inner relative">
+              <div 
+                className={`h-full transition-all duration-700 ease-out rounded-full relative ${isSubPathActive ? 'bg-gradient-to-r from-green-400 to-emerald-500' : 'bg-transparent'}`} 
+                style={{ width: isSubPathActive ? '100%' : '0%' }} 
+              />
+            </div>
+          );
+        }
 
         stageContent.push(
           <div 
             key={`dot-sub-${mIdx}-${sIdx}`}
             onClick={() => isSubActive && startLearning(`${major.name} · ${sub}`)}
-            className={`flex flex-col items-center relative`}
+            className={`relative flex items-center justify-center h-[86px] w-[clamp(48px,14vw,72px)]`}
           >
-            {isSubActive && (
-              <div className="absolute -top-10 bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-[clamp(8px,2.5vw,12px)] py-1 rounded-[clamp(8px,2vw,12px)] text-[10px] font-black shadow-lg whitespace-nowrap z-50 border border-yellow-300">
-                {sub}<div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-amber-500 rotate-45 border-b border-r border-yellow-300" />
-              </div>
-            )}
-            <div
-              className={`w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] rounded-full border-4 border-white shadow-md flex items-center justify-center transition-all duration-300
-                ${isSubDone ? 'bg-slate-400' : isSubActive ? 'bg-white cursor-pointer animate-breathe-scale scale-110 shadow-yellow-400/50' : 'bg-white/60 opacity-60'}
+            <motion.div
+              className={`relative z-10 w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] rounded-full border-4 border-white shadow-md flex items-center justify-center transition-all duration-300
+                ${isSubDone ? '' : isSubActive ? 'bg-white cursor-pointer animate-breathe-scale scale-110 shadow-yellow-400/50' : 'bg-white/60 opacity-60'}
               `}
               style={{ 
                 borderColor: isSubActive ? '#fbbf24' : 'white',
-                backgroundColor: isSubDone ? '#94a3b8' : 'white',
-                boxShadow: isSubActive ? '0 10px 15px -3px rgba(251, 191, 36, 0.5), inset 0 -3px 0 0 rgba(0,0,0,0.1)' : 'inset 0 -3px 0 0 rgba(0,0,0,0.1)'
+                backgroundColor: isSubDone ? major.color : 'white',
+                boxShadow: isSubDone
+                  ? `0 8px 18px -6px ${major.color}99, inset 0 -3px 0 0 rgba(0,0,0,0.1)`
+                  : isSubActive
+                    ? '0 10px 15px -3px rgba(251, 191, 36, 0.5), inset 0 -3px 0 0 rgba(0,0,0,0.1)'
+                    : 'inset 0 -3px 0 0 rgba(0,0,0,0.1)'
               }}
+              initial={false}
+              animate={isStageUnlocking && !isSubDone && !isSubActive ? {
+                opacity: [0.35, 1, 0.6],
+                scale: [1, 1.12, 1],
+                boxShadow: [
+                  'inset 0 -3px 0 0 rgba(0,0,0,0.1)',
+                  `0 0 0 6px ${major.color}22, 0 12px 28px ${major.color}66, inset 0 -3px 0 0 rgba(0,0,0,0.1)`,
+                  'inset 0 -3px 0 0 rgba(0,0,0,0.1)'
+                ],
+                filter: ['grayscale(1)', 'grayscale(0)', 'grayscale(0)']
+              } : undefined}
+              transition={isStageUnlocking && !isSubDone && !isSubActive ? { duration: 1.05, ease: 'easeOut', delay: 0.08 + sIdx * 0.08 } : { duration: 0.2 }}
             >
               {isSubDone ? <Check size={20} color="white" /> : isSubActive ? <Play size={20} className="fill-amber-500 text-amber-500 drop-shadow-sm" /> : <div className="w-3 h-3 rounded-full" style={{ backgroundColor: major.color }} />}
+            </motion.div>
+            <div
+              className={`absolute -bottom-4 left-1/2 z-10 -translate-x-1/2 w-[calc(100%+12px)] text-center text-[clamp(12px,3vw,14px)] font-black leading-tight transition-all duration-300 ${
+                isSubDone
+                  ? 'text-slate-500'
+                  : isSubActive
+                    ? 'text-amber-600 scale-105'
+                    : 'text-slate-400'
+              }`}
+            >
+              {sub}
             </div>
           </div>
         );
       });
 
-      // 3. 宝箱
+      // 2. 宝箱
+      const isChestPathActive = isMajorDone || (isMajorCurrent && subIdx >= major.subs.length);
+
       stageContent.push(
         <div key={`line-chest-${mIdx}`} className="w-[clamp(32px,8vw,40px)] h-2.5 bg-white/30 mx-1 rounded-full overflow-hidden shadow-inner relative">
-          <div className={`h-full transition-all duration-700 ease-out rounded-full ${isMajorDone ? 'bg-gradient-to-r from-green-400 to-emerald-500' : 'bg-transparent'}`} style={{ width: isMajorDone ? '100%' : '0%' }} />
+          <div className={`h-full transition-all duration-700 ease-out rounded-full ${isChestPathActive ? 'bg-gradient-to-r from-green-400 to-emerald-500' : 'bg-transparent'}`} style={{ width: isChestPathActive ? '100%' : '0%' }} />
         </div>
       );
 
       stageContent.push(
-        <div 
-          key={`chest-${mIdx}`}
-          onClick={() => isMajorCurrent && subIdx === major.subs.length && handleOpenReward(mIdx)}
-          className={`w-[clamp(48px,14vw,64px)] h-[clamp(48px,14vw,64px)] rounded-[clamp(12px,3vw,16px)] border-4 border-white shadow-xl flex items-center justify-center transition-all duration-500 relative
-            ${isMajorDone ? 'bg-slate-400' : (isMajorCurrent && subIdx === major.subs.length) ? 'bg-gradient-to-br from-yellow-300 to-orange-500 cursor-pointer scale-110 shadow-orange-500/50' : 'bg-slate-200 opacity-40'}
-          `}
-          style={{
-            boxShadow: (isMajorCurrent && subIdx === major.subs.length) ? '0 10px 25px -5px rgba(249, 115, 22, 0.6), inset 0 -4px 0 0 rgba(0,0,0,0.1)' : 'inset 0 -4px 0 0 rgba(0,0,0,0.1)'
-          }}
-        >
-          {isMajorDone ? <Check size={32} color="white" className="drop-shadow-md" /> : <span className={`text-[clamp(24px,6vw,32px)] drop-shadow-sm ${(isMajorCurrent && subIdx === major.subs.length) ? 'animate-breathe-scale inline-block' : ''}`}>🎁</span>}
+        <div key={`chest-wrap-${mIdx}`} className="relative flex items-center justify-center h-[86px] w-[clamp(48px,14vw,72px)]">
+          <motion.div 
+            key={`chest-${mIdx}`}
+            onClick={() => isMajorCurrent && subIdx === major.subs.length && handleOpenReward(mIdx)}
+            className={`w-[clamp(48px,14vw,64px)] h-[clamp(48px,14vw,64px)] rounded-[clamp(12px,3vw,16px)] border-4 border-white shadow-xl flex items-center justify-center transition-all duration-500 relative
+              ${isMajorDone ? '' : (isMajorCurrent && subIdx === major.subs.length) ? 'bg-gradient-to-br from-yellow-300 to-orange-500 cursor-pointer scale-110 shadow-orange-500/50' : 'bg-slate-200 opacity-40'}
+            `}
+            style={{
+              backgroundColor: isMajorDone ? major.color : undefined,
+              boxShadow: isMajorDone
+                ? `0 10px 25px -5px ${major.color}99, inset 0 -4px 0 0 rgba(0,0,0,0.1)`
+                : (isMajorCurrent && subIdx === major.subs.length)
+                  ? '0 10px 25px -5px rgba(249, 115, 22, 0.6), inset 0 -4px 0 0 rgba(0,0,0,0.1)'
+                  : 'inset 0 -4px 0 0 rgba(0,0,0,0.1)'
+            }}
+            initial={false}
+            animate={isStageUnlocking && !isMajorDone ? {
+              opacity: [0.4, 1, 0.4],
+              scale: [1, 1.1, 1],
+              boxShadow: [
+                'inset 0 -4px 0 0 rgba(0,0,0,0.1)',
+                `0 0 0 8px ${major.color}22, 0 16px 34px ${major.color}55, inset 0 -4px 0 0 rgba(0,0,0,0.1)`,
+                'inset 0 -4px 0 0 rgba(0,0,0,0.1)'
+              ],
+              filter: ['grayscale(1)', 'grayscale(0)', 'grayscale(1)']
+            } : undefined}
+            transition={isStageUnlocking && !isMajorDone ? { duration: 1.1, ease: 'easeOut', delay: 0.22 + major.subs.length * 0.08 } : { duration: 0.2 }}
+          >
+            {isMajorDone ? <Check size={32} color="white" className="drop-shadow-md" /> : <span className={`text-[clamp(24px,6vw,32px)] drop-shadow-sm ${(isMajorCurrent && subIdx === major.subs.length) ? 'animate-breathe-scale inline-block' : ''}`}>🎁</span>}
+          </motion.div>
+          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-full opacity-0 pointer-events-none text-center text-[10px] font-black leading-tight select-none">
+            奖励
+          </div>
         </div>
       );
 
       // Push the grouped stage block
       pathNodes.push(
         <React.Fragment key={`stage-frag-${mIdx}`}>
-          <div id={`major-module-${mIdx}`} className={`relative flex items-center h-[258px] px-[clamp(16px,4vw,24px)] py-[clamp(20px,5vw,32px)] mx-2 rounded-[40px] border-2 backdrop-blur-sm transition-all duration-700 overflow-hidden ${bgClass} ${borderClass}`}>
+          <motion.div
+            id={`major-module-${mIdx}`}
+            className={`relative flex items-center h-[220px] px-[clamp(28px,6vw,44px)] py-[clamp(16px,4vw,24px)] mx-2 rounded-[40px] border-2 backdrop-blur-sm transition-all duration-700 overflow-hidden ${bgClass} ${borderClass} ${highlightedStageIdx === mIdx ? 'z-20' : ''}`}
+            style={{ boxShadow: highlightedStageIdx === mIdx ? undefined : stageCardShadow }}
+            initial={false}
+            animate={highlightedStageIdx === mIdx ? {
+              scale: [1, 1.03, 1],
+              borderColor: [major.color, '#ffffff', major.color],
+              borderWidth: ['2px', '4px', '2px'],
+              boxShadow: [
+                '0 0 0 rgba(255,255,255,0)',
+                `0 0 0 6px ${major.color}33, 0 0 56px ${major.color}88`,
+                '0 0 0 rgba(255,255,255,0)'
+              ]
+            } : {
+              scale: 1,
+              borderColor: undefined,
+              borderWidth: '2px',
+              boxShadow: '0 0 0 rgba(255,255,255,0)'
+            }}
+            transition={highlightedStageIdx === mIdx ? { duration: 1.15, times: [0, 0.45, 1], ease: 'easeOut' } : { duration: 0.2 }}
+          >
             
             {/* Animated Background for Current Module */}
             {isMajorCurrent && (
               <div className="absolute inset-0 pointer-events-none z-0">
                 <div className={`absolute -top-10 -left-10 w-[clamp(160px,50vw,256px)] h-[clamp(160px,50vw,256px)] rounded-full opacity-20 animate-drift-1 ${mIdx === 0 ? 'bg-blue-300' : mIdx === 1 ? 'bg-green-300' : mIdx === 2 ? 'bg-amber-300' : 'bg-purple-300'}`}></div>
                 <div className={`absolute -bottom-10 -right-10 w-[clamp(200px,60vw,288px)] h-[clamp(200px,60vw,288px)] rounded-full opacity-20 animate-drift-2 ${mIdx === 0 ? 'bg-blue-200' : mIdx === 1 ? 'bg-green-200' : mIdx === 2 ? 'bg-amber-200' : 'bg-purple-200'}`}></div>
+              </div>
+            )}
+
+            {highlightedStageIdx === mIdx && (
+              <motion.div
+                className="absolute inset-0 pointer-events-none z-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.68),transparent_62%)]"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: [0, 1, 0], scale: [0.92, 1.04, 1.08] }}
+                transition={{ duration: 1.1, ease: 'easeOut' }}
+              />
+            )}
+
+            {highlightedStageIdx === mIdx && (
+              <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+                <motion.div
+                  className="absolute -inset-y-8 -left-1/3 w-1/3 rotate-12 bg-gradient-to-r from-transparent via-white/85 to-transparent blur-md"
+                  initial={{ x: '-140%', opacity: 0 }}
+                  animate={{ x: ['-140%', '420%'], opacity: [0, 0.95, 0] }}
+                  transition={{ duration: 1.05, ease: 'easeInOut', delay: 0.08 }}
+                />
               </div>
             )}
 
@@ -920,7 +1830,7 @@ export default function App() {
             <div className="flex items-center relative z-10 mt-[clamp(12px,3vw,16px)]">
               {stageContent}
             </div>
-          </div>
+          </motion.div>
 
           {/* 4. 大关连接 */}
           {mIdx < TASK_DATA.length - 1 && (
@@ -934,8 +1844,211 @@ export default function App() {
     return pathNodes;
   };
 
+  if (!hasLoggedIn) {
+    return (
+      <div className="bg-[#E0F2FE] w-full h-screen flex items-center justify-center overflow-hidden font-sans select-none text-slate-800 relative px-4">
+        {/* 淡蓝色动态装饰层：低不透明度，避免影响卡片阅读 */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <div className="absolute top-10 left-[8%] w-[clamp(120px,28vw,220px)] h-[clamp(70px,16vw,140px)] rounded-full opacity-30 bg-blue-200/70 blur-3xl animate-breathe-scale" />
+          <div className="absolute top-1/3 right-[12%] w-[clamp(140px,34vw,260px)] h-[clamp(90px,22vw,180px)] rounded-full opacity-25 bg-cyan-200/70 blur-3xl animate-drift-1" />
+          <div className="absolute bottom-24 left-[18%] w-[clamp(160px,40vw,320px)] h-[clamp(90px,22vw,200px)] rounded-full opacity-20 bg-indigo-200/60 blur-3xl animate-drift-2" />
+
+          {/* 小气泡/光点：更轻、更碎，避免抢阅读 */}
+          <div className="absolute top-[18%] left-[26%] w-[clamp(10px,2.6vw,18px)] h-[clamp(10px,2.6vw,18px)] rounded-full opacity-35 bg-blue-100 blur-xl animate-pulse" style={{ animationDelay: '0.2s' }} />
+          <div className="absolute top-[28%] right-[24%] w-[clamp(8px,2vw,14px)] h-[clamp(8px,2vw,14px)] rounded-full opacity-30 bg-cyan-100 blur-xl animate-pulse" style={{ animationDelay: '0.7s' }} />
+          <div className="absolute bottom-[22%] left-[30%] w-[clamp(9px,2.2vw,16px)] h-[clamp(9px,2.2vw,16px)] rounded-full opacity-25 bg-indigo-100 blur-xl animate-pulse" style={{ animationDelay: '1.1s' }} />
+          <div className="absolute top-[44%] left-[10%] w-[clamp(7px,1.8vw,13px)] h-[clamp(7px,1.8vw,13px)] rounded-full opacity-25 bg-blue-100 blur-xl animate-pulse" style={{ animationDelay: '0.5s' }} />
+          <div className="absolute top-[52%] right-[12%] w-[clamp(6px,1.6vw,12px)] h-[clamp(6px,1.6vw,12px)] rounded-full opacity-22 bg-cyan-100 blur-xl animate-pulse" style={{ animationDelay: '1.4s' }} />
+        </div>
+
+        <div className="relative z-10 w-full h-full flex items-center justify-center">
+          {loginView === 'form' ? (
+            <div
+              className="w-full max-w-lg bg-white/65 backdrop-blur-md rounded-[36px] shadow-2xl border border-white/70 p-10 flex flex-row items-stretch gap-8 transition-all duration-200"
+              style={{ maxWidth: isPhoneInputFocused ? '768px' : undefined }}
+            >
+              <div className="flex flex-col flex-1 items-stretch space-y-10">
+                <div className="flex flex-col items-center space-y-4">
+                <img
+                  src={publicAssetUrl('/logo qqmm.png')}
+                  alt="千千妈妈"
+                  className="h-12 object-contain"
+                />
+                <h1 className="text-2xl font-black text-slate-800">手机号登录</h1>
+                </div>
+                <div className="space-y-5">
+                  {!otpMode ? (
+                    <div className="flex items-stretch rounded-2xl border border-white/70 overflow-hidden bg-white/50">
+                      <button
+                        type="button"
+                        onClick={() => setLoginView('prefix')}
+                        className="px-3 sm:px-4 py-2 text-sm sm:text-base font-bold text-[#FC3D41] bg-white/60 border-r border-white/60 whitespace-nowrap"
+                      >
+                        {phonePrefix}
+                      </button>
+                      <input
+                        ref={phoneInputRef}
+                        type="tel"
+                        inputMode="numeric"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        placeholder="请输入手机号"
+                        onFocus={handlePhoneInputFocus}
+                        onBlur={handlePhoneInputBlur}
+                        className="flex-1 px-3 sm:px-4 py-2 bg-transparent outline-none text-slate-900 text-base"
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className="flex items-stretch justify-center rounded-2xl border border-white/70 overflow-hidden bg-transparent -mt-4"
+                      role="group"
+                      aria-label="验证码输入"
+                    >
+                      <input
+                        ref={otpInputRef}
+                        type="tel"
+                        inputMode="numeric"
+                        value={otpCode}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, '').slice(0, 4);
+                          setOtpCode(digits);
+                        }}
+                        onFocus={handlePhoneInputFocus}
+                        onBlur={handlePhoneInputBlur}
+                        className="sr-only"
+                      />
+                      <div className="w-1/2 grid grid-cols-4 gap-2 p-2">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                          <div
+                            key={i}
+                            className={`h-10 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-xl font-black ${
+                              otpCode[i] ? 'text-[#333333]' : 'text-[#CCCCCC]'
+                            }`}
+                          >
+                            {otpCode[i] ?? '*'}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleConfirmLogin}
+                    disabled={otpMode ? otpButtonDisabled : !isValidPhoneNumber}
+                    className="w-full mt-1 py-3.5 rounded-2xl font-black text-white text-base bg-blue-500 disabled:bg-slate-300 shadow-lg active:scale-95 transition-transform"
+                  >
+                    {otpMode
+                      ? otpButtonLabel
+                      : phoneNumber.trim()
+                        ? '接收验证码'
+                        : '请输入手机号'}
+                  </button>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-400 text-center">
+                  登录即表示阅读同意
+                  <a
+                    href="#"
+                    className="text-blue-600 font-bold underline-offset-2 underline ml-1"
+                  >
+                    《用户协议》
+                  </a>
+                </p>
+              </div>
+
+              {isPhoneInputFocused && (
+                <div className="w-[240px] sm:w-[260px] flex flex-col justify-between">
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      '1','2','3',
+                      '4','5','6',
+                      '7','8','9',
+                      null,'0','del'
+                    ].map((k, idx) => {
+                      if (k === null) {
+                        return <div key={`sp-${idx}`} className="h-14 w-full" />;
+                      }
+                      if (k === 'del') {
+                        return (
+                          <button
+                            key={`k-${idx}`}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => deleteDigit()}
+                            className="h-14 w-full rounded-2xl bg-slate-100 text-slate-700 border border-slate-200 font-black text-xl shadow-sm active:scale-95 active:bg-[#FC3D41] active:border-[#FC3D41] active:text-white"
+                          >
+                            删除
+                          </button>
+                        );
+                      }
+                      return (
+                        <button
+                          key={`k-${idx}`}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => appendDigit(k)}
+                          className="h-14 w-full rounded-2xl bg-slate-100 text-slate-700 border border-slate-200 font-black text-3xl shadow-sm active:scale-95 active:bg-[#FC3D41] active:border-[#FC3D41] active:text-white"
+                        >
+                          {k}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="w-full max-w-lg bg-white/65 backdrop-blur-md rounded-[36px] shadow-2xl border border-white/70 p-10 flex flex-col space-y-8">
+              <div className="flex items-center justify-between mb-2">
+                <button
+                  type="button"
+                  onClick={() => setLoginView('form')}
+                  className="w-9 h-9 rounded-full bg-white/60 flex items-center justify-center text-slate-600 border border-white/60"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <h2 className="text-lg font-black text-slate-800">选择地区/国家</h2>
+                <div className="w-9" />
+              </div>
+              <div className="border border-white/70 rounded-2xl overflow-y-auto max-h-[60vh] bg-white/45">
+                <ul className="divide-y divide-slate-100">
+                  {PREFIX_OPTIONS.map((p) => (
+                    <li key={p}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPhonePrefix(p);
+                          setLoginView('form');
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm sm:text-base flex items-center justify-between hover:bg-white/60"
+                      >
+                        <span className="font-medium text-slate-800">{p}</span>
+                        {phonePrefix === p && (
+                          <span className="text-xs text-blue-500 font-bold">已选</span>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={handleSkipLogin}
+          className="absolute right-5 bottom-5 z-20 text-sm sm:text-base font-bold text-slate-600 hover:text-blue-600 transition-colors"
+        >
+          跳过登录
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-slate-900 w-full h-screen flex items-center justify-center overflow-hidden font-sans select-none text-slate-800">
+    <div
+      className={`bg-slate-900 w-full h-screen flex items-center justify-center overflow-hidden font-sans select-none text-slate-800 ${loginEnterAnim ? 'animate-blur-to-clear' : ''}`}
+    >
       {/* 全屏舞台容器 */}
       <div id="app-stage" className="relative bg-[#E0F2FE] overflow-hidden w-full h-full">
         <div className="absolute inset-0 bg-gradient-to-b from-blue-300 via-cyan-100 to-green-100 z-0">
@@ -948,7 +2061,15 @@ export default function App() {
 
         {/* 首页 */}
         {currentView === 'home' && (
-          <div className="relative h-full w-full flex flex-col z-10 animate-in fade-in duration-500">
+          <div
+            className={`relative h-full w-full flex flex-col z-10 ${
+              loginEnterAnim ? 'login-enter-disable-motion' : 'animate-in fade-in duration-500'
+            }`}
+          >
+            {/*
+              禁用位移动画（loginEnterAnim=true时），避免装饰/位移动画造成“元素位移”观感
+              具体效果见 src/index.css 的 .login-enter-disable-motion
+            */}
             <header className="h-[15%] px-[4%] flex justify-between items-center relative z-20">
               <div onClick={() => setCurrentView('profile')} className="flex items-center space-x-[clamp(12px,3vw,16px)] cursor-pointer group">
                 <div className="relative">
@@ -959,7 +2080,7 @@ export default function App() {
                 </div>
                 <div className="bg-white/90 backdrop-blur-sm px-[clamp(14px,3.5vw,20px)] py-[clamp(8px,2.5vw,10px)] rounded-full shadow-md border border-white/50 group-hover:bg-white transition-colors">
                   <span className={`font-black text-[clamp(14px,3.5vw,16px)] tracking-wide ${isToday ? 'bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent' : 'text-green-600'}`}>
-                    L1 · {isToday ? '今日探险' : `复习(${selectedDate.getDate()}日)`}
+                    L{kikiLevel} · {isToday ? '今日探险' : `复习(${selectedDate.getDate()}日)`}
                   </span>
                 </div>
               </div>
@@ -968,6 +2089,16 @@ export default function App() {
                   <Gem size={22} className="text-blue-500 drop-shadow-sm mr-2" />
                   <span className="font-black text-slate-700 text-[clamp(18px,4.5vw,20px)] tracking-wider">{diamonds}</span>
                 </div>
+                <button
+                  onClick={restartAbilityTest}
+                  className="bg-white/90 backdrop-blur-sm px-[clamp(12px,3.5vw,18px)] py-[clamp(8px,2.5vw,10px)] rounded-full shadow-md flex items-center cursor-pointer hover:bg-white hover:scale-105 transition-all border border-white/50 active:scale-[0.98]"
+                  title="重新测试"
+                >
+                  <Repeat size={22} className="text-emerald-600 drop-shadow-sm mr-2" />
+                  <span className="font-black text-slate-700 text-[clamp(14px,3.5vw,16px)] tracking-wider whitespace-nowrap">
+                    重新测试
+                  </span>
+                </button>
                 <button onClick={openParentGate} className="w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] bg-white/90 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center text-slate-500 active:text-blue-600 active:rotate-90 transition-all border border-white/50">
                   <Settings size={26} />
                 </button>
@@ -1067,20 +2198,53 @@ export default function App() {
 
         {/* 学习详情页：纯白背景 & 修复按钮高度 */}
         {currentView === 'learning' && (
-          learningTitle.includes('单词卡') ? (
-            <FlashcardLearning onFinish={finishSubTask} onBack={() => setCurrentView('home')} />
+          learningTitle === `${TASK_DATA[0].name} · 视频` ? (
+            <MobileVideoLearning onFinish={finishSubTask} onBack={() => setCurrentView('home')} onSkip={skipSubTask} />
+          ) : learningTitle.includes('单词卡') ? (
+            <FlashcardLearning onFinish={finishSubTask} onBack={() => setCurrentView('home')} onSkip={skipSubTask} />
           ) : learningTitle.includes('电子书') ? (
-            <EbookReader onFinish={finishSubTask} onBack={() => setCurrentView('home')} />
+            <EbookReader onFinish={finishSubTask} onBack={() => setCurrentView('home')} onSkip={skipSubTask} />
+          ) : learningTitle === `${TASK_DATA[0].name} · 跟读` ? (
+            <ReadAloud onFinish={finishSubTask} onBack={() => setCurrentView('home')} onSkip={skipSubTask} />
+          ) : learningTitle.includes('练习-') ? (
+            <ExerciseModule type={learningTitle.split(' · ')[1] || learningTitle} onFinish={finishSubTask} onBack={() => setCurrentView('home')} />
           ) : (
-            <div className="relative h-full w-full bg-white z-[100] flex flex-col animate-in slide-in-from-bottom duration-500 text-slate-800">
-              <header className="h-[12%] px-[4%] flex items-center justify-between bg-slate-50 border-b border-slate-100 shadow-sm">
+            <div className="relative h-screen w-full bg-white z-[100] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-500 text-slate-800">
+              <header className="h-[12%] min-h-[64px] px-[4%] flex items-center justify-between bg-slate-50 border-b border-slate-100 shadow-sm shrink-0">
                 <button onClick={() => setCurrentView('home')} className="w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] bg-slate-200 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center text-slate-600 hover:bg-slate-300 transition-colors"><X size={32} /></button>
-                <h2 className="font-black tracking-widest text-[clamp(20px,5vw,24px)] uppercase text-slate-600">{learningTitle}</h2><div className="w-[clamp(40px,12vw,56px)]" />
+                <h2 className="font-black tracking-widest text-[clamp(20px,5vw,24px)] uppercase text-slate-600">{learningTitle}</h2>
+                <button
+                  onClick={skipSubTask}
+                  className="px-[clamp(10px,2.5vw,16px)] h-[clamp(40px,12vw,56px)] bg-amber-100 text-amber-700 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center font-black text-[clamp(12px,3vw,16px)] whitespace-nowrap hover:bg-amber-200 transition-colors"
+                >
+                  跳过本环节
+                </button>
               </header>
-              <div className="flex-1 flex items-center justify-center p-[clamp(16px,4vw,24px)] sm:p-[clamp(24px,6vw,40px)]"><div className="w-full h-full max-w-4xl aspect-video bg-slate-100 rounded-[40px] border-4 border-slate-200 shadow-xl flex items-center justify-center relative overflow-hidden"><Play size={80} className="text-slate-300 opacity-50" /><div className="absolute bottom-6 left-6 right-6 h-3 bg-slate-200 rounded-full overflow-hidden"><div className="h-full bg-blue-500 w-1/3" /></div></div></div>
-              <div className="h-[16%] flex items-center justify-center px-[clamp(24px,6vw,40px)] pb-4"><button onClick={finishSubTask} className="bg-blue-600 text-white px-[clamp(32px,8vw,56px)] py-[clamp(12px,3vw,16px)] rounded-[clamp(12px,3vw,16px)] font-black text-[clamp(22px,5.5vw,28px)] shadow-lg active:scale-95">学完了！领取奖励</button></div>
+              <div className="flex-1 min-h-0 flex items-center justify-center px-[clamp(16px,4vw,24px)] py-[clamp(10px,2.5vw,16px)]">
+                <div className="w-full max-w-3xl h-full max-h-[60vh] aspect-video bg-slate-100 rounded-[32px] border-4 border-slate-200 shadow-xl flex items-center justify-center relative overflow-hidden">
+                  <Play size={80} className="text-slate-300 opacity-50" />
+                  <div className="absolute bottom-6 left-6 right-6 h-3 bg-slate-200 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 w-1/3" />
+                  </div>
+                </div>
+              </div>
+              <div className="h-[14%] min-h-[88px] flex items-center justify-center px-[clamp(24px,6vw,40px)] pb-4 shrink-0">
+                <button onClick={finishSubTask} className="bg-blue-600 text-white px-[clamp(32px,8vw,56px)] py-[clamp(12px,3vw,16px)] rounded-[clamp(12px,3vw,16px)] font-black text-[clamp(22px,5.5vw,28px)] shadow-lg active:scale-95">
+                  学完了！领取奖励
+                </button>
+              </div>
             </div>
           )
+        )}
+
+        {/* 能力测试页：嵌入附件项目的结果回传逻辑 */}
+        {currentView === 'ability-test' && (
+          <div className="relative h-full w-full bg-white z-[2000]">
+            <EnglishProficiencyTest
+              onBack={() => setCurrentView('home')}
+              onComplete={handleAbilityTestComplete}
+            />
+          </div>
         )}
 
         {/* 各二级视图 (纯白背景) */}
@@ -1328,12 +2492,7 @@ export default function App() {
                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-[clamp(12px,3vw,16px)] flex-1 min-h-0">
                      {/* Left: Skill Cards */}
                      <div className="grid grid-cols-2 gap-[clamp(8px,2.5vw,12px)]">
-                       {[
-                         { id: 'listen', name: '听', level: 1, progress: 20, color: 'bg-blue-500', light: 'bg-blue-100', text: 'text-blue-600', icon: '🎧' },
-                         { id: 'speak', name: '说', level: 12, progress: 80, color: 'bg-green-500', light: 'bg-green-100', text: 'text-green-600', icon: '🎙️' },
-                         { id: 'read', name: '读', level: 1, progress: 30, color: 'bg-amber-500', light: 'bg-amber-100', text: 'text-amber-600', icon: '📖' },
-                         { id: 'write', name: '写', level: 1, progress: 40, color: 'bg-purple-500', light: 'bg-purple-100', text: 'text-purple-600', icon: '✍️' },
-                       ].map(item => (
+                      {skillCards.map(item => (
                          <div key={item.id} className={`${item.light} rounded-[24px] p-[clamp(12px,3vw,16px)] flex flex-col relative overflow-hidden transition-transform hover:scale-105 cursor-pointer border-2 border-white shadow-sm`}>
                            <div className="flex justify-between items-start mb-[clamp(6px,2vw,8px)]">
                              <div className={`w-[clamp(32px,8vw,40px)] h-[clamp(32px,8vw,40px)] bg-white rounded-[clamp(8px,2vw,12px)] flex items-center justify-center text-[clamp(20px,5vw,24px)] shadow-sm`}>
@@ -1357,9 +2516,9 @@ export default function App() {
                        </div>
                        <div className="w-full h-full min-h-[150px] mt-[clamp(16px,4vw,24px)]">
                          <ResponsiveContainer width="100%" height="100%">
-                           <RadarChart cx="50%" cy="50%" outerRadius="65%" data={RADAR_DATA}>
+                           <RadarChart cx="50%" cy="50%" outerRadius="65%" data={radarData}>
                              <PolarGrid content={<CustomPolarGrid />} />
-                             <PolarAngleAxis dataKey="subject" tick={<CustomTick />} />
+                             <PolarAngleAxis dataKey="subject" tick={<CustomTick radarData={radarData} />} />
                              <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
                              <Radar 
                                name="能力" 
@@ -1388,12 +2547,12 @@ export default function App() {
                          <p className="text-slate-400 font-bold text-[clamp(14px,3.5vw,16px)] mb-1">当前进度</p>
                          <h3 className="font-black text-[clamp(20px,5vw,24px)] text-slate-800 flex items-center space-x-[clamp(6px,2vw,8px)]">
                            <Crown className="text-yellow-500" size={20} />
-                           <span>Lv.2 入门</span>
+                           <span>{kikiCurrentLabel}</span>
                          </h3>
                        </div>
                        <div className="text-right">
                          <p className="text-slate-400 font-bold text-[clamp(14px,3.5vw,16px)] mb-1">下一级</p>
-                         <h3 className="font-black text-[clamp(18px,4.5vw,20px)] text-slate-400">Lv.3 学徒</h3>
+                         <h3 className="font-black text-[clamp(18px,4.5vw,20px)] text-slate-400">{kikiNextLabel}</h3>
                        </div>
                      </div>
                      <div className="h-6 bg-slate-100 rounded-full relative overflow-hidden p-1 z-10">
@@ -1522,6 +2681,51 @@ export default function App() {
 
         {/* --- 弹窗逻辑 --- */}
 
+        {showAbilityTestPrompt && (
+          <div
+            className="absolute inset-0 z-[950] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-[4%]"
+            onClick={dismissAbilityTestPrompt}
+          >
+            <div
+              className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-90 fade-in duration-300 ease-out text-slate-800"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <header className="bg-emerald-600 p-[clamp(16px,4vw,24px)] text-white flex justify-between items-center">
+                <button
+                  onClick={dismissAbilityTestPrompt}
+                  className="w-[clamp(36px,10vw,48px)] h-[clamp(36px,10vw,48px)] bg-white/20 rounded-[clamp(8px,2vw,12px)] flex items-center justify-center"
+                >
+                  <X size={20} />
+                </button>
+                <div className="font-black tracking-widest">能力测试</div>
+                <div className="w-[clamp(36px,10vw,48px)] h-[clamp(36px,10vw,48px)]" />
+              </header>
+
+              <div className="p-[clamp(16px,4vw,24px)] flex flex-col gap-4">
+                <h2 className="text-[clamp(20px,5vw,24px)] font-black text-slate-800">用 10 分钟，精准定位学习起点</h2>
+                <p className="text-slate-500 font-bold text-[clamp(14px,3.5vw,16px)] leading-relaxed">
+                  测试完成后，我们会自动刷新你的学员等级，并调整首页学习进度与学习环节。
+                </p>
+
+                <button
+                  onClick={goAbilityTest}
+                  className="w-full bg-emerald-500 text-white text-[clamp(18px,4.5vw,20px)] font-black py-[clamp(14px,3.5vw,20px)] rounded-[clamp(16px,4vw,24px)] shadow-xl active:scale-95 transition-transform flex items-center justify-center space-x-2"
+                >
+                  <GraduationCap size={20} />
+                  <span>开始能力测试</span>
+                </button>
+
+                <button
+                  onClick={dismissAbilityTestPrompt}
+                  className="w-full py-1.5 text-slate-400 font-black text-[clamp(14px,3.5vw,16px)] uppercase tracking-widest"
+                >
+                  稍后再说
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {showCalendar && (
           <div className="absolute inset-0 z-[700] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-[4%]" onClick={() => setShowCalendar(false)}>
             <div onClick={(e) => e.stopPropagation()} className="bg-white w-full max-w-4xl h-[90%] rounded-[40px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-90 fade-in duration-300 ease-out text-slate-800">
@@ -1598,13 +2802,18 @@ export default function App() {
 
         {showModuleReward !== null && TASK_DATA[showModuleReward] && (
           <div className="absolute inset-0 z-[800] bg-transparent flex items-center justify-center text-slate-800">
-            <div className="bg-white rounded-[40px] p-[clamp(32px,8vw,48px)] text-center shadow-2xl animate-in zoom-in duration-500 max-w-sm">
+            <motion.div
+              initial={{ scale: 0.72, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              className="bg-white rounded-[40px] p-[clamp(24px,6vw,36px)] text-center shadow-2xl w-[min(86vw,460px)] aspect-square flex flex-col justify-between"
+            >
               <div className="text-8xl mb-[clamp(16px,4vw,24px)]">🎁</div>
               <h2 className="text-[clamp(24px,6vw,32px)] font-black text-orange-500 mb-[clamp(6px,2vw,8px)]">{TASK_DATA[showModuleReward].name}</h2>
               <p className="text-slate-500 mb-[clamp(20px,5vw,32px)] font-bold text-[clamp(14px,3.5vw,16px)]">获得专属奖励能量包</p>
               <div className="text-[clamp(32px,8vw,48px)] font-black text-blue-600 mb-10 flex items-center justify-center space-x-[clamp(8px,2.5vw,12px)]"><span>+50</span> <Gem size={32} className="text-blue-400" /></div>
               <button onClick={handleRewardConfirm} className="w-full bg-blue-500 text-white text-[clamp(22px,5.5vw,28px)] font-black py-[clamp(14px,3.5vw,20px)] rounded-[clamp(16px,4vw,24px)] shadow-xl active:scale-95 transition-transform">收下奖励</button>
-            </div>
+            </motion.div>
           </div>
         )}
 
@@ -1717,7 +2926,7 @@ export default function App() {
           </div>
         )}
 
-        <div id="toast" className="absolute top-[10vw] left-1/2 bg-white px-[clamp(24px,6vw,40px)] py-[clamp(14px,3.5vw,20px)] rounded-full shadow-2xl border-4 border-yellow-400 opacity-0 transition-all duration-500 z-[1100] flex items-center space-x-[clamp(12px,3vw,16px)] pointer-events-none text-slate-700" style={{ transform: 'translate(-50%, 0) scale(0.5)' }}>
+        <div id="toast" className="absolute top-[10vw] left-1/2 bg-white px-[clamp(20px,5vw,36px)] py-[clamp(10px,3vw,16px)] rounded-full shadow-2xl border-4 border-yellow-400 opacity-0 transition-all duration-500 z-[1100] flex items-center space-x-[clamp(12px,3vw,16px)] pointer-events-none text-slate-700" style={{ transform: 'translate(-50%, 0) scale(0.5)' }}>
           <Gem className="text-blue-400" size={36} /><span className="text-[clamp(24px,6vw,32px)] font-black text-blue-600">+10 钻石！</span>
         </div>
       </div>

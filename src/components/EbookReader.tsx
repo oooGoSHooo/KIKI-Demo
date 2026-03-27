@@ -2,25 +2,25 @@ import React, { useState, useRef, useEffect } from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import { Play, Pause, CheckCircle } from 'lucide-react';
 
-const EBOOK_PAGES = [
- { id: 'cover', image: '/U6%20L1%20D1/00.jpg', audio: '/U6%20L1%20D1/00.MP3', position: 'full' },
- { id: 'page1-left', image: '/U6%20L1%20D1/01.jpg', audio: null, position: 'left' },
- { id: 'page1-right', image: '/U6%20L1%20D1/01.jpg', audio: '/U6%20L1%20D1/01.MP3', position: 'right' },
- { id: 'page2-left', image: '/U6%20L1%20D1/02.jpg', audio: null, position: 'left' },
- { id: 'page2-right', image: '/U6%20L1%20D1/02.jpg', audio: '/U6%20L1%20D1/02.MP3', position: 'right' },
- { id: 'page3-left', image: '/U6%20L1%20D1/03.jpg', audio: null, position: 'left' },
- { id: 'page3-right', image: '/U6%20L1%20D1/03.jpg', audio: '/U6%20L1%20D1/03.MP3', position: 'right' },
- { id: 'page4-left', image: '/U6%20L1%20D1/04.jpg', audio: null, position: 'left' },
- { id: 'page4-right', image: '/U6%20L1%20D1/04.jpg', audio: '/U6%20L1%20D1/04.MP3', position: 'right' },
- { id: 'page5-left', image: '/U6%20L1%20D1/05.jpg', audio: null, position: 'left' },
- { id: 'page5-right', image: '/U6%20L1%20D1/05.jpg', audio: '/U6%20L1%20D1/05.MP3', position: 'right' },
- { id: 'page6-left', image: '/U6%20L1%20D1/06.jpg', audio: null, position: 'left' },
- { id: 'page6-right', image: '/U6%20L1%20D1/06.jpg', audio: '/U6%20L1%20D1/06.MP3', position: 'right' },
- { id: 'page7-left', image: '/U6%20L1%20D1/07.jpg', audio: null, position: 'left' },
- { id: 'page7-right', image: '/U6%20L1%20D1/07.jpg', audio: '/U6%20L1%20D1/07.MP3', position: 'right' },
- { id: 'page8-left', image: '/U6%20L1%20D1/08.jpg', audio: null, position: 'left' },
- { id: 'page8-right', image: '/U6%20L1%20D1/08.jpg', audio: '/U6%20L1%20D1/08.MP3', position: 'right' },
- { id: 'backcover', image: '/U6%20L1%20D1/09.jpg', audio: null, position: 'full' },
+export const EBOOK_PAGES = [
+ { id: 'cover', image: '/ebooks/U6-L1-D1/00.jpg', audio: '/ebooks/U6-L1-D1/00.MP3', position: 'full' },
+ { id: 'page1-left', image: '/ebooks/U6-L1-D1/01.jpg', audio: null, position: 'left' },
+ { id: 'page1-right', image: '/ebooks/U6-L1-D1/01.jpg', audio: '/ebooks/U6-L1-D1/01.MP3', position: 'right' },
+ { id: 'page2-left', image: '/ebooks/U6-L1-D1/02.jpg', audio: null, position: 'left' },
+ { id: 'page2-right', image: '/ebooks/U6-L1-D1/02.jpg', audio: '/ebooks/U6-L1-D1/02.MP3', position: 'right' },
+ { id: 'page3-left', image: '/ebooks/U6-L1-D1/03.jpg', audio: null, position: 'left' },
+ { id: 'page3-right', image: '/ebooks/U6-L1-D1/03.jpg', audio: '/ebooks/U6-L1-D1/03.MP3', position: 'right' },
+ { id: 'page4-left', image: '/ebooks/U6-L1-D1/04.jpg', audio: null, position: 'left' },
+ { id: 'page4-right', image: '/ebooks/U6-L1-D1/04.jpg', audio: '/ebooks/U6-L1-D1/04.MP3', position: 'right' },
+ { id: 'page5-left', image: '/ebooks/U6-L1-D1/05.jpg', audio: null, position: 'left' },
+ { id: 'page5-right', image: '/ebooks/U6-L1-D1/05.jpg', audio: '/ebooks/U6-L1-D1/05.MP3', position: 'right' },
+ { id: 'page6-left', image: '/ebooks/U6-L1-D1/06.jpg', audio: null, position: 'left' },
+ { id: 'page6-right', image: '/ebooks/U6-L1-D1/06.jpg', audio: '/ebooks/U6-L1-D1/06.MP3', position: 'right' },
+ { id: 'page7-left', image: '/ebooks/U6-L1-D1/07.jpg', audio: null, position: 'left' },
+ { id: 'page7-right', image: '/ebooks/U6-L1-D1/07.jpg', audio: '/ebooks/U6-L1-D1/07.MP3', position: 'right' },
+ { id: 'page8-left', image: '/ebooks/U6-L1-D1/08.jpg', audio: null, position: 'left' },
+ { id: 'page8-right', image: '/ebooks/U6-L1-D1/08.jpg', audio: '/ebooks/U6-L1-D1/08.MP3', position: 'right' },
+ { id: 'backcover', image: '/ebooks/U6-L1-D1/09.jpg', audio: null, position: 'full' },
 ];
 
 interface PageProps {
@@ -49,15 +49,17 @@ const Page = React.forwardRef<HTMLDivElement, PageProps>((props, ref) => {
  );
 });
 
-export const EbookReader = ({ onFinish, onBack }: { onFinish: () => void, onBack: () => void }) => {
+export const EbookReader = ({ onFinish, onBack, onSkip }: { onFinish: () => void, onBack: () => void, onSkip: () => void }) => {
  const [currentPage, setCurrentPage] = useState(0);
  const [isPlaying, setIsPlaying] = useState(false);
+ const [isFlipLocked, setIsFlipLocked] = useState(false);
  const [pageDimensions, setPageDimensions] = useState({ width: 0, height: 0 });
  const [bookRatio, setBookRatio] = useState(0);
  const audioRef = useRef<HTMLAudioElement | null>(null);
  const bookRef = useRef<any>(null);
  const containerRef = useRef<HTMLDivElement>(null);
  const hasAutoFlippedRef = useRef(false);
+ const shouldUnlockAfterAutoFlipRef = useRef(false);
 
  // 1. Calculate Book Aspect Ratio from the first representative page
  useEffect(() => {
@@ -120,6 +122,10 @@ export const EbookReader = ({ onFinish, onBack }: { onFinish: () => void, onBack
   const isLastPage = currentPage >= EBOOK_PAGES.length - 2;
 
   const onPage = (e: any) => {
+    if (shouldUnlockAfterAutoFlipRef.current) {
+      shouldUnlockAfterAutoFlipRef.current = false;
+      setIsFlipLocked(false);
+    }
     setCurrentPage(e.data);
   };
 
@@ -149,6 +155,8 @@ export const EbookReader = ({ onFinish, onBack }: { onFinish: () => void, onBack
         hasAutoFlippedRef.current = true;
         timeoutId = setTimeout(() => {
           if (bookRef.current && bookRef.current.pageFlip()) {
+            setIsFlipLocked(true);
+            shouldUnlockAfterAutoFlipRef.current = true;
             bookRef.current.pageFlip().flipNext();
           }
         }, 1000);
@@ -175,6 +183,8 @@ export const EbookReader = ({ onFinish, onBack }: { onFinish: () => void, onBack
       hasAutoFlippedRef.current = true;
       timeoutId = setTimeout(() => {
         if (bookRef.current && bookRef.current.pageFlip()) {
+          setIsFlipLocked(true);
+          shouldUnlockAfterAutoFlipRef.current = true;
           bookRef.current.pageFlip().flipNext();
         }
       }, 2000);
@@ -188,23 +198,32 @@ export const EbookReader = ({ onFinish, onBack }: { onFinish: () => void, onBack
   useEffect(() => {
     const audioEl = audioRef.current;
     let isActive = true;
+    let playTimeoutId: NodeJS.Timeout | undefined;
 
     if (audioEl && currentAudioSrc) {
       // Reset and play
       audioEl.pause();
       audioEl.currentTime = 0;
-      
-      const playPromise = audioEl.play();
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          if (isActive) setIsPlaying(true);
-        }).catch(err => {
-          // Ignore AbortError which happens when play() is interrupted by pause()
-          if (err.name !== 'AbortError') {
-            console.error("Auto-play failed:", err);
-          }
-          if (isActive) setIsPlaying(false);
-        });
+
+      const startPlayback = () => {
+        const playPromise = audioEl.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            if (isActive) setIsPlaying(true);
+          }).catch(err => {
+            // Ignore AbortError which happens when play() is interrupted by pause()
+            if (err.name !== 'AbortError') {
+              console.error("Auto-play failed:", err);
+            }
+            if (isActive) setIsPlaying(false);
+          });
+        }
+      };
+
+      if (currentPage === 0) {
+        playTimeoutId = setTimeout(startPlayback, 500);
+      } else {
+        startPlayback();
       }
     } else if (audioEl) {
       audioEl.pause();
@@ -214,13 +233,14 @@ export const EbookReader = ({ onFinish, onBack }: { onFinish: () => void, onBack
 
     return () => {
       isActive = false;
+      if (playTimeoutId) clearTimeout(playTimeoutId);
       // When the effect re-runs (page changes) or component unmounts, 
       // we should pause the current audio to prevent it from continuing to play
       if (audioEl) {
         audioEl.pause();
       }
     };
-  }, [currentAudioSrc]);
+  }, [currentAudioSrc, currentPage]);
 
  return (
  <div className="relative h-full w-full bg-slate-100 z-[100] flex flex-col animate-in slide-in-from-bottom duration-500 text-slate-800">
@@ -229,10 +249,19 @@ export const EbookReader = ({ onFinish, onBack }: { onFinish: () => void, onBack
  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
  </button>
  <h2 className="font-black tracking-widest text-[clamp(20px,5vw,24px)] uppercase text-slate-600">阅读电子书</h2>
- <div className="w-[clamp(40px,12vw,56px)]" />
+ <button
+ onClick={onSkip}
+ className="px-[clamp(10px,2.5vw,16px)] h-[clamp(40px,12vw,56px)] bg-amber-100 text-amber-700 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center font-black text-[clamp(12px,3vw,16px)] whitespace-nowrap transition-colors"
+ >
+ 跳过本环节
+ </button>
  </header>
 
  <main ref={containerRef} className="flex-1 flex items-center justify-center relative overflow-hidden bg-slate-800/5 p-[4%]">
+ <div
+ className={`absolute inset-0 z-10 ${isFlipLocked ? 'pointer-events-auto' : 'pointer-events-none'}`}
+ aria-hidden="true"
+ />
  <div className="w-full h-full flex items-center justify-center">
  {pageDimensions.width > 0 && (
  // @ts-ignore - react-pageflip types are sometimes missing or incomplete

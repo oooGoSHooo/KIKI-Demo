@@ -32,6 +32,73 @@
   66% { transform: translate(20px, -20px) scale(1.15); }
 }
 
+.kid-progress-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 22px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #fde68a 0%, #f9a8d4 45%, #93c5fd 100%);
+  cursor: pointer;
+  border: 0;
+  outline: none;
+  box-shadow: none;
+  transition: none;
+}
+
+.kid-progress-slider::-webkit-slider-runnable-track {
+  height: 22px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #fde68a 0%, #f9a8d4 45%, #93c5fd 100%);
+  border: 0;
+  box-shadow: none;
+}
+
+.kid-progress-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 40px;
+  height: 40px;
+  margin-top: -9px;
+  border-radius: 9999px;
+  border: 0;
+  background: linear-gradient(180deg, #ffffff 0%, #fef3c7 100%);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16);
+  transition: none;
+}
+
+.kid-progress-slider::-moz-range-track {
+  height: 22px;
+  border: 0;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #fde68a 0%, #f9a8d4 45%, #93c5fd 100%);
+  box-shadow: none;
+}
+
+.kid-progress-slider::-moz-range-thumb {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #ffffff 0%, #fef3c7 100%);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16);
+}
+
+.kid-progress-slider::-moz-range-progress {
+  height: 22px;
+  border: 0;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #fde68a 0%, #f9a8d4 45%, #93c5fd 100%);
+  box-shadow: none;
+}
+
+.kid-progress-slider:hover,
+.kid-progress-slider:focus,
+.kid-progress-slider:active {
+  outline: none;
+  box-shadow: none;
+  opacity: 1;
+}
+
 .animate-breathe-scale {
   animation: breathe-scale 1.5s ease-in-out infinite;
 }
@@ -46,4 +113,49 @@
 
 body {
   font-family: var(--font-sans);
+}
+
+@keyframes blurToClear {
+  0% {
+    filter: blur(14px);
+    opacity: 0.2;
+  }
+  100% {
+    filter: blur(0px);
+    opacity: 1;
+  }
+}
+
+.animate-blur-to-clear {
+  animation: blurToClear 650ms ease-out both;
+}
+
+@keyframes recording-pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.28;
+  }
+  46.1538% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
+}
+
+.recording-pulse {
+  animation: recording-pulse-ring 1300ms ease-out infinite;
+}
+
+.recording-pulse-delayed {
+  animation-delay: 240ms;
+}
+
+/* 登录进入首页短时间禁用所有位移/动画 */
+.login-enter-disable-motion * {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
