@@ -1,833 +1,495 @@
-import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import {
-  ChevronRight,
-  Volume2,
-  Mic,
-  BookOpen,
-  CheckCircle2,
-  Star,
-  Trophy,
-  ArrowRight,
-  RefreshCw,
-  User,
-  GraduationCap,
-  Target,
-  X,
-} from "lucide-react";
-import confetti from "canvas-confetti";
-
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
+import { testModules } from './questions';
+import { Button, playClickSound, playSuccessSound } from './Button';
+import { AudioPlayer } from './AudioPlayer';
+import { Clock, ArrowRight, Mic, CheckCircle2, FileText, X, ArrowLeft } from 'lucide-react';
 import {
   AgeGroup,
   ExpLevel,
   TestState,
-  calculateFinalLevel,
-  LEVEL_MAP,
   AbilityTestResult,
-} from "./types";
-
-// --- Mock Data (kept from the provided test project) ---
-const LISTENING_QUESTIONS = [
-  { id: 1, audio: "Apple", options: ["🍎", "🍌", "🍇"], correct: 0 },
-  {
-    id: 2,
-    audio: "The cat is on the mat",
-    options: ["🐱🛋️", "🐱📦", "🐱🌳"],
-    correct: 0,
-  },
-  { id: 3, audio: "Where is the library?", options: ["📚", "🍔", "⚽"], correct: 0 },
-  {
-    id: 4,
-    audio: "I like swimming in summer",
-    options: ["🏊‍♂️☀️", "⛷️❄️", "🍂🍁"],
-    correct: 0,
-  },
-  {
-    id: 5,
-    audio: "The weather forecast says it will rain",
-    options: ["☀️", "🌧️", "☁️"],
-    correct: 1,
-  },
-];
-
-const VOCAB_QUESTIONS: Record<
-  "A" | "B" | "C",
-  Array<{ word: string; options: string[]; correct: number }>
-> = {
-  A: [
-    { word: "Dog", options: ["🐕", "🐈", "🐘"], correct: 0 },
-    { word: "Blue", options: ["🔴", "🔵", "🟡"], correct: 1 },
-    { word: "Three", options: ["1", "2", "3"], correct: 2 },
-    { word: "Happy", options: ["😊", "😢", "😡"], correct: 0 },
-  ],
-  B: [
-    { word: "Elephant", options: ["🐘", "🦒", "🦓"], correct: 0 },
-    { word: "Mountain", options: ["🌊", "⛰️", "🔥"], correct: 1 },
-    { word: "Scientist", options: ["👨‍🔬", "👨‍🍳", "👨‍🎨"], correct: 0 },
-    { word: "Library", options: ["🏥", "🏫", "📚"], correct: 2 },
-  ],
-  C: [
-    { word: "Environment", options: ["🌍", "🏢", "🚗"], correct: 0 },
-    { word: "Architecture", options: ["🏛️", "🎨", "🎵"], correct: 0 },
-    { word: "Philosophy", options: ["🤔", "🏃", "🍽️"], correct: 0 },
-    { word: "Sustainability", options: ["♻️", "💰", "⚔️"], correct: 0 },
-  ],
-};
-
-const READING_QUESTIONS = [
-  {
-    text: "The sun is very hot. It gives us light and warmth. Plants need the sun to grow.",
-    question: "What does the sun give us?",
-    options: ["Rain and snow", "Light and warmth", "Food and water"],
-    correct: 1,
-  },
-];
-
-const ORAL_QUESTIONS = [
-  { text: "Hello, how are you?", translation: "你好，你好吗？" },
-  { text: "I like eating red apples.", translation: "我喜欢吃红苹果。" },
-  { text: "The weather is very nice today.", translation: "今天天气很好。" },
-  { text: "Can you help me find my cat?", translation: "你能帮我找我的猫吗？" },
-];
-
-const GRAMMAR_QUESTIONS = [
-  { sentence: "She ___ to school every day.", options: ["go", "goes", "going"], correct: 1 },
-  { sentence: "They ___ playing football now.", options: ["is", "am", "are"], correct: 2 },
-];
-
-const ProgressBar = ({ current, total }: { current: number; total: number }) => (
-  <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden mb-6">
-    <motion.div
-      className="h-full bg-emerald-500"
-      initial={{ width: 0 }}
-      animate={{ width: `${(current / total) * 100}%` }}
-      transition={{ duration: 0.5 }}
-    />
-  </div>
-);
-
-const Card = ({ children, onClick, active, className = "" }: any) => (
-  <motion.div
-    whileTap={{ scale: 0.98 }}
-    onClick={onClick}
-    className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
-      active
-        ? "border-emerald-500 bg-emerald-50 shadow-lg shadow-emerald-100"
-        : "border-gray-100 bg-white"
-    } ${className}`}
-  >
-    {children}
-  </motion.div>
-);
+} from './types';
 
 export type EnglishProficiencyTestProps = {
   onComplete: (result: AbilityTestResult) => void;
   onBack?: () => void;
 };
 
-const EMPTY_TEST_STATE: TestState = {
-  ageGroup: null,
-  expLevel: null,
-  goal: null,
-  listeningScore: 0,
-  oralScore: null,
-  vocabScore: 0,
-  readingScore: null,
-  grammarScore: null,
-  oralTriggered: false,
-  readingTriggered: false,
-  grammarTriggered: false,
-  vocabStartRange: "A",
-};
+type Step = 'questionnaire' | 'transition' | 'test' | 'result';
+
+function mapLevel13to7(level13: number): number {
+  return Math.max(1, Math.min(7, Math.round((level13 - 1) / 12 * 6 + 1)));
+}
+
+function buildTestState(answers: boolean[]): TestState {
+  const listeningAnswers = answers.slice(0, 5);
+  const speakingAnswers = answers.slice(5, 8);
+  const vocabAnswers = answers.slice(8, 16);
+  const readingAnswers = answers.slice(16, 20);
+  const grammarAnswers = answers.slice(20, 23);
+
+  const listeningScore = listeningAnswers.filter(Boolean).length;
+  const oralScore = speakingAnswers.length > 0
+    ? speakingAnswers.filter(Boolean).length / speakingAnswers.length
+    : 1.0;
+  const vocabScore = vocabAnswers.length > 0
+    ? vocabAnswers.filter(Boolean).length / vocabAnswers.length
+    : 0;
+  const readingScore = readingAnswers.length > 0
+    ? readingAnswers.filter(Boolean).length / readingAnswers.length
+    : null;
+  const grammarScore = grammarAnswers.length > 0
+    ? grammarAnswers.filter(Boolean).length / grammarAnswers.length
+    : null;
+
+  return {
+    ageGroup: null as unknown as AgeGroup,
+    expLevel: null as unknown as ExpLevel,
+    goal: null,
+    listeningScore,
+    oralScore,
+    vocabScore,
+    readingScore,
+    grammarScore,
+    oralTriggered: speakingAnswers.length > 0,
+    readingTriggered: readingAnswers.length > 0,
+    grammarTriggered: grammarAnswers.length > 0,
+    vocabStartRange: 'A',
+  };
+}
 
 export function EnglishProficiencyTest({ onComplete, onBack }: EnglishProficiencyTestProps) {
-  const [step, setStep] = useState<"welcome" | "questionnaire" | "listening" | "oral" | "vocab" | "reading" | "grammar" | "result">(
-    "welcome",
-  );
-  const [testState, setTestState] = useState<TestState>(EMPTY_TEST_STATE);
-
-  const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
-  const [tempScore, setTempScore] = useState(0);
-  const [isRecording, setIsRecording] = useState(false);
-
-  const [isPortrait, setIsPortrait] = useState(window.innerHeight > window.innerWidth);
-  const lastCompleteRef = useRef(false);
+  const [step, setStep] = useState<Step>('questionnaire');
+  const [currentModuleIndex, setCurrentModuleIndex] = useState(0);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [timeRemaining, setTimeRemaining] = useState(15 * 60);
+  const [timeSpent, setTimeSpent] = useState(0);
+  const [answers, setAnswers] = useState<boolean[]>([]);
+  const [showExitModal, setShowExitModal] = useState(false);
+  const [isPortrait, setIsPortrait] = useState(false);
+  const [showPassage, setShowPassage] = useState(false);
+  const resultRef = useRef<AbilityTestResult | null>(null);
 
   useEffect(() => {
-    const handleResize = () => setIsPortrait(window.innerHeight > window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const checkOrientation = () => setIsPortrait(window.innerHeight > window.innerWidth);
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    const lockOrientation = async () => {
+      try {
+        if (screen.orientation && (screen.orientation as any).lock) {
+          await (screen.orientation as any).lock('landscape');
+        }
+      } catch (e) {}
+    };
+    document.addEventListener('click', lockOrientation, { once: true });
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+      document.removeEventListener('click', lockOrientation);
+    };
   }, []);
 
-  const getOverallProgress = () => {
-    const progressMap: Record<string, number> = {
-      welcome: 0,
-      questionnaire: 10,
-      listening: 25,
-      oral: 40,
-      vocab: 60,
-      reading: 80,
-      grammar: 95,
-      result: 100,
-    };
-    return progressMap[step] || 0;
-  };
-
-  const resetAll = () => {
-    lastCompleteRef.current = false;
-    setStep("welcome");
-    setTestState(EMPTY_TEST_STATE);
-    setCurrentQuestionIdx(0);
-    setTempScore(0);
-    setIsRecording(false);
-  };
-
-  // --- Handlers ---
-  const startTest = () => setStep("questionnaire");
-
-  const handleQuestionnaireSubmit = () => {
-    setStep("listening");
-    setCurrentQuestionIdx(0);
-    setTempScore(0);
-  };
-
-  const handleListeningAnswer = (isCorrect: boolean) => {
-    const newScore = isCorrect ? tempScore + 1 : tempScore;
-    if (currentQuestionIdx < LISTENING_QUESTIONS.length - 1) {
-      setTempScore(newScore);
-      setCurrentQuestionIdx((prev) => prev + 1);
-    } else {
-      const finalListeningScore = newScore;
-      const oralTrigger = finalListeningScore >= 2;
-      let vocabRange: "A" | "B" | "C" = "A";
-      if (finalListeningScore >= 4) vocabRange = "C";
-      else if (finalListeningScore >= 2) vocabRange = "B";
-
-      setTestState((prev) => ({
-        ...prev,
-        listeningScore: finalListeningScore,
-        oralTriggered: oralTrigger,
-        vocabStartRange: vocabRange,
-      }));
-
-      if (oralTrigger) {
-        setStep("oral");
-      } else {
-        setStep("vocab");
-      }
-      setCurrentQuestionIdx(0);
-      setTempScore(0);
-    }
-  };
-
-  const handleOralComplete = () => {
-    if (currentQuestionIdx < ORAL_QUESTIONS.length - 1) {
-      setCurrentQuestionIdx((prev) => prev + 1);
-    } else {
-      setTestState((prev) => ({ ...prev, oralScore: 0.85 }));
-      setStep("vocab");
-      setCurrentQuestionIdx(0);
-      setTempScore(0);
-    }
-  };
-
-  const handleVocabAnswer = (isCorrect: boolean) => {
-    const questions = VOCAB_QUESTIONS[testState.vocabStartRange];
-    const newScore = isCorrect ? tempScore + 1 : tempScore;
-
-    if (currentQuestionIdx < questions.length - 1) {
-      setTempScore(newScore);
-      setCurrentQuestionIdx((prev) => prev + 1);
-    } else {
-      const finalVocabScore = newScore / questions.length;
-      const readingTrigger = finalVocabScore >= 0.5;
-
-      setTestState((prev) => ({
-        ...prev,
-        vocabScore: finalVocabScore,
-        readingTriggered: readingTrigger,
-      }));
-
-      if (readingTrigger) setStep("reading");
-      else setStep("result");
-
-      setCurrentQuestionIdx(0);
-      setTempScore(0);
-    }
-  };
-
-  const handleReadingAnswer = (isCorrect: boolean) => {
-    const newScore = isCorrect ? tempScore + 1 : tempScore;
-    if (currentQuestionIdx < READING_QUESTIONS.length - 1) {
-      setTempScore(newScore);
-      setCurrentQuestionIdx((prev) => prev + 1);
-    } else {
-      const finalReadingScore = newScore / READING_QUESTIONS.length;
-      const grammarTrigger = finalReadingScore >= 0.5;
-      setTestState((prev) => ({
-        ...prev,
-        readingScore: finalReadingScore,
-        grammarTriggered: grammarTrigger,
-      }));
-
-      if (grammarTrigger) setStep("grammar");
-      else setStep("result");
-
-      setCurrentQuestionIdx(0);
-      setTempScore(0);
-    }
-  };
-
-  const handleGrammarAnswer = (isCorrect: boolean) => {
-    const newScore = isCorrect ? tempScore + 1 : tempScore;
-    if (currentQuestionIdx < GRAMMAR_QUESTIONS.length - 1) {
-      setTempScore(newScore);
-      setCurrentQuestionIdx((prev) => prev + 1);
-    } else {
-      const finalGrammarScore = newScore / GRAMMAR_QUESTIONS.length;
-      setTestState((prev) => ({ ...prev, grammarScore: finalGrammarScore }));
-      setStep("result");
-      setCurrentQuestionIdx(0);
-      setTempScore(0);
-    }
-  };
-
   useEffect(() => {
-    if (step === "result") {
-      confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ["#10b981", "#34d399", "#6ee7b7"],
-      });
+    let timer: ReturnType<typeof setInterval>;
+    if (step === 'test' || step === 'transition') {
+      timer = setInterval(() => {
+        setTimeRemaining((prev) => {
+          if (prev <= 1) { clearInterval(timer); setStep('result'); return 0; }
+          return prev - 1;
+        });
+        setTimeSpent((prev) => prev + 1);
+      }, 1000);
     }
+    return () => clearInterval(timer);
   }, [step]);
 
-  // --- Renderers ---
-  const renderWelcome = () => (
-    <div className="flex flex-col items-center justify-center h-full px-[6%] gap-4 md:gap-8 bg-gradient-to-br from-emerald-50 to-white overflow-y-auto py-4">
-      <motion.div initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-center max-w-xl">
-        <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-emerald-500 rounded-xl md:rounded-3xl flex items-center justify-center mb-3 md:mb-6 shadow-xl shadow-emerald-100 mx-auto">
-          <GraduationCap className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-white" />
-        </div>
-        <p className="text-gray-500 text-sm sm:text-base md:text-xl leading-relaxed max-w-xs mx-auto mb-3 md:mb-6">
-          开启宝贝的英语探索之旅，只需10分钟，精准定位学习起点。
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6 text-xs sm:text-sm md:text-base text-emerald-600 font-bold">
-          <span className="flex items-center gap-1 md:gap-2">
-            <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" /> 自适应题库
-          </span>
-          <span className="flex items-center gap-1 md:gap-2">
-            <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" /> AI 口语评测
-          </span>
-        </div>
-      </motion.div>
-
-      <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="w-full max-w-sm">
-        <div className="space-y-3 md:space-y-4">
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={startTest}
-            className="w-full py-3 sm:py-4 md:py-6 bg-emerald-500 text-white rounded-xl md:rounded-[2rem] font-black text-base sm:text-lg md:text-2xl shadow-2xl shadow-emerald-200 flex items-center justify-center gap-2 md:gap-4 transition-colors"
-          >
-            开始定级测试 <ChevronRight className="w-5 h-5 md:w-8 md:h-8" />
-          </motion.button>
-          <div className="flex flex-col items-center gap-1 md:gap-2">
-            <p className="text-center text-[8px] md:text-xs text-gray-400 uppercase tracking-[0.3em] font-bold">
-              Professional Assessment System
-            </p>
-            <div className="h-0.5 w-12 md:w-20 bg-emerald-100 rounded-full" />
-          </div>
-        </div>
-      </motion.div>
-    </div>
-  );
-
-  const renderQuestionnaire = () => (
-    <div className="px-[4%] py-2 md:px-[8%] md:py-6 h-full flex flex-col overflow-hidden max-w-7xl mx-auto w-full">
-      <div className="flex items-center justify-between mb-2 md:mb-6 shrink-0">
-        <h2 className="text-lg md:text-3xl font-black flex items-center gap-2 md:gap-4 text-gray-900">
-          <div className="w-7 h-7 md:w-10 md:h-10 bg-emerald-100 rounded-lg md:rounded-xl flex items-center justify-center">
-            <User className="text-emerald-600 w-4 h-4 md:w-6 md:h-6" />
-          </div>
-          宝贝基本信息
-        </h2>
-        <div className="text-gray-400 font-bold tracking-widest text-[7px] md:text-xs uppercase">Step 01 / 05</div>
-      </div>
-
-      <div className="flex-1 grid grid-cols-2 gap-4 md:gap-12 min-h-0">
-        <section className="flex flex-col min-h-0">
-          <label className="block text-[9px] md:text-xs font-black text-gray-400 mb-2 md:mb-4 uppercase tracking-[0.2em] shrink-0">
-            孩子年龄段
-          </label>
-          <div className="grid grid-cols-2 gap-2 md:gap-4 overflow-y-auto pr-1 custom-scrollbar">
-            {[
-              { label: "2-4岁", val: AgeGroup.Toddler },
-              { label: "5-7岁", val: AgeGroup.Young },
-              { label: "8-10岁", val: AgeGroup.Middle },
-              { label: "11-12岁", val: AgeGroup.Older },
-            ].map((item) => (
-              <Card
-                key={item.val}
-                active={testState.ageGroup === item.val}
-                onClick={() => setTestState((p) => ({ ...p, ageGroup: item.val }))}
-                className="flex items-center justify-center text-xs md:text-xl font-black py-3 md:py-8"
-              >
-                {item.label}
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        <section className="flex flex-col min-h-0">
-          <label className="block text-[9px] md:text-xs font-black text-gray-400 mb-2 md:mb-4 uppercase tracking-[0.2em] shrink-0">
-            英语学习经历
-          </label>
-          <div className="space-y-2 md:space-y-3 overflow-y-auto pr-1 custom-scrollbar">
-            {[
-              { label: "完全零基础，从没学过", val: ExpLevel.Zero },
-              { label: "在家听过一些英语歌/动画", val: ExpLevel.Exposure },
-              { label: "幼儿园/早教有接触过英语", val: ExpLevel.Early },
-              { label: "上过英语培训班或外教课", val: ExpLevel.Training },
-              { label: "一直在系统学英语", val: ExpLevel.Systematic },
-            ].map((item) => (
-              <Card
-                key={item.val}
-                active={testState.expLevel === item.val}
-                onClick={() => setTestState((p) => ({ ...p, expLevel: item.val }))}
-                className="flex items-center justify-between py-2 px-3 md:py-4 md:px-6"
-              >
-                <span className="font-bold text-[10px] md:text-lg">{item.label}</span>
-                {testState.expLevel === item.val && <CheckCircle2 className="text-emerald-500 w-3 h-3 md:w-6 md:h-6" />}
-              </Card>
-            ))}
-          </div>
-        </section>
-      </div>
-
-      <div className="mt-3 md:mt-6 flex justify-end shrink-0">
-        <motion.button
-          disabled={!testState.ageGroup || testState.expLevel === null}
-          onClick={handleQuestionnaireSubmit}
-          className="px-6 py-2 md:px-16 md:py-4 bg-emerald-500 text-white rounded-lg md:rounded-2xl font-black text-xs md:text-xl shadow-xl disabled:opacity-30 disabled:shadow-none transition-all flex items-center gap-2 md:gap-4"
-        >
-          进入测试 <ArrowRight className="w-4 h-4 md:w-6 md:h-6" />
-        </motion.button>
-      </div>
-    </div>
-  );
-
-  const renderListening = () => {
-    const q = LISTENING_QUESTIONS[currentQuestionIdx];
-    return (
-      <div className="px-[4%] py-2 md:px-[8%] md:py-6 h-full flex flex-col overflow-hidden max-w-7xl mx-auto w-full">
-        <div className="flex justify-between items-center mb-2 md:mb-6 shrink-0">
-          <div className="flex items-center gap-2 md:gap-6">
-            <span className="bg-emerald-100 text-emerald-600 px-2 py-1 md:px-5 md:py-2 rounded-lg md:rounded-xl font-black text-[10px] md:text-base flex items-center gap-1 md:gap-2">
-              <Volume2 className="w-3 h-3 md:w-5 md:h-5" /> 听力筛选
-            </span>
-            <span className="text-gray-400 font-black text-[9px] md:text-lg tracking-widest uppercase">
-              Q{currentQuestionIdx + 1} / {LISTENING_QUESTIONS.length}
-            </span>
-          </div>
-          <div className="w-24 md:w-80">
-            <ProgressBar current={currentQuestionIdx + 1} total={LISTENING_QUESTIONS.length} />
-          </div>
-        </div>
-
-        <div className="flex-1 flex gap-4 md:gap-16 items-center min-h-0">
-          <div className="flex-1 flex flex-col items-center justify-center">
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              className="w-20 h-20 sm:w-28 sm:h-28 md:w-56 md:h-56 bg-emerald-500 rounded-2xl md:rounded-[2.5rem] flex items-center justify-center shadow-xl md:shadow-2xl shadow-emerald-200 mb-2 md:mb-6"
-            >
-              <Volume2 className="w-10 h-10 md:w-28 md:h-28 text-white" />
-            </motion.button>
-            <p className="text-gray-400 font-black text-[8px] md:text-lg uppercase tracking-widest">点击播放音频</p>
-          </div>
-
-          <div className="flex-[1.5] grid grid-cols-3 gap-2 md:gap-6 overflow-y-auto pr-1 custom-scrollbar max-h-full py-2">
-            {q.options.map((opt, idx) => (
-              <Card
-                key={idx}
-                onClick={() => handleListeningAnswer(idx === q.correct)}
-                className="aspect-square flex items-center justify-center text-2xl sm:text-3xl md:text-7xl"
-              >
-                {opt}
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderOral = () => {
-    const q = ORAL_QUESTIONS[currentQuestionIdx];
-    return (
-      <div className="px-[4%] py-2 md:px-[8%] md:py-6 h-full flex flex-col overflow-hidden max-w-7xl mx-auto w-full">
-        <div className="flex justify-between items-center mb-2 md:mb-6 shrink-0">
-          <div className="flex items-center gap-2 md:gap-6">
-            <span className="bg-emerald-100 text-emerald-600 px-2 py-1 md:px-5 md:py-2 rounded-lg md:rounded-xl font-black text-[10px] md:text-base flex items-center gap-1 md:gap-2">
-              <Mic className="w-3 h-3 md:w-5 md:h-5" /> 口语跟读
-            </span>
-            <span className="text-gray-400 font-black text-[9px] md:text-lg tracking-widest uppercase">
-              Q{currentQuestionIdx + 1} / {ORAL_QUESTIONS.length}
-            </span>
-          </div>
-          <div className="w-24 md:w-80">
-            <ProgressBar current={currentQuestionIdx + 1} total={ORAL_QUESTIONS.length} />
-          </div>
-        </div>
-
-        <div className="flex-1 flex gap-6 md:gap-16 items-center min-h-0">
-          <div className="flex-1 text-left">
-            <h2 className="text-[10px] md:text-xl font-black text-gray-400 mb-1 md:mb-2 uppercase tracking-[0.2em]">
-              Please repeat:
-            </h2>
-            <p className="text-xl sm:text-2xl md:text-5xl font-black text-emerald-600 leading-tight tracking-tight italic mb-2 md:mb-4">
-              "{q.text}"
-            </p>
-            <p className="text-gray-400 text-[10px] md:text-lg font-bold">{q.translation}</p>
-          </div>
-
-          <div className="flex-1 flex flex-col items-center justify-center">
-            <div className="relative mb-3 md:mb-8">
-              <AnimatePresence>
-                {isRecording && (
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 2.2, opacity: 0.1 }}
-                    exit={{ scale: 0.8, opacity: 0 }}
-                    transition={{ repeat: Infinity, duration: 1.5 }}
-                    className="absolute inset-0 bg-emerald-400 rounded-full"
-                  />
-                )}
-              </AnimatePresence>
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onMouseDown={() => setIsRecording(true)}
-                onMouseUp={() => {
-                  setIsRecording(false);
-                  handleOralComplete();
-                }}
-                onTouchStart={() => setIsRecording(true)}
-                onTouchEnd={() => {
-                  setIsRecording(false);
-                  handleOralComplete();
-                }}
-                className={`w-20 h-20 md:w-40 md:h-40 rounded-full flex items-center justify-center shadow-xl md:shadow-[0_15px_40px_rgba(0,0,0,0.1)] relative z-10 transition-all duration-300 ${
-                  isRecording ? "bg-red-500 scale-110" : "bg-emerald-500"
-                }`}
-              >
-                <Mic className="w-7 h-7 md:w-16 md:h-16 text-white" />
-              </motion.button>
-            </div>
-            <p className="text-gray-500 font-black text-[10px] md:text-lg tracking-wide">长按按钮开始录音</p>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderVocab = () => {
-    const questions = VOCAB_QUESTIONS[testState.vocabStartRange];
-    const q = questions[currentQuestionIdx];
-    return (
-      <div className="px-[4%] py-2 md:px-[8%] md:py-6 h-full flex flex-col overflow-hidden max-w-7xl mx-auto w-full">
-        <div className="flex justify-between items-center mb-2 md:mb-6 shrink-0">
-          <div className="flex items-center gap-2 md:gap-6">
-            <span className="bg-emerald-100 text-emerald-600 px-2 py-1 md:px-5 md:py-2 rounded-lg md:rounded-xl font-black text-[10px] md:text-base flex items-center gap-1 md:gap-2">
-              <BookOpen className="w-3 h-3 md:w-5 md:h-5" /> 词汇自适应
-            </span>
-            <span className="text-gray-400 font-black text-[9px] md:text-lg tracking-widest uppercase">
-              Q{currentQuestionIdx + 1} / {questions.length}
-            </span>
-          </div>
-          <div className="w-24 md:w-80">
-            <ProgressBar current={currentQuestionIdx + 1} total={questions.length} />
-          </div>
-        </div>
-
-        <div className="flex-1 flex gap-4 md:gap-16 items-center min-h-0">
-          <div className="flex-1 flex flex-col items-center justify-center">
-            <div className="bg-emerald-50 w-full aspect-video rounded-xl md:rounded-[2.5rem] flex items-center justify-center mb-2 md:mb-4 border-2 md:border-4 border-emerald-100 shadow-inner">
-              <h2 className="text-xl sm:text-3xl md:text-6xl font-black text-emerald-600 tracking-tighter">{q.word}</h2>
-            </div>
-            <p className="text-gray-400 font-black text-[8px] md:text-lg uppercase tracking-widest">这个单词是什么意思？</p>
-          </div>
-
-          <div className="flex-[1.5] grid grid-cols-2 gap-2 md:gap-6 overflow-y-auto pr-1 custom-scrollbar py-2">
-            {q.options.map((opt, idx) => (
-              <Card
-                key={idx}
-                onClick={() => handleVocabAnswer(idx === q.correct)}
-                className="h-14 sm:h-16 md:h-32 flex items-center justify-center text-lg sm:text-xl md:text-5xl"
-              >
-                {opt}
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderResult = () => {
-    const finalLevel = calculateFinalLevel(testState);
-    const levelLabel = LEVEL_MAP[`L${finalLevel}`];
-
-    const handleComplete = () => {
-      // 防止连点重复回调
-      if (lastCompleteRef.current) return;
-      lastCompleteRef.current = true;
-      onComplete({ finalLevel, testState });
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      e.preventDefault();
+      if (step === 'test' || step === 'transition') setShowExitModal(true);
+      window.history.pushState(null, '', window.location.href);
     };
+    window.history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [step]);
 
-    return (
-      <div className="px-[4%] py-2 md:px-[8%] md:py-6 h-full flex gap-4 md:gap-10 items-center bg-gradient-to-br from-emerald-50 to-white overflow-y-auto custom-scrollbar max-w-7xl ml-0 mr-auto w-full">
-        <div className="flex-1 text-center min-w-[180px]">
-          <motion.div
-            initial={{ scale: 0.5, opacity: 0, rotate: -20 }}
-            animate={{ scale: 1, opacity: 1, rotate: 0 }}
-            transition={{ type: "spring", damping: 12 }}
-            className="relative inline-block mb-2 md:mb-6"
-          >
-            <Trophy className="w-16 h-16 sm:w-20 sm:h-20 md:w-36 md:h-36 text-yellow-400 mx-auto drop-shadow-2xl" />
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="absolute inset-0 border-2 md:border-6 border-dashed border-yellow-200/50 rounded-full -m-1 md:-m-6"
-            />
-          </motion.div>
-          <h2 className="text-lg sm:text-xl md:text-4xl font-black text-gray-900 mb-1 md:mb-2 tracking-tight">定级测试完成！</h2>
-          <p className="text-gray-400 text-[10px] sm:text-xs md:text-lg font-bold">宝贝太棒了，为你点赞</p>
-        </div>
-
-        <div className="flex-[1.5] flex flex-col gap-2 md:gap-6 min-w-[240px]">
-          <div className="bg-white rounded-xl md:rounded-[2.5rem] p-3 md:p-8 border-2 md:border-4 border-emerald-100 flex items-center justify-between shadow-xl md:shadow-2xl shadow-emerald-100/50">
-            <div className="text-left">
-              <p className="text-[7px] md:text-xs font-black text-emerald-600 uppercase tracking-[0.3em] mb-1 md:mb-2">当前定级结果</p>
-              <div className="flex items-baseline gap-1 md:gap-3">
-                <h3 className="text-2xl sm:text-3xl md:text-6xl font-black text-gray-900 tracking-tighter">Level {finalLevel}</h3>
-                <span className="text-[10px] sm:text-xs md:text-xl font-black text-emerald-600 opacity-60">{levelLabel}</span>
-              </div>
-            </div>
-            <div className="w-10 h-10 sm:w-14 sm:h-14 md:w-24 md:h-24 bg-emerald-50 rounded-lg md:rounded-3xl flex items-center justify-center shadow-inner">
-              <Star className="w-5 h-5 sm:w-7 sm:h-7 md:w-12 md:h-12 text-yellow-400 fill-yellow-400" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 md:gap-4">
-            <div className="bg-white p-2 md:p-4 rounded-lg md:rounded-2xl border-2 border-gray-50 flex flex-col gap-1 md:gap-2 shadow-sm">
-              <div className="flex justify-between items-center">
-                <span className="text-[7px] md:text-sm font-black text-gray-400 uppercase tracking-widest">听力理解</span>
-                <span className="text-emerald-600 font-black text-[10px] md:text-xl">{testState.listeningScore}/5</span>
-              </div>
-              <div className="h-1 md:h-3 bg-gray-100 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${(testState.listeningScore / 5) * 100}%` }}
-                  className="h-full bg-emerald-500"
-                />
-              </div>
-            </div>
-            <div className="bg-white p-2 md:p-4 rounded-lg md:rounded-2xl border-2 border-gray-50 flex flex-col gap-1 md:gap-2 shadow-sm">
-              <div className="flex justify-between items-center">
-                <span className="text-[7px] md:text-sm font-black text-gray-400 uppercase tracking-widest">词汇储备</span>
-                <span className="text-emerald-600 font-black text-[10px] md:text-xl">{Math.round(testState.vocabScore * 100)}%</span>
-              </div>
-              <div className="h-1 md:h-3 bg-gray-100 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${testState.vocabScore * 100}%` }}
-                  className="h-full bg-emerald-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-2 md:gap-4">
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={handleComplete}
-              className="flex-1 py-2 md:py-5 bg-emerald-500 text-white rounded-lg md:rounded-2xl font-black text-xs md:text-xl shadow-xl md:shadow-2xl shadow-emerald-200 flex items-center justify-center gap-2 md:gap-4"
-            >
-              领取学习计划 <ArrowRight className="w-3 h-3 md:w-6 md:h-6" />
-            </motion.button>
-            <motion.button
-              onClick={resetAll}
-              className="px-3 py-2 md:px-8 md:py-5 bg-white text-emerald-500 border-2 md:border-4 border-emerald-100 rounded-lg md:rounded-2xl font-black transition-all"
-            >
-              <RefreshCw className="w-3 h-3 md:w-6 md:h-6" />
-            </motion.button>
-          </div>
-        </div>
-      </div>
-    );
+  const handleNextQuestion = (isCorrect: boolean) => {
+    const newAnswers = [...answers, isCorrect];
+    setAnswers(newAnswers);
+    const currentModule = testModules[currentModuleIndex];
+    if (currentQuestionIndex < currentModule.questions.length - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1);
+    } else if (currentModuleIndex < testModules.length - 1) {
+      const nextIdx = currentModuleIndex + 1;
+      setCurrentModuleIndex(nextIdx);
+      setCurrentQuestionIndex(0);
+      setStep('transition');
+      if (testModules[nextIdx].id === 'R-1') setShowPassage(true);
+    } else {
+      const correct = newAnswers.filter(Boolean).length;
+      const total = newAnswers.length;
+      const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+      const level13 = Math.max(1, Math.min(13, Math.ceil((accuracy / 100) * 13)));
+      resultRef.current = { finalLevel: mapLevel13to7(level13), testState: buildTestState(newAnswers) };
+      setStep('result');
+    }
   };
 
-  const renderReading = () => {
-    return (
-      <div className="px-[4%] py-2 md:px-[8%] md:py-6 h-full flex flex-col overflow-hidden max-w-7xl mx-auto w-full">
-        <div className="flex justify-between items-center mb-2 md:mb-6 shrink-0">
-          <div className="flex items-center gap-2 md:gap-6">
-            <span className="bg-emerald-100 text-emerald-600 px-2 py-1 md:px-5 md:py-2 rounded-lg md:rounded-xl font-black text-[10px] md:text-base flex items-center gap-1 md:gap-2">
-              <BookOpen className="w-3 h-3 md:w-5 md:h-5" /> 阅读理解
-            </span>
-            <span className="text-gray-400 font-black text-[9px] md:text-lg tracking-widest uppercase">
-              Q{currentQuestionIdx + 1} / {READING_QUESTIONS.length}
-            </span>
-          </div>
-          <div className="w-24 md:w-80">
-            <ProgressBar current={currentQuestionIdx + 1} total={READING_QUESTIONS.length} />
-          </div>
-        </div>
-
-        <div className="flex-1 flex gap-4 md:gap-16 items-center min-h-0">
-          <div className="flex-1 bg-emerald-50 p-3 md:p-8 rounded-xl md:rounded-[2.5rem] border-2 md:border-4 border-emerald-100 shadow-inner h-full flex flex-col justify-center overflow-y-auto custom-scrollbar">
-            <p className="text-sm sm:text-base md:text-2xl font-bold text-gray-800 leading-relaxed italic mb-2 md:mb-6">
-              "{READING_QUESTIONS[currentQuestionIdx].text}"
-            </p>
-            <div className="h-0.5 w-10 md:w-16 bg-emerald-200 rounded-full" />
-          </div>
-
-          <div className="flex-1 flex flex-col justify-center min-h-0">
-            <h3 className="text-xs sm:text-sm md:text-2xl font-black text-gray-900 mb-2 md:mb-6 leading-tight shrink-0">
-              {READING_QUESTIONS[currentQuestionIdx].question}
-            </h3>
-            <div className="space-y-2 md:space-y-4 overflow-y-auto pr-1 custom-scrollbar py-2">
-              {READING_QUESTIONS[currentQuestionIdx].options.map((opt, idx) => (
-                <Card
-                  key={idx}
-                  onClick={() => handleReadingAnswer(idx === READING_QUESTIONS[currentQuestionIdx].correct)}
-                  className="py-2 px-3 md:py-4 md:px-8 text-xs sm:text-sm md:text-xl font-bold"
-                >
-                  {opt}
-                </Card>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  const handleComplete = () => {
+    if (resultRef.current) { onComplete(resultRef.current); return; }
+    const correct = answers.filter(Boolean).length;
+    const total = answers.length;
+    const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+    const level13 = Math.max(1, Math.min(13, Math.ceil((accuracy / 100) * 13)));
+    onComplete({ finalLevel: mapLevel13to7(level13), testState: buildTestState(answers) });
   };
 
-  const renderGrammar = () => {
-    return (
-      <div className="px-[4%] py-2 md:px-[8%] md:py-6 h-full flex flex-col overflow-hidden max-w-7xl mx-auto w-full">
-        <div className="flex justify-between items-center mb-2 md:mb-6 shrink-0">
-          <div className="flex items-center gap-2 md:gap-6">
-            <span className="bg-emerald-100 text-emerald-600 px-2 py-1 md:px-5 md:py-2 rounded-lg md:rounded-xl font-black text-[10px] md:text-base flex items-center gap-1 md:gap-2">
-              <Target className="w-3 h-3 md:w-5 md:h-5" /> 语法筛选
-            </span>
-            <span className="text-gray-400 font-black text-[9px] md:text-lg tracking-widest uppercase">
-              Q{currentQuestionIdx + 1} / {GRAMMAR_QUESTIONS.length}
-            </span>
-          </div>
-          <div className="w-24 md:w-80">
-            <ProgressBar current={currentQuestionIdx + 1} total={GRAMMAR_QUESTIONS.length} />
-          </div>
-        </div>
-
-        <div className="flex-1 flex flex-col items-center justify-center min-h-0 overflow-y-auto custom-scrollbar px-2">
-          <div className="bg-emerald-50 w-full max-w-3xl p-3 md:p-10 rounded-xl md:rounded-[2.5rem] border-2 md:border-4 border-emerald-100 mb-3 md:mb-8 text-center shrink-0">
-            <h2 className="text-lg sm:text-xl md:text-4xl font-black text-emerald-600 tracking-tight leading-tight">
-              {GRAMMAR_QUESTIONS[currentQuestionIdx].sentence.split("___").map((part, i, arr) => (
-                <React.Fragment key={i}>
-                  {part}
-                  {i < arr.length - 1 && (
-                    <span className="inline-block w-6 md:w-24 h-0.5 bg-emerald-400 mx-1 md:mx-3 align-middle" />
-                  )}
-                </React.Fragment>
-              ))}
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-6 w-full max-w-3xl py-2">
-            {GRAMMAR_QUESTIONS[currentQuestionIdx].options.map((opt, idx) => (
-              <Card
-                key={idx}
-                onClick={() => handleGrammarAnswer(idx === GRAMMAR_QUESTIONS[currentQuestionIdx].correct)}
-                className="py-2 md:py-6 text-xs sm:text-sm md:text-2xl font-black flex items-center justify-center"
-              >
-                {opt}
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
+  const formatTime = (s: number) =>
+    `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
   return (
-    <div className="h-full w-full bg-white font-sans antialiased overflow-hidden relative">
-      {onBack && (
-        <button
-          onClick={onBack}
-          className="absolute top-4 left-4 z-[200] w-10 h-10 bg-white/90 rounded-full shadow-md border border-emerald-100 flex items-center justify-center text-emerald-600 active:scale-95"
-          aria-label="Back"
-        >
-          <X size={20} />
-        </button>
-      )}
-
-      {/* Orientation Lock Overlay */}
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-[#F7FFF7]">
       <AnimatePresence>
         {isPortrait && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-emerald-500 flex flex-col items-center justify-center text-white p-12 text-center"
+            key="portrait-guard"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-[#ED7470] z-[200] flex flex-col items-center justify-center p-8 text-white text-center"
           >
-            <motion.div
-              animate={{ rotate: [0, 90, 90, 0] }}
-              transition={{ repeat: Infinity, duration: 2, times: [0, 0.4, 0.6, 1] }}
-              className="mb-8"
-            >
-              <RefreshCw className="w-24 h-24" />
+            <motion.div animate={{ rotate: 90 }} transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }} className="mb-8">
+              <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                <line x1="12" y1="18" x2="12.01" y2="18" />
+              </svg>
             </motion.div>
-            <h2 className="text-4xl font-black mb-4">请旋转手机</h2>
-            <p className="text-xl font-bold opacity-80">横屏体验更佳哦！</p>
+            <h2 className="text-3xl font-bold mb-4">请横屏使用</h2>
+            <p className="text-xl opacity-90">为了获得最佳测试体验，请将手机横过来哦！</p>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <main className="h-full w-full relative">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -20, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="h-full w-full"
-          >
-            {step === "welcome" && renderWelcome()}
-            {step === "questionnaire" && renderQuestionnaire()}
-            {step === "listening" && renderListening()}
-            {step === "oral" && renderOral()}
-            {step === "vocab" && renderVocab()}
-            {step === "reading" && renderReading()}
-            {step === "grammar" && renderGrammar()}
-            {step === "result" && renderResult()}
-          </motion.div>
-        </AnimatePresence>
+      {step === 'questionnaire' && onBack && (
+        <button
+          onClick={() => { playClickSound(); onBack(); }}
+          className="absolute top-4 left-4 z-50 p-2 rounded-full bg-white/80 hover:bg-white transition-colors shadow"
+          aria-label="返回"
+        >
+          <ArrowLeft size={24} className="text-[#2F3640]" />
+        </button>
+      )}
 
-        {/* Overall Progress Bar */}
-        {step !== "welcome" && step !== "result" && (
-          <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100 z-50">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${getOverallProgress()}%` }}
-              className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
-              transition={{ duration: 0.8, ease: "easeInOut" }}
-            />
-          </div>
+      <AnimatePresence mode="wait">
+        {step === 'questionnaire' && <Questionnaire key="questionnaire" onStart={() => setStep('transition')} />}
+        {step === 'transition' && (
+          <TransitionScreen key={'transition-' + currentModuleIndex} moduleIndex={currentModuleIndex} onComplete={() => setStep('test')} />
         )}
-      </main>
+        {step === 'test' && showPassage && (
+          <PassageScreen key="passage" moduleIndex={currentModuleIndex} onNext={() => setShowPassage(false)} />
+        )}
+        {step === 'test' && !showPassage && (
+          <TestScreen key={'test-' + currentModuleIndex + '-' + currentQuestionIndex} moduleIndex={currentModuleIndex} questionIndex={currentQuestionIndex} onNext={handleNextQuestion} />
+        )}
+        {step === 'result' && <ResultScreen key="result" answers={answers} timeSpent={timeSpent} onComplete={handleComplete} />}
+      </AnimatePresence>
+
+      {(step === 'test' || step === 'transition') && (
+        <div className="fixed bottom-6 left-6 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full shadow-lg flex items-center gap-2 text-[#2F3640] font-bold z-50">
+          <Clock size={20} className="text-[#ED7470]" />
+          <span>{formatTime(timeRemaining)}</span>
+        </div>
+      )}
+
+      {showExitModal && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center">
+            <h2 className="text-2xl font-bold mb-4 text-[#2F3640]">确认退出？</h2>
+            <p className="text-gray-600 mb-8">中断测试需要重新完成整个测试哦！</p>
+            <div className="flex gap-4">
+              <Button variant="outline" className="flex-1" onClick={() => { playClickSound(); setShowExitModal(false); }}>继续测试</Button>
+              <Button variant="primary" className="flex-1" onClick={() => { playClickSound(); setShowExitModal(false); onBack?.(); }}>确认退出</Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
 
+const Questionnaire: React.FC<{ onStart: () => void }> = ({ onStart }) => {
+  const [subStep, setSubStep] = useState<'cover' | 'age' | 'exp'>('cover');
+  const [age, setAge] = useState('');
+  const [exp, setExp] = useState('');
+  const ages = ['3-5岁', '6-8岁', '9-11岁', '12岁以上'];
+  const exps = ['零基础', '不到1年', '1-3年', '3-5年', '5年以上'];
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="flex-1 flex flex-col items-center justify-center p-6 max-w-2xl mx-auto w-full">
+      <div className="bg-white rounded-[2rem] p-8 shadow-xl w-full min-h-[400px] flex flex-col">
+        <div className="flex-1 flex flex-col justify-center">
+          <AnimatePresence mode="wait">
+            {subStep === 'cover' && (
+              <motion.div key="cover" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="text-center">
+                <div className="w-32 h-32 bg-[#ED7470]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-5xl">👋</span>
+                </div>
+                <h1 className="text-3xl font-bold mb-4 text-[#ED7470]">欢迎参加千千妈妈定级测试</h1>
+                <p className="text-gray-600 mb-8 leading-relaxed">为了给孩子匹配最合适的题目，<br />请先完成 2 道小调查哦！</p>
+                <div className="flex justify-center gap-6 mb-8">
+                  <div className="flex items-center gap-2 text-[#ED7470] font-bold"><CheckCircle2 size={20} /><span>自适应题库</span></div>
+                  <div className="flex items-center gap-2 text-[#ED7470] font-bold"><CheckCircle2 size={20} /><span>AI 口语评测</span></div>
+                </div>
+              </motion.div>
+            )}
+            {subStep === 'age' && (
+              <motion.div key="age" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <h2 className="text-2xl font-bold mb-8 text-[#2F3640] text-center">1. 孩子的年龄段是？</h2>
+                <div className="grid grid-cols-1 gap-4 mb-6">
+                  {ages.map((a) => (
+                    <Button key={a} variant={age === a ? 'secondary' : 'outline'} className="h-14 text-lg rounded-2xl" onClick={() => setAge(a)}>{a}</Button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+            {subStep === 'exp' && (
+              <motion.div key="exp" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <h2 className="text-2xl font-bold mb-8 text-[#2F3640] text-center">2. 英语学习经历？</h2>
+                <div className="grid grid-cols-1 gap-4 mb-6">
+                  {exps.map((e) => (
+                    <Button key={e} variant={exp === e ? 'accent' : 'outline'} className="h-14 text-lg rounded-2xl" onClick={() => setExp(e)}>{e}</Button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        <div className="mt-6">
+          {subStep === 'cover' && (
+            <Button variant="primary" size="lg" className="w-64 mx-auto block text-xl rounded-full" onClick={() => { playClickSound(); setSubStep('age'); }}>开始填写问卷</Button>
+          )}
+          {subStep === 'age' && (
+            <>
+              <Button variant="primary" size="lg" className="w-64 mx-auto block text-xl rounded-full mb-6" disabled={!age} onClick={() => { playClickSound(); setSubStep('exp'); }}>下一题</Button>
+              <div className="flex justify-center gap-2"><div className="w-3 h-3 rounded-full bg-[#ED7470]"></div><div className="w-3 h-3 rounded-full bg-gray-200"></div></div>
+            </>
+          )}
+          {subStep === 'exp' && (
+            <>
+              <Button variant="primary" size="lg" className="w-64 mx-auto block text-xl rounded-full mb-6" disabled={!exp} onClick={onStart}>完成，开始测试</Button>
+              <div className="flex justify-center gap-2"><div className="w-3 h-3 rounded-full bg-gray-200"></div><div className="w-3 h-3 rounded-full bg-[#FF6B6B]"></div></div>
+            </>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+const TransitionScreen: React.FC<{ moduleIndex: number; onComplete: () => void }> = ({ moduleIndex, onComplete }) => {
+  const module = testModules[moduleIndex];
+  const [isLoaded, setIsLoaded] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => { setIsLoaded(true); playSuccessSound(); }, 2000);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 flex flex-col items-center justify-center p-6 bg-[#4ECDC4] text-white">
+      <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ type: 'spring', bounce: 0.5 }} className="text-center flex flex-col items-center w-full max-w-2xl">
+        <h2 className="text-2xl font-medium mb-2 opacity-80">Module {moduleIndex + 1}</h2>
+        <h1 className="text-5xl font-bold mb-24">{module.title}</h1>
+        <p className={'text-xl font-medium mb-4 transition-all duration-500' + (!isLoaded ? ' animate-pulse' : '')}>
+          {isLoaded ? '开始接受挑战吧～' : 'AI正在为您生成专属题库...'}
+        </p>
+        <div className="w-1/2 mb-12 relative">
+          <div className="h-10 bg-[#8B4513] rounded-full p-1.5 shadow-inner border-4 border-[#D2691E]">
+            <motion.div className="h-full bg-[#FFD700] rounded-full relative overflow-hidden bg-striped" initial={{ width: '0%' }} animate={{ width: '100%' }} transition={{ duration: 2, ease: 'easeIn' }}>
+              <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent pointer-events-none" />
+            </motion.div>
+          </div>
+        </div>
+      </motion.div>
+      <Button variant="accent" size="lg" className="min-w-[200px] text-xl rounded-full disabled:!text-[#C56F33]" disabled={!isLoaded} onClick={onComplete}>
+        {isLoaded ? '开始答题' : '加载中...'}
+      </Button>
+    </motion.div>
+  );
+};
+
+const PassageScreen: React.FC<{ moduleIndex: number; onNext: () => void }> = ({ moduleIndex, onNext }) => {
+  const passage = testModules[moduleIndex].questions[0].passage;
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center p-6 max-w-3xl mx-auto w-full">
+      <motion.div key="passage-screen-root" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.05 }} className="bg-white rounded-[3rem] p-10 shadow-xl w-full flex flex-col items-center">
+        <div className="flex items-center gap-4 mb-8">
+          <div className="w-16 h-16 bg-[#4ECDC4]/10 rounded-full flex items-center justify-center"><FileText size={32} className="text-[#4ECDC4]" /></div>
+          <h1 className="text-3xl font-bold text-[#2F3640]">阅读文章</h1>
+        </div>
+        <div className="bg-gray-50 p-8 rounded-3xl mb-10 text-xl text-gray-700 leading-relaxed w-full border-2 border-dashed border-gray-200">{passage}</div>
+        <Button variant="primary" size="lg" className="w-full max-w-xs text-xl h-16 rounded-full shadow-lg" onClick={() => { playClickSound(); onNext(); }}>下一步</Button>
+      </motion.div>
+    </div>
+  );
+};
+
+const TestScreen: React.FC<{ moduleIndex: number; questionIndex: number; onNext: (isCorrect: boolean) => void }> = ({ moduleIndex, questionIndex, onNext }) => {
+  const module = testModules[moduleIndex];
+  const question = module.questions[questionIndex];
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [hasRecorded, setHasRecorded] = useState(false);
+  const [showPassagePopup, setShowPassagePopup] = useState(false);
+
+  useEffect(() => {
+    setSelectedOptionId(null); setIsRecording(false); setHasRecorded(false); setShowPassagePopup(false);
+  }, [questionIndex, moduleIndex]);
+
+  const handleNext = () => {
+    if (question.type === 'speaking') { onNext(true); return; }
+    onNext(question.options?.find((o) => o.id === selectedOptionId)?.isCorrect || false);
+  };
+
+  const handleRecord = () => {
+    playClickSound(); setIsRecording(true);
+    setTimeout(() => { setIsRecording(false); setHasRecorded(true); playSuccessSound(); }, 3000);
+  };
+
+  return (
+    <div className={'flex-1 flex flex-col p-6 pb-24 ' + (module.id === 'VA-1' ? 'max-w-6xl' : 'max-w-3xl') + ' mx-auto w-full relative'}>
+      <motion.div key={moduleIndex + '-' + questionIndex} initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="flex-1 flex flex-col">
+        <div className="flex justify-between items-center mb-8">
+          <div className="font-bold text-[#4ECDC4] text-lg">{module.title}</div>
+          <div className="font-bold text-gray-400">{questionIndex + 1} / {module.questions.length}</div>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center w-full">
+          {(question.type === 'listening' || question.type === 'vocabulary' || question.type === 'speaking') && question.audioText && (
+            <div className={module.id === 'VA-1' ? 'mb-16' : 'mb-8'}>
+              <AudioPlayer text={question.audioText} audio={question.audio} autoPlay={true} />
+            </div>
+          )}
+          {question.text && <h2 className="text-3xl font-bold text-center mb-8 text-[#2F3640] leading-tight">{question.text}</h2>}
+          {question.options && (
+            <div className={'grid ' + (module.id === 'VA-1' ? 'gap-8' : 'gap-4') + ' w-full ' + (question.options[0].image ? (module.id === 'VA-1' ? 'grid-cols-4' : 'grid-cols-2') : 'grid-cols-1')}>
+              {question.options.map((option) => (
+                <button key={option.id} onClick={() => { playClickSound(); setSelectedOptionId(option.id); }}
+                  className={'relative overflow-hidden rounded-3xl transition-all active:scale-95 ' + (selectedOptionId === option.id ? 'shadow-lg scale-[1.02] bg-[#ED7470]' : 'shadow-sm bg-white')}>
+                  {option.image ? (
+                    <div className={(module.id === 'VA-1' ? 'aspect-[400/512]' : 'aspect-[4/3]') + ' relative'}>
+                      <img src={option.image} alt="Option" className="w-full h-full object-cover" referrerPolicy="no-referrer" draggable="false" />
+                      <div className={'absolute inset-0 rounded-[1.4rem] pointer-events-none transition-all z-10 ' + (selectedOptionId === option.id ? 'ring-4 ring-inset ring-[#ED7470]' : 'ring-0')} />
+                      {selectedOptionId === option.id && (
+                        <div className="absolute inset-0 bg-[#ED7470]/20 flex items-center justify-center z-20">
+                          <div className="bg-[#ED7470] text-white rounded-full p-2"><CheckCircle2 size={32} /></div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className={'p-6 text-xl font-semibold text-center transition-all ' + (selectedOptionId === option.id ? 'text-white' : 'text-[#2F3640]')}>{option.text}</div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+          {question.type === 'speaking' && (
+            <div className="flex flex-col items-center gap-6 mt-8">
+              <div className="relative">
+                <AnimatePresence>
+                  {isRecording && (
+                    <>
+                      <motion.div initial={{ scale: 1, opacity: 0.8 }} animate={{ scale: 2.5, opacity: 0 }} transition={{ repeat: Infinity, duration: 2, ease: 'easeOut', repeatDelay: 0.5 }} className="absolute inset-0 rounded-full border-4 border-[#FF6B6B]/40 -z-10" />
+                      <motion.div initial={{ scale: 1, opacity: 0.8 }} animate={{ scale: 2.5, opacity: 0 }} transition={{ repeat: Infinity, duration: 2, ease: 'easeOut', delay: 0.5, repeatDelay: 0.5 }} className="absolute inset-0 rounded-full border-4 border-[#FF6B6B]/40 -z-10" />
+                    </>
+                  )}
+                </AnimatePresence>
+                <button onClick={handleRecord} disabled={isRecording}
+                  className={'w-32 h-32 rounded-full flex items-center justify-center transition-all relative z-10 ' + (isRecording ? 'bg-[#ED7470] text-white scale-110 shadow-[0_0_30px_rgba(237,116,112,0.5)]' : hasRecorded ? 'bg-[#4ECDC4] text-white' : 'bg-white text-[#ED7470] shadow-lg active:scale-95')}>
+                  <motion.div animate={isRecording ? { opacity: [1, 0.3, 1] } : { opacity: 1 }} transition={isRecording ? { repeat: Infinity, duration: 1.5, ease: 'easeInOut' } : {}}>
+                    {hasRecorded && !isRecording ? <CheckCircle2 size={48} /> : <Mic size={48} />}
+                  </motion.div>
+                </button>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-medium text-gray-500">{isRecording ? '正在录音...' : hasRecorded ? '录音完成!' : '点击开始跟读'}</p>
+                {hasRecorded && !isRecording && (
+                  <motion.p initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="text-sm text-gray-400 mt-1">再次点击按钮开始重新录音。</motion.p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-center gap-4">
+        <AnimatePresence>
+          {question.passage && (
+            <motion.div key="passage-btn" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}>
+              <Button variant="secondary" size="icon" className="w-16 h-16 rounded-full shadow-xl" onClick={() => { playClickSound(); setShowPassagePopup(!showPassagePopup); }}>
+                <FileText size={32} />
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <Button variant="primary" size="icon" className="w-16 h-16 rounded-full shadow-xl" disabled={!(selectedOptionId !== null || hasRecorded)} onClick={handleNext}>
+          <ArrowRight size={32} />
+        </Button>
+      </div>
+
+      <AnimatePresence>
+        {showPassagePopup && <motion.div key="passage-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]" onClick={() => setShowPassagePopup(false)} />}
+        {showPassagePopup && (
+          <motion.div key="passage-modal" initial={{ opacity: 0, y: 100, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 100, scale: 0.9 }} className="fixed inset-x-6 bottom-24 top-24 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-2xl bg-white rounded-[2.5rem] shadow-2xl z-[101] p-8 flex flex-col">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#4ECDC4]/10 rounded-full flex items-center justify-center"><FileText size={20} className="text-[#4ECDC4]" /></div>
+                <h3 className="text-2xl font-bold text-[#2F3640]">阅读原文</h3>
+              </div>
+              <button onClick={() => setShowPassagePopup(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X size={24} className="text-gray-400" /></button>
+            </div>
+            <div className="flex-1 overflow-y-auto pr-2"><p className="text-xl text-gray-700 leading-relaxed">{question.passage}</p></div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+const ResultScreen: React.FC<{ answers: boolean[]; timeSpent: number; onComplete: () => void }> = ({ answers, timeSpent, onComplete }) => {
+  useEffect(() => {
+    playSuccessSound();
+    const end = Date.now() + 3000;
+    const frame = () => {
+      confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#ED7470', '#4ECDC4', '#FFE66D'] });
+      confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#ED7470', '#4ECDC4', '#FFE66D'] });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    };
+    frame();
+  }, []);
+
+  const correctCount = answers.filter(Boolean).length;
+  const total = answers.length;
+  const accuracy = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+  const level = Math.max(1, Math.min(13, Math.ceil((accuracy / 100) * 13)));
+  const m = Math.floor(timeSpent / 60);
+  const s = timeSpent % 60;
+
+  return (
+    <motion.div key="result-screen-root" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex-1 flex flex-col items-center justify-center p-6 bg-[#FFE66D]">
+      <div className="bg-white rounded-[3rem] p-8 shadow-2xl w-full max-w-md text-center relative overflow-hidden">
+        <div className="relative z-10">
+          <h1 className="text-4xl font-bold text-[#CA5C55] mb-8">测试完成</h1>
+          <div className="bg-[#FFF4C8] rounded-3xl p-6 mb-6 shadow-inner">
+            <p className="text-gray-500 font-medium mb-1">你的英语等级是</p>
+            <div className="text-6xl font-black text-[#4ECDC4] mb-2 font-sans tracking-tighter">Lv {level}</div>
+          </div>
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="bg-gray-50 rounded-2xl p-4"><p className="text-sm text-gray-500 mb-1">正确率</p><p className="text-2xl font-bold text-[#CA5C55]">{accuracy}%</p></div>
+            <div className="bg-gray-50 rounded-2xl p-4"><p className="text-sm text-gray-500 mb-1">测试用时</p><p className="text-2xl font-bold text-[#2F3640]">{m}分{s}秒</p></div>
+          </div>
+          <Button variant="primary" size="lg" className="w-full text-xl h-16 rounded-full" onClick={onComplete}>完成</Button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};

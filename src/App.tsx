@@ -1104,6 +1104,9 @@ export default function App() {
     setCurrentView('home');
     setLearningTitle('');
     applyAbilityPlan(result);
+    // 无论定级结果如何，始终从当天第一个 Stage 的第一个子环节开始
+    setMajorIdx(0);
+    setSubIdx(0);
   };
 
   const dismissAbilityTestPrompt = () => {
