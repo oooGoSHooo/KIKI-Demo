@@ -322,7 +322,7 @@ const FlashcardLearning = ({ onFinish, onBack, onSkip }: { onFinish: () => void,
       <header className="h-[10%] min-h-[60px] px-[4%] flex items-center justify-between bg-white shadow-sm border-b border-slate-100 shrink-0 z-10 relative">
         <button
           onClick={onBack}
-          className="w-[clamp(36px,10vw,48px)] h-[clamp(36px,10vw,48px)] bg-slate-100 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center text-slate-600 active:scale-90 transition-transform"
+          className="w-[clamp(36px,10vw,48px)] h-[clamp(36px,10vw,48px)] bg-slate-100 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center text-slate-600 active:bg-slate-200 active:scale-95 transition-all"
         >
           <X size={28} />
         </button>
@@ -331,7 +331,7 @@ const FlashcardLearning = ({ onFinish, onBack, onSkip }: { onFinish: () => void,
         </h2>
         <button
           onClick={onSkip}
-          className="px-[clamp(10px,2.5vw,14px)] h-[clamp(36px,10vw,48px)] bg-amber-100 text-amber-700 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center font-black text-[clamp(12px,3vw,14px)] whitespace-nowrap hover:bg-amber-200 transition-colors"
+          className="px-[clamp(10px,2.5vw,14px)] h-[clamp(36px,10vw,48px)] bg-amber-100 text-amber-700 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center font-black text-[clamp(12px,3vw,14px)] whitespace-nowrap active:bg-amber-200 active:scale-95 transition-all"
         >
           跳过本环节
         </button>
@@ -343,7 +343,7 @@ const FlashcardLearning = ({ onFinish, onBack, onSkip }: { onFinish: () => void,
           onClick={prevCard}
           disabled={currentIndex === 0}
           className={`fixed left-3 sm:left-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-md transition-all ${
-            currentIndex === 0 ? 'bg-gray-300 text-gray-100 cursor-not-allowed' : 'bg-[#ff4757] text-white hover:scale-110 active:scale-95'
+            currentIndex === 0 ? 'bg-gray-300 text-gray-100 cursor-not-allowed' : 'bg-[#ff4757] text-white active:bg-[#e63b4a] active:scale-95'
           }`}
         >
           <ChevronLeft size={28} strokeWidth={3} />
@@ -354,7 +354,7 @@ const FlashcardLearning = ({ onFinish, onBack, onSkip }: { onFinish: () => void,
       {!showFinishScreen && (
         <button
           onClick={nextCard}
-          className="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-md transition-all bg-[#ff4757] text-white hover:scale-110 active:scale-95"
+          className="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-md transition-all bg-[#ff4757] text-white active:bg-[#e63b4a] active:scale-95"
         >
           <ChevronRight size={28} strokeWidth={3} />
         </button>
@@ -362,7 +362,7 @@ const FlashcardLearning = ({ onFinish, onBack, onSkip }: { onFinish: () => void,
 
       <main className="flex-1 flex flex-col items-center justify-center relative w-full max-w-5xl mx-auto px-14 sm:px-16 py-8">
         <div className="w-full">
-          <div className="w-full max-w-3xl mx-auto relative h-[calc(60vh+7rem)] overflow-hidden">
+          <div className="w-full max-w-3xl mx-auto relative h-[calc(60vh+7rem)] px-[clamp(12px,3vw,24px)] overflow-visible">
             <AnimatePresence initial={false} custom={direction}>
               <motion.div
                 key={showFinishScreen ? 'finish' : currentIndex}
@@ -395,11 +395,12 @@ const FlashcardLearning = ({ onFinish, onBack, onSkip }: { onFinish: () => void,
               >
                 {!showFinishScreen ? (
                   <>
-                    <div className="w-full h-[60vh] bg-white rounded-[6vh] shadow-[0_12px_40px_rgba(0,0,0,0.08)] p-[2vh] flex flex-col sm:flex-row gap-[3vh] relative z-10 items-center">
+                    <div className="w-full h-[60vh] bg-white rounded-[6vh] shadow-[0_12px_40px_rgba(0,0,0,0.08)] p-[2vh] flex flex-col sm:flex-row gap-[3vh] relative z-10 items-center overflow-visible">
                       <div className="aspect-[500/640] h-full rounded-l-[6vh] overflow-hidden flex-shrink-0">
                         <img
                           src={publicAssetUrl(currentCard.image)}
                           alt={currentCard.word}
+                          draggable={false}
                           className="w-full h-full object-cover"
                         />
                       </div>
@@ -409,7 +410,7 @@ const FlashcardLearning = ({ onFinish, onBack, onSkip }: { onFinish: () => void,
                           <div className="flex items-center gap-[1.5vh] mb-[1.5vh]">
                             <button
                               onClick={() => playAudio(currentCard.audio)}
-                              className="w-[6vh] h-[6vh] bg-[#ff4757] rounded-2xl text-white flex items-center justify-center shadow-sm hover:scale-105 active:scale-95 transition-transform flex-shrink-0"
+                              className="w-[6vh] h-[6vh] bg-[#ff4757] rounded-2xl text-white flex items-center justify-center shadow-sm active:bg-[#e63b4a] active:scale-95 transition-all flex-shrink-0"
                             >
                               <motion.div
                                 animate={isPlaying ? { scale: [1, 1.1, 1] } : { scale: 1 }}
@@ -437,22 +438,27 @@ const FlashcardLearning = ({ onFinish, onBack, onSkip }: { onFinish: () => void,
                       </div>
                     </div>
 
-                    <div className="mt-8 sm:mt-12 relative z-20 cursor-pointer active:brightness-75 transition-all" onClick={() => setShowModal(true)}>
+                    <button
+                      type="button"
+                      className="mt-8 sm:mt-12 relative z-20 active:brightness-90 active:scale-95 transition-all"
+                      onClick={() => setShowModal(true)}
+                    >
                       <img
                         src={publicAssetUrl('/学单词.png')}
                         alt="学单词"
+                        draggable={false}
                         className="h-16 sm:h-20 object-contain drop-shadow-xl"
                       />
-                    </div>
+                    </button>
                   </>
                 ) : (
                   <div className="flex h-full items-center justify-center">
                     <motion.button
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 18, delay: 0.25 }}
+                      transition={{ duration: 0.2, ease: 'easeOut', delay: 0.25 }}
                       onClick={onFinish}
-                      className="px-12 py-6 bg-emerald-500 text-white rounded-full font-black text-[clamp(20px,5vw,28px)] shadow-2xl hover:bg-emerald-600 active:scale-95 transition-colors"
+                      className="px-12 py-6 bg-emerald-500 text-white rounded-full font-black text-[clamp(20px,5vw,28px)] shadow-2xl active:bg-emerald-600 active:scale-95 transition-all"
                     >
                       完成学习并继续
                     </motion.button>
@@ -480,7 +486,7 @@ const FlashcardLearning = ({ onFinish, onBack, onSkip }: { onFinish: () => void,
 
           <div className="relative z-10 w-[95%] sm:w-[80%] max-w-4xl aspect-[4/3] sm:aspect-[16/9] flex items-center justify-center animate-in fade-in zoom-in duration-200">
             <button
-              className="absolute -top-4 -right-4 sm:-top-6 sm:-right-6 w-10 h-10 sm:w-12 sm:h-12 bg-[#ff4757] border-2 sm:border-4 border-white rounded-full text-white flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-transform z-20"
+              className="absolute -top-4 -right-4 sm:-top-6 sm:-right-6 w-10 h-10 sm:w-12 sm:h-12 bg-[#ff4757] border-2 sm:border-4 border-white rounded-full text-white flex items-center justify-center shadow-xl active:bg-[#e63b4a] active:scale-95 transition-all z-20"
               onClick={() => setShowModal(false)}
             >
               <X size={24} strokeWidth={3} />
@@ -489,6 +495,7 @@ const FlashcardLearning = ({ onFinish, onBack, onSkip }: { onFinish: () => void,
             <img
               src={publicAssetUrl('/study-card.png')}
               alt="学习卡片"
+              draggable={false}
               className="w-full h-full object-contain drop-shadow-2xl"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
