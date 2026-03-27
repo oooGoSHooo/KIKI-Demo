@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { EbookReader } from './components/EbookReader';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   ChevronLeft, X, Gem, Settings, Trophy, 
   Calendar as CalendarIcon, Award, Play, 
@@ -18,7 +19,7 @@ import {
  * 核心任务配置数据
  */
 const TASK_DATA = [
-  { id: 'listen', name: '听 (LISTEN)', color: '#3b82f6', icon: '🎧', subs: ['视频', '单词卡', '电子书', '互动'], rewardName: '听力能量包' },
+  { id: 'listen', name: '听 (LISTEN)', color: '#3b82f6', icon: '🎧', subs: ['视频', '单词卡', '电子书', '听音', '互动'], rewardName: '听力能量包' },
   { id: 'speak', name: '说 (SPEAK)', color: '#22c55e', icon: '🎙️', subs: ['跟读', 'AI评测'], rewardName: '口语奖励箱' },
   { id: 'read', name: '读 (READ)', color: '#f59e0b', icon: '📖', subs: ['认读', '拼读'], rewardName: '阅读宝藏库' },
   { id: 'write', name: '写 (WRITE)', color: '#a855f7', icon: '✍️', subs: ['排序', '拼写'], rewardName: '书写大师杯' }
@@ -193,14 +194,19 @@ const AwardCard: React.FC<{ ach: any }> = ({ ach }) => {
   );
 };
 
-import { motion, AnimatePresence } from 'motion/react';
+const publicAssetUrl = (path: string) => {
+  const base = (import.meta as any).env?.BASE_URL ?? '/';
+  const normalizedBase = typeof base === 'string' && base.endsWith('/') ? base : `${base}/`;
+  const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
+  return encodeURI(`${normalizedBase}${normalizedPath}`);
+};
 
 const FLASHCARDS_DATA = [
-  { word: 'calculator', pos: 'n.', pron: '/ˈkæl.kjə.leɪ.tər/', meaning: '计算器', example: 'I need a calculator for my math homework.', image: '/cards/calculator (noun 计算器).png' },
-  { word: 'gel', pos: 'n.', pron: '/dʒel/', meaning: '凝胶', example: 'He uses hair gel every morning.', image: '/cards/gel (noun 凝胶).png' },
-  { word: 'hate', pos: 'v.', pron: '/heɪt/', meaning: '讨厌，憎恨', example: 'I hate waking up early on weekends.', image: '/cards/hate (verb 讨厌，憎恨).png' },
-  { word: 'invention', pos: 'n.', pron: '/ɪnˈven.ʃən/', meaning: '发明；发明物', example: 'The telephone is a great invention.', image: '/cards/invention (noun 发明；发明物).png' },
-  { word: 'remote control', pos: 'n.', pron: '/rɪˌmoʊt kənˈtroʊl/', meaning: '遥控器', example: 'Where is the TV remote control?', image: '/cards/remote control (noun 遥控器).png' },
+  { word: 'calculator', pos: 'n.', pron: '/ˈkæl.kjə.leɪ.tər/', meaning: '计算器', example: 'I need a calculator for my math homework.', image: '/cards/calculator.png' },
+  { word: 'gel', pos: 'n.', pron: '/dʒel/', meaning: '凝胶', example: 'He uses hair gel every morning.', image: '/cards/gel.png' },
+  { word: 'hate', pos: 'v.', pron: '/heɪt/', meaning: '讨厌，憎恨', example: 'I hate waking up early on weekends.', image: '/cards/hate.png' },
+  { word: 'invention', pos: 'n.', pron: '/ɪnˈven.ʃən/', meaning: '发明；发明物', example: 'The telephone is a great invention.', image: '/cards/invention.png' },
+  { word: 'remote control', pos: 'n.', pron: '/rɪˌmoʊt kənˈtroʊl/', meaning: '遥控器', example: 'Where is the TV remote control?', image: '/cards/remote control.png' },
 ];
 
 const FlashcardLearning = ({ onFinish, onBack }: { onFinish: () => void, onBack: () => void }) => {
@@ -264,7 +270,7 @@ const FlashcardLearning = ({ onFinish, onBack }: { onFinish: () => void, onBack:
           >
             {/* Image Section */}
             <div className="w-full md:w-1/2 aspect-square md:aspect-auto bg-slate-100 relative">
-              <img src={FLASHCARDS_DATA[currentIndex].image} alt={FLASHCARDS_DATA[currentIndex].word} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              <img src={publicAssetUrl(FLASHCARDS_DATA[currentIndex].image)} alt={FLASHCARDS_DATA[currentIndex].word} className="w-full h-full object-cover" />
             </div>
             
             {/* Content Section */}
@@ -428,6 +434,7 @@ export default function App() {
   const [showParentGate, setShowParentGate] = useState(false);
   const [gateMath, setGateMath] = useState({ q: '', a: 0 });
   const [gateInput, setGateInput] = useState(''); 
+  const [gateError, setGateError] = useState(false);
   const [learningTitle, setLearningTitle] = useState('');
   const [studyTime, setStudyTime] = useState(0);
 
@@ -445,6 +452,7 @@ export default function App() {
 
   const mapScrollRef = useRef<number>(0);
   const mainRef = useRef<HTMLElement>(null);
+  const gateInputRef = useRef<HTMLInputElement>(null);
   const isDragging = useRef(false);
 
   // --- 全局点击音效 ---
@@ -551,8 +559,8 @@ export default function App() {
         toast.style.opacity = '0';
         setTimeout(() => {
           toast.style.transform = 'translate(-50%, 0) scale(0.5)';
-        }, 500);
-      }, 2000);
+        }, 250);
+      }, 1000);
     }
   };
 
@@ -723,6 +731,7 @@ export default function App() {
     const n2 = Math.floor(Math.random() * 9) + 1;
     setGateMath({ q: `${n1} + ${n2} = ?`, a: n1 + n2 });
     setGateInput('');
+    setGateError(false);
     setShowParentGate(true);
   };
 
@@ -731,8 +740,40 @@ export default function App() {
       setShowParentGate(false);
       setCurrentView('parent');
     } else {
+      setGateError(true);
       setGateInput('');
+
+      try {
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioContext) {
+          const ctx = new AudioContext();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+
+          osc.type = 'square';
+          const now = ctx.currentTime;
+          osc.frequency.setValueAtTime(520, now);
+          osc.frequency.linearRampToValueAtTime(260, now + 0.18);
+
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.22);
+        }
+      } catch {
+        // ignore audio errors
+      }
+
+      setTimeout(() => setGateError(false), 220);
     }
+  };
+
+  const handleParentGateCancel = () => {
+    setShowParentGate(false);
+    setCurrentView('home');
   };
 
   const changeDay = (delta: number) => {
@@ -812,21 +853,25 @@ export default function App() {
           <div 
             key={`dot-sub-${mIdx}-${sIdx}`}
             onClick={() => isSubActive && startLearning(`${major.name} · ${sub}`)}
-            className={`w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] rounded-full border-4 border-white shadow-md flex items-center justify-center relative transition-all duration-300
-              ${isSubDone ? 'bg-slate-400' : isSubActive ? 'bg-white cursor-pointer animate-bounce scale-110 shadow-yellow-400/50' : 'bg-white/60 opacity-60'}
-            `}
-            style={{ 
-              borderColor: isSubActive ? '#fbbf24' : 'white',
-              backgroundColor: isSubDone ? '#94a3b8' : 'white',
-              boxShadow: isSubActive ? '0 10px 15px -3px rgba(251, 191, 36, 0.5), inset 0 -3px 0 0 rgba(0,0,0,0.1)' : 'inset 0 -3px 0 0 rgba(0,0,0,0.1)'
-            }}
+            className={`flex flex-col items-center relative`}
           >
             {isSubActive && (
               <div className="absolute -top-10 bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-[clamp(8px,2.5vw,12px)] py-1 rounded-[clamp(8px,2vw,12px)] text-[10px] font-black shadow-lg whitespace-nowrap z-50 border border-yellow-300">
                 {sub}<div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-amber-500 rotate-45 border-b border-r border-yellow-300" />
               </div>
             )}
-            {isSubDone ? <Check size={20} color="white" /> : isSubActive ? <Play size={20} className="fill-amber-500 text-amber-500 drop-shadow-sm" /> : <div className="w-3 h-3 rounded-full" style={{ backgroundColor: major.color }} />}
+            <div
+              className={`w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] rounded-full border-4 border-white shadow-md flex items-center justify-center transition-all duration-300
+                ${isSubDone ? 'bg-slate-400' : isSubActive ? 'bg-white cursor-pointer animate-breathe-scale scale-110 shadow-yellow-400/50' : 'bg-white/60 opacity-60'}
+              `}
+              style={{ 
+                borderColor: isSubActive ? '#fbbf24' : 'white',
+                backgroundColor: isSubDone ? '#94a3b8' : 'white',
+                boxShadow: isSubActive ? '0 10px 15px -3px rgba(251, 191, 36, 0.5), inset 0 -3px 0 0 rgba(0,0,0,0.1)' : 'inset 0 -3px 0 0 rgba(0,0,0,0.1)'
+              }}
+            >
+              {isSubDone ? <Check size={20} color="white" /> : isSubActive ? <Play size={20} className="fill-amber-500 text-amber-500 drop-shadow-sm" /> : <div className="w-3 h-3 rounded-full" style={{ backgroundColor: major.color }} />}
+            </div>
           </div>
         );
       });
@@ -909,7 +954,7 @@ export default function App() {
                 <div className="relative">
                   <div className="absolute inset-0 bg-yellow-400 rounded-[clamp(12px,3vw,16px)] rotate-3 group-hover:rotate-6 transition-transform shadow-md"></div>
                   <div className="w-[clamp(48px,14vw,64px)] h-[clamp(48px,14vw,64px)] bg-white rounded-[clamp(12px,3vw,16px)] p-1 shadow-lg border-2 border-white overflow-hidden relative z-10 group-hover:scale-105 transition-transform">
-                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Qian" alt="avatar" className="bg-blue-50 w-full h-full object-cover" />
+                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Qian" alt="avatar" className="w-full h-full object-cover" />
                   </div>
                 </div>
                 <div className="bg-white/90 backdrop-blur-sm px-[clamp(14px,3.5vw,20px)] py-[clamp(8px,2.5vw,10px)] rounded-full shadow-md border border-white/50 group-hover:bg-white transition-colors">
@@ -1570,8 +1615,105 @@ export default function App() {
         )}
 
         {showParentGate && (
-          <div className="absolute inset-0 z-[1000] bg-slate-950/80 backdrop-blur-xl flex items-center justify-center text-slate-800">
-            <div className="bg-white rounded-[40px] p-[clamp(32px,8vw,48px)] max-w-md w-full text-center shadow-2xl animate-in zoom-in"><h3 className="text-[clamp(22px,5.5vw,28px)] font-black text-slate-800 mb-[clamp(20px,5vw,32px)]">家长验证</h3><div className="text-[clamp(32px,8vw,48px)] font-black text-blue-600 mb-10 tracking-widest">{gateMath.q}</div><input type="number" placeholder="?" autoFocus value={gateInput} onChange={(e) => setGateInput(e.target.value)} className="w-full text-center text-[clamp(28px,7vw,40px)] p-[clamp(14px,3.5vw,20px)] bg-slate-50 rounded-[clamp(12px,3vw,16px)] mb-[clamp(20px,5vw,32px)] outline-none border-4 border-transparent focus:border-blue-100 transition-all" onKeyDown={(e) => { if (e.key === 'Enter') handleParentGateSubmit(); }} /><div className="flex space-x-[clamp(12px,3vw,16px)]"><button onClick={() => setShowParentGate(false)} className="flex-1 py-[clamp(12px,3vw,16px)] bg-slate-100 rounded-[clamp(12px,3vw,16px)] font-black text-slate-500 text-[clamp(18px,4.5vw,20px)]">取消</button><button onClick={handleParentGateSubmit} className="flex-1 py-[clamp(12px,3vw,16px)] bg-blue-600 text-white rounded-[clamp(12px,3vw,16px)] font-black shadow-xl text-[clamp(18px,4.5vw,20px)]">确认</button></div></div>
+          <div
+            className="absolute inset-0 z-[1000] bg-slate-950/80 backdrop-blur-xl flex items-center justify-center text-slate-800"
+            onClick={handleParentGateCancel}
+          >
+            <div
+              className="bg-white rounded-[40px] p-[clamp(20px,5vw,32px)] sm:p-[clamp(28px,7vw,44px)] max-w-2xl w-[min(92vw,900px)] shadow-2xl animate-in zoom-in"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex flex-col md:flex-row gap-[clamp(16px,4vw,24px)] md:items-stretch">
+                {/* Left: question + input */}
+                <div className="flex-1 text-center flex flex-col h-full">
+                  <h3 className="text-[clamp(22px,5.5vw,28px)] font-black text-slate-800 mb-[clamp(12px,3vw,18px)]">家长验证</h3>
+                  <div className="text-[clamp(32px,8vw,48px)] font-black text-blue-600 mb-[clamp(14px,3.5vw,20px)] tracking-widest">
+                    {gateMath.q}
+                  </div>
+
+                  <input
+                    ref={gateInputRef}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="?"
+                    autoFocus
+                    value={gateInput}
+                    onChange={(e) => setGateInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    className={`w-full text-center text-[clamp(28px,7vw,40px)] p-[clamp(10px,2.8vw,14px)] bg-slate-50 rounded-[clamp(12px,3vw,16px)] mb-[clamp(12px,3vw,16px)] outline-none border-4 transition-all ${
+                      gateError ? 'border-red-400 animate-[pulse_0.2s_ease-in-out_2]' : 'border-transparent focus:border-blue-100'
+                    }`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleParentGateSubmit();
+                    }}
+                  />
+
+                  <div className="flex space-x-[clamp(12px,3vw,16px)] mt-auto">
+                    <button
+                      onClick={handleParentGateCancel}
+                      className="flex-1 py-[clamp(12px,3vw,16px)] bg-slate-100 rounded-[clamp(12px,3vw,16px)] font-black text-slate-500 text-[clamp(18px,4.5vw,20px)] active:scale-95 transition-transform"
+                    >
+                      取消
+                    </button>
+                    <button
+                      onClick={handleParentGateSubmit}
+                      className="flex-1 py-[clamp(12px,3vw,16px)] bg-blue-600 text-white rounded-[clamp(12px,3vw,16px)] font-black shadow-xl text-[clamp(18px,4.5vw,20px)] active:scale-95 transition-transform"
+                    >
+                      确认
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right: cute touch keypad */}
+                <div className="md:w-[320px] w-full shrink-0">
+                  <div className="bg-gradient-to-b from-blue-50 to-indigo-50 border border-blue-100 rounded-[28px] p-[clamp(14px,3.5vw,18px)] shadow-inner">
+                    <div className="grid grid-cols-3 gap-[clamp(10px,2.5vw,12px)] select-none">
+                      {['1','2','3','4','5','6','7','8','9'].map((d) => (
+                        <button
+                          key={d}
+                          type="button"
+                          onPointerDown={(e) => {
+                            e.preventDefault();
+                            setGateInput((prev) => (prev + d).replace(/\D/g, '').slice(0, 4));
+                            gateInputRef.current?.focus();
+                          }}
+                          className="h-[clamp(52px,12vw,64px)] rounded-[20px] bg-white border border-blue-100 shadow-lg font-black text-[clamp(20px,5vw,24px)] text-slate-800 active:scale-95 transition-transform"
+                        >
+                          {d}
+                        </button>
+                      ))}
+
+                      <div className="h-[clamp(52px,12vw,64px)]" />
+
+                      <button
+                        type="button"
+                        onPointerDown={(e) => {
+                          e.preventDefault();
+                          setGateInput((prev) => (prev + '0').replace(/\D/g, '').slice(0, 4));
+                          gateInputRef.current?.focus();
+                        }}
+                        className="h-[clamp(52px,12vw,64px)] rounded-[20px] bg-white border border-blue-100 shadow-lg font-black text-[clamp(20px,5vw,24px)] text-slate-800 active:scale-95 transition-transform"
+                      >
+                        0
+                      </button>
+
+                      <button
+                        type="button"
+                        onPointerDown={(e) => {
+                          e.preventDefault();
+                          setGateInput((prev) => prev.slice(0, -1));
+                          gateInputRef.current?.focus();
+                        }}
+                        className="h-[clamp(52px,12vw,64px)] rounded-[20px] bg-gradient-to-b from-rose-400 to-pink-500 text-white shadow-lg font-semibold text-[clamp(22px,5vw,28px)] active:scale-95 transition-transform flex items-center justify-center"
+                        aria-label="删除"
+                      >
+                        <span className="text-[clamp(24px,6vw,32px)] leading-none">⌫</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
