@@ -81,7 +81,7 @@ const ACHIEVEMENTS_LIST = [
 ];
 
 const MOCK_HISTORY_STATUS: Record<number, number> = {
-  1: 2, 2: 2, 3: 1, 4: 0, 5: 2, 6: 2, 7: 2, 8: 1, 9: 0, 10: 2, 11: 2, 12: 2, 13: 1
+  1: 2, 2: 2, 3: 1, 4: 0, 5: 2, 6: 2, 7: 2, 8: 1, 9: 0, 10: 2, 11: 2, 12: 2, 13: 1, 19: 0
 };
 
 const DEFAULT_RADAR_DATA = [
@@ -1057,6 +1057,20 @@ export default function App() {
     return selectedDate.toDateString() === new Date().toDateString();
   }, [selectedDate]);
 
+  const totalSubCount = useMemo(
+    () => TASK_DATA.reduce((acc, task) => acc + task.subs.length, 0),
+    []
+  );
+
+  const completedSubCount = useMemo(() => {
+    return TASK_DATA.slice(0, majorIdx).reduce((acc, task) => acc + task.subs.length, 0) + subIdx;
+  }, [majorIdx, subIdx]);
+
+  const adventureProgressPercent = useMemo(() => {
+    if (totalSubCount <= 0) return 0;
+    return Math.round((completedSubCount / totalSubCount) * 100);
+  }, [completedSubCount, totalSubCount]);
+
   const kikiLevel = abilityTestResult?.finalLevel ?? 2;
   const kikiLevelLabels = [
     'Lv.1 启蒙',
@@ -1322,15 +1336,15 @@ export default function App() {
   };
 
   const handleConfirmDate = () => {
-    // 已完成定级后：开始学习时不要再用 mock 历史状态覆盖进度
-    // 否则会把通过定级计算出来的 majorIdx/subIdx 重置回 0。
-    if (abilityTestResult) {
+    const day = selectedDate.getDate();
+    const status = MOCK_HISTORY_STATUS[day] ?? 0;
+
+    // 已完成定级后，默认不覆盖进度；但若切到“未学习”日期，则回到 Stage 1 第一个子环节。
+    if (abilityTestResult && !isToday && status !== 0) {
       setShowCalendar(false);
       return;
     }
 
-    const day = selectedDate.getDate();
-    const status = MOCK_HISTORY_STATUS[day] ?? 0;
     if (isToday) {
       setMajorIdx(0);
       setSubIdx(0);
@@ -1882,6 +1896,7 @@ export default function App() {
                 <img
                   src={publicAssetUrl('/logo qqmm.png')}
                   alt="千千妈妈"
+                  draggable={false}
                   className="h-12 object-contain"
                 />
                 <h1 className="text-2xl font-black text-slate-800">手机号登录</h1>
@@ -2085,7 +2100,7 @@ export default function App() {
                 <div className="relative">
                   <div className="absolute inset-0 bg-yellow-400 rounded-[clamp(12px,3vw,16px)] rotate-3 group-hover:rotate-6 transition-transform shadow-md"></div>
                   <div className="w-[clamp(48px,14vw,64px)] h-[clamp(48px,14vw,64px)] bg-white rounded-[clamp(12px,3vw,16px)] p-1 shadow-lg border-2 border-white overflow-hidden relative z-10 group-hover:scale-105 transition-transform">
-                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Qian" alt="avatar" className="w-full h-full object-cover" />
+                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Qian" alt="avatar" draggable={false} className="w-full h-full object-cover" />
                   </div>
                 </div>
                 <div className="bg-white/90 backdrop-blur-sm px-[clamp(14px,3.5vw,20px)] py-[clamp(8px,2.5vw,10px)] rounded-full shadow-md border border-white/50 group-hover:bg-white transition-colors">
@@ -2161,20 +2176,19 @@ export default function App() {
                 <div className="flex flex-col justify-center w-[clamp(240px,70vw,320px)] relative pr-3">
                   <div className="flex justify-between items-end mb-[clamp(8px,2.5vw,12px)]">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Adventure Progress</p>
-                    <p className="text-[12px] font-black text-orange-500">{Math.round((TASK_DATA.slice(0, majorIdx).reduce((acc, task) => acc + task.subs.length, 0) + subIdx) / TASK_DATA.reduce((acc, task) => acc + task.subs.length, 0) * 100)}%</p>
+                    <p className="text-[12px] font-black text-orange-500">{adventureProgressPercent}%</p>
                   </div>
                   <div className="relative h-3 w-full bg-slate-100 rounded-full">
                     <div 
                       className="absolute top-0 left-0 h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all duration-1000 ease-out" 
-                      style={{ width: `${(TASK_DATA.slice(0, majorIdx).reduce((acc, task) => acc + task.subs.length, 0) + subIdx) / TASK_DATA.reduce((acc, task) => acc + task.subs.length, 0) * 100}%` }} 
+                      style={{ width: `${adventureProgressPercent}%` }} 
                     >
                       <div className="absolute inset-0 bg-white/20 w-full h-full animate-pulse rounded-full" />
                     </div>
                     {TASK_DATA.map((task, idx) => {
-                      const totalSubs = TASK_DATA.reduce((acc, t) => acc + t.subs.length, 0);
-                      const currentTotalSubsDone = TASK_DATA.slice(0, majorIdx).reduce((acc, t) => acc + t.subs.length, 0) + subIdx;
+                      const currentTotalSubsDone = completedSubCount;
                       const taskEndSubs = TASK_DATA.slice(0, idx + 1).reduce((acc, t) => acc + t.subs.length, 0);
-                      const nodePercent = (taskEndSubs / totalSubs) * 100;
+                      const nodePercent = (taskEndSubs / totalSubCount) * 100;
                       const isReached = currentTotalSubsDone >= taskEndSubs;
                       const isCurrent = majorIdx === idx;
                       return (
@@ -2354,7 +2368,7 @@ export default function App() {
                        <div className="flex items-center space-x-[clamp(12px,3vw,16px)] sm:space-x-[clamp(14px,3.5vw,20px)]">
                          <div className="w-[clamp(64px,20vw,96px)] h-[clamp(64px,20vw,96px)] sm:w-[clamp(80px,25vw,112px)] sm:h-[clamp(80px,25vw,112px)] flex-shrink-0 relative flex items-center justify-center">
                            <div className="absolute inset-0 bg-[#CCCCCC] rounded-[clamp(12px,3vw,16px)] animate-pulse" />
-                           <img src={sub.image} alt={sub.name} className={`w-full h-full object-contain drop-shadow-sm relative z-10 opacity-0 transition-opacity duration-300 ${sub.status === 'unpurchased' ? 'brightness-75 saturate-50' : ''}`} referrerPolicy="no-referrer" onLoad={(e) => { e.currentTarget.classList.remove('opacity-0'); e.currentTarget.classList.add('opacity-100'); const prev = e.currentTarget.previousElementSibling as HTMLElement; if (prev) prev.style.display = 'none'; }} onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${sub.id}/200/200`; }} />
+                           <img src={sub.image} alt={sub.name} draggable={false} className={`w-full h-full object-contain drop-shadow-sm relative z-10 opacity-0 transition-opacity duration-300 ${sub.status === 'unpurchased' ? 'brightness-75 saturate-50' : ''}`} referrerPolicy="no-referrer" onLoad={(e) => { e.currentTarget.classList.remove('opacity-0'); e.currentTarget.classList.add('opacity-100'); const prev = e.currentTarget.previousElementSibling as HTMLElement; if (prev) prev.style.display = 'none'; }} onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${sub.id}/200/200`; }} />
                            {sub.status === 'unpurchased' && (
                              <div className="absolute inset-0 flex items-center justify-center rounded-[clamp(12px,3vw,16px)] z-20">
                                <div className="bg-black/50 rounded-full p-[clamp(8px,2vw,12px)] flex items-center justify-center"><Lock className="text-white drop-shadow-md" size={28} /></div>
@@ -2402,18 +2416,15 @@ export default function App() {
                            扫一扫
                          </div>
                          <div className="w-[clamp(160px,50vw,224px)] h-[clamp(160px,50vw,224px)] sm:w-[clamp(160px,50vw,256px)] sm:h-[clamp(160px,50vw,256px)] bg-slate-50 rounded-[clamp(12px,3vw,16px)] overflow-hidden relative">
-                           {/* 占位二维码，如果用户上传了图片，请将 src 替换为本地路径，例如 "./qrcode.jpg" */}
                            <img 
-                             src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=QianQianMaMa" 
+                             src="/qm_qrcode.jpg" 
                              alt="千千妈妈公众号二维码" 
+                             draggable={false}
                              className="w-full h-full object-cover"
                              referrerPolicy="no-referrer"
                            />
                          </div>
                        </div>
-                       <p className="text-slate-400 font-black tracking-widest uppercase text-[clamp(14px,3.5vw,16px)] mb-[clamp(16px,4vw,24px)]">
-                         Scan to Subscribe
-                       </p>
                        <button 
                          onClick={() => setCurrentView('report-generator')}
                          className="px-[clamp(20px,5vw,32px)] py-[clamp(12px,3vw,16px)] bg-blue-500 text-white rounded-full font-black text-[clamp(18px,4.5vw,20px)] shadow-lg hover:bg-blue-600 active:scale-95 transition-all flex items-center space-x-[clamp(6px,2vw,8px)]"
@@ -2486,7 +2497,7 @@ export default function App() {
                      <div className="relative mr-8">
                        <div className="absolute inset-0 bg-yellow-400 rounded-[32px] -rotate-6 scale-105 shadow-md"></div>
                        <div className="w-[clamp(64px,20vw,96px)] h-[clamp(64px,20vw,96px)] bg-white rounded-[32px] p-1.5 shadow-xl border-4 border-white overflow-hidden relative z-10">
-                         <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Qian" alt="avatar" className="w-full h-full object-cover bg-blue-50" />
+                         <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Qian" alt="avatar" draggable={false} className="w-full h-full object-cover bg-blue-50" />
                        </div>
                        <div className="absolute -top-2 -right-4 text-[clamp(24px,6vw,32px)] animate-bounce z-20">✨</div>
                        <div className="absolute -bottom-2 -left-4 text-[clamp(24px,6vw,32px)] animate-pulse z-20">🌟</div>
