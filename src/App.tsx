@@ -11,6 +11,7 @@ import {
   ChevronLeft, X, Gem, Settings, Trophy, 
   Calendar as CalendarIcon, Award, Play, 
   ArrowLeft, ArrowRight, Check, Lock, Camera,
+  Pencil, Shuffle, Keyboard,
   Footprints, Sunrise, Gift, Ear, Mic, BookOpen, GraduationCap,
   Repeat, CalendarCheck, ShoppingBag, Palette, 
   Zap, Star, Medal, Crown, Target, Rocket,
@@ -85,10 +86,14 @@ const MOCK_HISTORY_STATUS: Record<number, number> = {
 };
 
 const DEFAULT_RADAR_DATA = [
-  { subject: '说', grade: 'A', A: 80, fullMark: 100 },
-  { subject: '写', grade: 'B', A: 40, fullMark: 100 },
-  { subject: '读', grade: 'B-', A: 30, fullMark: 100 },
-  { subject: '听', grade: 'C', A: 20, fullMark: 100 },
+  { subject: '听力', grade: 'C', A: 35, fullMark: 100 },
+  { subject: '口语', grade: 'B-', A: 45, fullMark: 100 },
+  { subject: '阅读', grade: 'B', A: 55, fullMark: 100 },
+  { subject: '写作', grade: 'B-', A: 48, fullMark: 100 },
+  { subject: '词汇', grade: 'B', A: 52, fullMark: 100 },
+  { subject: '语法', grade: 'B-', A: 46, fullMark: 100 },
+  { subject: '发音', grade: 'B-', A: 50, fullMark: 100 },
+  { subject: '拼写', grade: 'C', A: 40, fullMark: 100 },
 ];
 
 type RadarDatum = (typeof DEFAULT_RADAR_DATA)[number];
@@ -207,6 +212,53 @@ const publicAssetUrl = (path: string) => {
   const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
   return encodeURI(`${normalizedBase}${normalizedPath}`);
 };
+
+const CUTE_NAME_POOL = [
+  '糯米团子', '奶糖泡泡', '葡萄啵啵', '星星果冻', '桃桃奶盖',
+  '芝士月亮', '莓莓小熊', '云朵布丁', '柚子软糖', '蜜桃星球',
+  '牛奶丸子', '晴天小饼', '跳跳果果', '甜甜松饼', '糖心豆豆',
+  '小橙奶酪', '花花奶昔', '雪梨团团', '软软可可', '香草泡芙'
+];
+
+const CUTE_AVATAR_SEEDS = [
+  'sunny-bunny', 'honey-bear', 'mint-puff', 'peachy-mochi', 'strawberry-pop',
+  'cocoa-kid', 'boba-cloud', 'lucky-bird', 'daisy-milk', 'fizzy-panda',
+  'maple-spark', 'choco-sprout', 'berry-bloom', 'mango-bounce', 'cotton-star',
+  'toffee-joy', 'plum-smile', 'lemon-skip', 'cookie-moon', 'jelly-dream',
+  'winkle-pie', 'mochi-sun', 'candy-river', 'butter-sky', 'melon-hug',
+  'snack-rocket', 'happy-pearl', 'tutu-fox', 'pudding-wave', 'rainbow-yo'
+];
+
+const DEFAULT_SMILE_AVATAR_SEED = 'smile-face';
+
+const resolveAvatarSeed = (seed?: string | null) => {
+  if (!seed) return DEFAULT_SMILE_AVATAR_SEED;
+  return CUTE_AVATAR_SEEDS.includes(seed) ? seed : DEFAULT_SMILE_AVATAR_SEED;
+};
+
+const buildCuteAvatarUrl = (seed?: string | null) =>
+  `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(resolveAvatarSeed(seed))}&radius=50&scale=95`;
+
+const StudentAvatar = ({
+  seed,
+  alt = '学员头像',
+  className = '',
+  imgClassName = ''
+}: {
+  seed?: string | null;
+  alt?: string;
+  className?: string;
+  imgClassName?: string;
+}) => (
+  <div className={`rounded-full overflow-hidden bg-white border-2 border-white shadow-sm ${className}`}>
+    <img
+      src={buildCuteAvatarUrl(seed)}
+      alt={alt}
+      draggable={false}
+      className={`w-full h-full object-cover rounded-full ${imgClassName}`}
+    />
+  </div>
+);
 
 const FLASHCARDS_DATA = [
   {
@@ -802,6 +854,10 @@ export default function App() {
 
   // --- 状态管理 ---
   const [currentView, setCurrentView] = useState('home');
+  const [studentName, setStudentName] = useState('糯米团子');
+  const [studentAvatarSeed, setStudentAvatarSeed] = useState(DEFAULT_SMILE_AVATAR_SEED);
+  const [profileDraftName, setProfileDraftName] = useState('糯米团子');
+  const [profileDraftAvatarSeed, setProfileDraftAvatarSeed] = useState(DEFAULT_SMILE_AVATAR_SEED);
   const [majorIdx, setMajorIdx] = useState(0); 
   const [subIdx, setSubIdx] = useState(0);     
   const [diamonds, setDiamonds] = useState(500); 
@@ -878,12 +934,26 @@ export default function App() {
       result.testState.grammarScore !== null
         ? Math.round(Math.max(0, Math.min(1, result.testState.grammarScore)) * 100)
         : Math.round(Math.max(0, Math.min(1, result.testState.vocabScore)) * 60);
+    const vocabA = Math.round(Math.max(0, Math.min(1, result.testState.vocabScore)) * 100);
+    const grammarA =
+      result.testState.grammarScore !== null
+        ? Math.round(Math.max(0, Math.min(1, result.testState.grammarScore)) * 100)
+        : Math.round(vocabA * 0.85);
+    const pronunciationA =
+      result.testState.oralScore !== null
+        ? Math.round(Math.max(0, Math.min(1, result.testState.oralScore)) * 100)
+        : Math.round(listenA * 0.75);
+    const spellingA = Math.round((vocabA * 0.6 + grammarA * 0.4));
 
     return [
-      { subject: '说', grade: calcGrade(speakA), A: speakA, fullMark: 100 },
-      { subject: '写', grade: calcGrade(writeA), A: writeA, fullMark: 100 },
-      { subject: '读', grade: calcGrade(readA), A: readA, fullMark: 100 },
-      { subject: '听', grade: calcGrade(listenA), A: listenA, fullMark: 100 },
+      { subject: '听力', grade: calcGrade(listenA), A: listenA, fullMark: 100 },
+      { subject: '口语', grade: calcGrade(speakA), A: speakA, fullMark: 100 },
+      { subject: '阅读', grade: calcGrade(readA), A: readA, fullMark: 100 },
+      { subject: '写作', grade: calcGrade(writeA), A: writeA, fullMark: 100 },
+      { subject: '词汇', grade: calcGrade(vocabA), A: vocabA, fullMark: 100 },
+      { subject: '语法', grade: calcGrade(grammarA), A: grammarA, fullMark: 100 },
+      { subject: '发音', grade: calcGrade(pronunciationA), A: pronunciationA, fullMark: 100 },
+      { subject: '拼写', grade: calcGrade(spellingA), A: spellingA, fullMark: 100 },
     ];
   };
 
@@ -971,6 +1041,7 @@ export default function App() {
   const mapScrollRef = useRef<number>(0);
   const mainRef = useRef<HTMLElement>(null);
   const gateInputRef = useRef<HTMLInputElement>(null);
+  const profileNameInputRef = useRef<HTMLInputElement | null>(null);
   const isDragging = useRef(false);
 
   // --- 全局点击音效 ---
@@ -1085,22 +1156,30 @@ export default function App() {
   const kikiCurrentLabel = kikiLevelLabels[kikiLevelIdx] ?? 'Lv.2 入门';
   const kikiNextLabel = kikiLevelLabels[Math.min(6, kikiLevelIdx + 1)] ?? 'Lv.3 学徒';
 
-  const skillCards = useMemo(() => {
-    const getA = (subject: string) => radarData.find((d) => d.subject === subject)?.A ?? 0;
+  const pickRandom = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)];
 
-    const mk = (id: string, name: string, subject: string, icon: string, color: string, light: string, text: string) => {
-      const progress = Math.max(0, Math.min(100, getA(subject)));
-      const level = Math.max(1, Math.round(progress / 10));
-      return { id, name, level, progress, subject, icon, color, light, text };
-    };
+  const randomizeCuteProfile = () => {
+    const randomName = pickRandom(CUTE_NAME_POOL);
+    setProfileDraftName(randomName);
+  };
 
-    return [
-      mk('listen', '听', '听', '🎧', 'bg-blue-500', 'bg-blue-100', 'text-blue-600'),
-      mk('speak', '说', '说', '🎙️', 'bg-green-500', 'bg-green-100', 'text-green-600'),
-      mk('read', '读', '读', '📖', 'bg-amber-500', 'bg-amber-100', 'text-amber-600'),
-      mk('write', '写', '写', '✍️', 'bg-purple-500', 'bg-purple-100', 'text-purple-600'),
-    ];
-  }, [radarData]);
+  const openProfileEdit = () => {
+    setProfileDraftName(studentName);
+    setProfileDraftAvatarSeed(studentAvatarSeed);
+    setCurrentView('profile-edit');
+  };
+
+  const focusNameInput = () => {
+    profileNameInputRef.current?.focus();
+    profileNameInputRef.current?.select();
+  };
+
+  const saveProfile = () => {
+    const normalized = profileDraftName.trim();
+    setStudentName(normalized || pickRandom(CUTE_NAME_POOL));
+    setStudentAvatarSeed(profileDraftAvatarSeed);
+    setCurrentView('profile');
+  };
 
   // --- 逻辑处理 ---
   const handleAbilityTestComplete = (result: AbilityTestResult) => {
@@ -2098,10 +2177,12 @@ export default function App() {
             <header className="h-[15%] px-[4%] flex justify-between items-center relative z-20">
               <div onClick={() => setCurrentView('profile')} className="flex items-center space-x-[clamp(12px,3vw,16px)] cursor-pointer group">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-yellow-400 rounded-[clamp(12px,3vw,16px)] rotate-3 group-hover:rotate-6 transition-transform shadow-md"></div>
-                  <div className="w-[clamp(48px,14vw,64px)] h-[clamp(48px,14vw,64px)] bg-white rounded-[clamp(12px,3vw,16px)] p-1 shadow-lg border-2 border-white overflow-hidden relative z-10 group-hover:scale-105 transition-transform">
-                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Qian" alt="avatar" draggable={false} className="w-full h-full object-cover" />
-                  </div>
+                  <div className="absolute inset-0 bg-yellow-300 rounded-full scale-105 group-hover:scale-110 transition-transform shadow-md"></div>
+                  <StudentAvatar
+                    seed={studentAvatarSeed}
+                    className="w-[clamp(48px,14vw,64px)] h-[clamp(48px,14vw,64px)] p-1 shadow-lg relative z-10 group-hover:scale-105 transition-transform"
+                    imgClassName="bg-[#fff9dc]"
+                  />
                 </div>
                 <div className="bg-white/90 backdrop-blur-sm px-[clamp(14px,3.5vw,20px)] py-[clamp(8px,2.5vw,10px)] rounded-full shadow-md border border-white/50 group-hover:bg-white transition-colors">
                   <span className={`font-black text-[clamp(14px,3.5vw,16px)] tracking-wide ${isToday ? 'bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent' : 'text-green-600'}`}>
@@ -2272,11 +2353,11 @@ export default function App() {
         )}
 
         {/* 各二级视图 (纯白背景) */}
-        {['parent', 'awards', 'shop', 'profile', 'settings', 'subscriptions', 'reports', 'report-generator'].includes(currentView) && (
+        {['parent', 'awards', 'shop', 'profile', 'profile-edit', 'settings', 'subscriptions', 'reports', 'report-generator'].includes(currentView) && (
           <div className="relative h-full w-full bg-white z-50 flex flex-col animate-in slide-in-from-left duration-300">
             <header className="h-[12%] px-[4%] flex items-center justify-between bg-white shadow-sm border-b border-slate-100">
-              <button onClick={() => currentView === 'report-generator' ? setCurrentView('reports') : ['settings', 'subscriptions', 'reports'].includes(currentView) ? setCurrentView('parent') : setCurrentView('home')} className="w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] bg-slate-100 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center text-slate-600 active:scale-90 transition-transform"><ChevronLeft size={32} /></button>
-              <h2 className="font-black text-slate-800 text-[clamp(22px,5.5vw,28px)] tracking-widest">{currentView === 'parent' ? '家长中心' : currentView === 'awards' ? '我的勋章' : currentView === 'shop' ? '魔法商城' : currentView === 'settings' ? 'App 设置' : currentView === 'subscriptions' ? '管理订阅' : currentView === 'reports' ? '接收学习报告' : currentView === 'report-generator' ? '生成学习报告' : '学员档案'}</h2>
+              <button onClick={() => currentView === 'report-generator' ? setCurrentView('reports') : currentView === 'profile-edit' ? setCurrentView('profile') : ['settings', 'subscriptions', 'reports'].includes(currentView) ? setCurrentView('parent') : setCurrentView('home')} className="w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] bg-slate-100 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center text-slate-600 active:scale-90 transition-transform"><ChevronLeft size={32} /></button>
+              <h2 className="font-black text-slate-800 text-[clamp(22px,5.5vw,28px)] tracking-widest">{currentView === 'parent' ? '家长中心' : currentView === 'awards' ? '我的勋章' : currentView === 'shop' ? '魔法商城' : currentView === 'settings' ? 'App 设置' : currentView === 'subscriptions' ? '管理订阅' : currentView === 'reports' ? '接收学习报告' : currentView === 'report-generator' ? '生成学习报告' : currentView === 'profile-edit' ? '编辑个人信息' : '学员档案'}</h2>
               {currentView === 'parent' ? (
                 <button onClick={() => setCurrentView('settings')} className="w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] bg-slate-100 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center text-slate-600 active:scale-90 transition-transform">
                   <Settings size={28} />
@@ -2285,7 +2366,7 @@ export default function App() {
                 <div className="w-[clamp(40px,12vw,56px)]" />
               )}
             </header>
-            <main {...verticalDragProps} className="flex-1 p-[4%] overflow-y-auto no-scrollbar text-slate-800 cursor-grab active:cursor-grabbing">
+            <main {...(currentView === 'profile-edit' ? {} : verticalDragProps)} className={`flex-1 p-[4%] overflow-y-auto no-scrollbar text-slate-800 ${currentView === 'profile-edit' ? '' : 'cursor-grab active:cursor-grabbing'}`}>
                {currentView === 'awards' ? (
                  <div className="max-w-5xl mx-auto">
                    <div className="flex items-center space-x-[clamp(12px,3vw,16px)] mb-[clamp(20px,5vw,32px)]">
@@ -2491,98 +2572,203 @@ export default function App() {
                    </div>
                  </div>
                ) : currentView === 'profile' ? (
-                 <div className="max-w-5xl mx-auto h-full flex flex-col pb-4">
-                   {/* Top Profile Banner */}
-                   <div className="flex items-center mb-[clamp(16px,4vw,24px)] w-full">
-                     <div className="relative mr-8">
-                       <div className="absolute inset-0 bg-yellow-400 rounded-[32px] -rotate-6 scale-105 shadow-md"></div>
-                       <div className="w-[clamp(64px,20vw,96px)] h-[clamp(64px,20vw,96px)] bg-white rounded-[32px] p-1.5 shadow-xl border-4 border-white overflow-hidden relative z-10">
-                         <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Qian" alt="avatar" draggable={false} className="w-full h-full object-cover bg-blue-50" />
+                 <div className="max-w-5xl mx-auto pb-6 space-y-[clamp(16px,4vw,24px)]">
+                   <section className="bg-slate-50 border-2 border-slate-200 rounded-[32px] px-[clamp(16px,4vw,24px)] py-[clamp(12px,3vw,16px)] flex items-center justify-between gap-[clamp(12px,3vw,20px)]">
+                     <div className="flex items-center gap-[clamp(12px,3vw,20px)] min-w-0">
+                       <StudentAvatar
+                         seed={studentAvatarSeed}
+                         className="w-[clamp(68px,20vw,92px)] h-[clamp(68px,20vw,92px)] p-1"
+                         imgClassName="bg-[#fff9dc]"
+                       />
+                       <div className="min-w-0">
+                         <div className="flex items-center gap-2 mb-2">
+                           <h1 className="text-[clamp(24px,6vw,36px)] leading-none font-black text-slate-800 truncate">{studentName}</h1>
+                           <button
+                             onClick={openProfileEdit}
+                             className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center hover:bg-slate-300 active:scale-95 transition-all"
+                             title="编辑个人信息"
+                           >
+                             <Pencil size={16} />
+                           </button>
+                         </div>
+                         <div className="flex items-center gap-2 flex-wrap">
+                           <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full font-black text-sm border border-blue-200">小小探险家</span>
+                           <span className="bg-violet-100 text-violet-600 px-3 py-1 rounded-full font-black text-sm border border-violet-200">Lv.{kikiLevel}</span>
+                         </div>
                        </div>
-                       <div className="absolute -top-2 -right-4 text-[clamp(24px,6vw,32px)] animate-bounce z-20">✨</div>
-                       <div className="absolute -bottom-2 -left-4 text-[clamp(24px,6vw,32px)] animate-pulse z-20">🌟</div>
                      </div>
-                     <div className="flex flex-col items-start">
-                       <h1 className="text-[clamp(24px,6vw,32px)] font-black text-slate-800 tracking-wide mb-[clamp(6px,2vw,8px)]">糯米团子</h1>
-                       <div className="bg-blue-100 text-blue-600 px-[clamp(12px,3vw,16px)] py-1 rounded-full font-black text-[clamp(14px,3.5vw,16px)] shadow-sm border border-blue-200">
-                         小小探险家
-                       </div>
+                     <div className="bg-orange-50 border border-orange-200 rounded-[24px] px-5 py-4 text-center shrink-0 min-w-[150px]">
+                       <p className="text-orange-500 font-black text-[clamp(24px,6vw,36px)] leading-none">12</p>
+                       <p className="text-orange-500 font-black text-sm mt-1">连续学习天数</p>
                      </div>
-                   </div>
+                   </section>
 
-                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-[clamp(12px,3vw,16px)] flex-1 min-h-0">
-                     {/* Left: Skill Cards */}
-                     <div className="grid grid-cols-2 gap-[clamp(8px,2.5vw,12px)]">
-                      {skillCards.map(item => (
-                         <div key={item.id} className={`${item.light} rounded-[24px] p-[clamp(12px,3vw,16px)] flex flex-col relative overflow-hidden transition-transform hover:scale-105 cursor-pointer border-2 border-white shadow-sm`}>
-                           <div className="flex justify-between items-start mb-[clamp(6px,2vw,8px)]">
-                             <div className={`w-[clamp(32px,8vw,40px)] h-[clamp(32px,8vw,40px)] bg-white rounded-[clamp(8px,2vw,12px)] flex items-center justify-center text-[clamp(20px,5vw,24px)] shadow-sm`}>
-                               {item.icon}
+                   <section>
+                     <div className="flex items-center justify-between mb-3">
+                       <h2 className="text-[clamp(18px,4vw,22px)] font-black text-slate-800 flex items-center gap-2">
+                         <Target className="text-green-500" size={20} />
+                         今日任务
+                       </h2>
+                       <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm font-black">已完成 2/3</span>
+                     </div>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-[clamp(10px,2.5vw,14px)]">
+                       <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4 flex items-center gap-3">
+                         <div className="w-10 h-10 rounded-full bg-green-100 text-green-500 flex items-center justify-center"><Check size={18} /></div>
+                         <div>
+                           <p className="font-black text-slate-700">完成1个绘本展读</p>
+                           <p className="text-slate-400 font-bold text-sm">+10 经验值</p>
+                         </div>
+                       </div>
+                       <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4 flex items-center gap-3">
+                         <div className="w-10 h-10 rounded-full bg-green-100 text-green-500 flex items-center justify-center"><Check size={18} /></div>
+                         <div>
+                           <p className="font-black text-slate-700">完成1个单词卡学习</p>
+                           <p className="text-slate-400 font-bold text-sm">+10 经验值</p>
+                         </div>
+                       </div>
+                       <div className="rounded-[20px] border border-blue-200 bg-blue-50 p-4 flex items-center gap-3">
+                         <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center"><BookOpen size={18} /></div>
+                         <div>
+                           <p className="font-black text-slate-700">学习时长达到 20 分钟</p>
+                           <p className="text-blue-500 font-black text-sm">进度 15/20 分钟</p>
+                         </div>
+                       </div>
+                     </div>
+                   </section>
+
+                   <section>
+                     <h2 className="text-[clamp(18px,4vw,22px)] font-black text-slate-800 flex items-center gap-2 mb-3">
+                       <Rocket className="text-violet-500" size={20} />
+                       能力成长
+                     </h2>
+                     <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-[clamp(10px,2.5vw,14px)]">
+                       <div className="bg-slate-50 rounded-[28px] p-[clamp(12px,3vw,16px)] border border-slate-200 min-h-[260px]">
+                         <div className="w-full h-full min-h-[240px]">
+                           <ResponsiveContainer width="100%" height="100%">
+                             <RadarChart cx="50%" cy="50%" outerRadius="66%" data={radarData}>
+                               <PolarGrid content={<CustomPolarGrid />} />
+                               <PolarAngleAxis dataKey="subject" tick={<CustomTick radarData={radarData} />} />
+                               <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
+                               <Radar
+                                 name="能力"
+                                 dataKey="A"
+                                 stroke="#7c3aed"
+                                 strokeWidth={3}
+                                 fill="#8b5cf6"
+                                 fillOpacity={0.45}
+                                 isAnimationActive={true}
+                                 animationBegin={0}
+                                 animationDuration={1200}
+                                 animationEasing="ease-out"
+                                 dot={{ r: 4, fill: '#fff', stroke: '#7c3aed', strokeWidth: 2 }}
+                                 activeDot={{ r: 6, fill: '#fff', stroke: '#7c3aed', strokeWidth: 2 }}
+                               />
+                             </RadarChart>
+                           </ResponsiveContainer>
+                         </div>
+                       </div>
+
+                       <div className="bg-slate-50 rounded-[28px] p-[clamp(16px,4vw,24px)] border border-slate-200 flex flex-col justify-between">
+                         <div>
+                           <h3 className="text-[clamp(24px,6vw,34px)] font-black text-slate-700">当前级别: <span className="text-violet-600">{kikiCurrentLabel}</span></h3>
+                           <p className="text-slate-500 text-[clamp(16px,4vw,20px)] font-bold mt-1">再获得 150 经验值即可升级到 {kikiNextLabel}</p>
+                         </div>
+                         <div className="pt-8">
+                           <div className="relative">
+                             <div className="h-3 rounded-full bg-slate-200" />
+                             <div className="absolute top-0 left-0 h-3 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 w-[18%]" />
+                             {/* avatar pinned exactly above the current-level node */}
+                             <div className="absolute left-[18%] -translate-x-1/2" style={{ bottom: 'calc(100% + 8px)' }}>
+                               <div className="animate-breathe-scale">
+                                 <StudentAvatar seed={studentAvatarSeed} className="w-12 h-12 p-1" imgClassName="bg-[#fff9dc]" />
+                               </div>
                              </div>
-                             <div className={`font-black ${item.text} text-[clamp(14px,3.5vw,16px)] bg-white/60 px-[clamp(6px,2vw,8px)] py-0.5 rounded-[clamp(6px,1.5vw,8px)]`}>Lv.{item.level}</div>
+                             <div className="absolute top-1/2 left-[18%] -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white border-[4px] border-violet-500" />
+                             <div className="absolute top-1/2 left-[40%] -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white border-[3px] border-slate-300" />
+                             <div className="absolute top-1/2 left-[62%] -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white border-[3px] border-slate-300" />
+                             <div className="absolute top-1/2 left-[84%] -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white border-[3px] border-slate-300" />
+                             <div className="absolute top-1/2 left-[98%] -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white border-[3px] border-slate-300" />
                            </div>
-                           <h3 className={`font-black ${item.text} text-[clamp(18px,4.5vw,20px)] mb-[clamp(6px,2vw,8px)]`}>{item.name}力</h3>
-                           <div className="h-3 bg-white/60 rounded-full overflow-hidden p-0.5 mt-auto">
-                             <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.progress}%` }} />
+                           <div className="flex justify-between mt-5 text-sm font-black">
+                             <span className="text-violet-600">Lv.1</span>
+                             <span className="text-violet-600">Lv.2</span>
+                             <span className="text-slate-400">Lv.4</span>
+                             <span className="text-slate-400">Lv.7</span>
+                             <span className="text-slate-400">Lv.10</span>
+                             <span className="text-slate-400">Lv.13</span>
                            </div>
                          </div>
-                       ))}
-                     </div>
-
-                     {/* Right: Radar Chart */}
-                     <div className="bg-slate-50 rounded-[32px] p-[clamp(12px,3vw,16px)] flex flex-col items-center justify-center border-4 border-slate-100 relative shadow-sm min-h-0">
-                       <div className="absolute top-4 left-4 bg-white px-[clamp(8px,2.5vw,12px)] py-1.5 rounded-[clamp(8px,2vw,12px)] shadow-sm font-black text-slate-700 flex items-center space-x-[clamp(6px,2vw,8px)] z-10 text-[clamp(14px,3.5vw,16px)]">
-                         <Target className="text-red-500" size={16} />
-                         <span>我的超能力雷达</span>
-                       </div>
-                       <div className="w-full h-full min-h-[150px] mt-[clamp(16px,4vw,24px)]">
-                         <ResponsiveContainer width="100%" height="100%">
-                           <RadarChart cx="50%" cy="50%" outerRadius="65%" data={radarData}>
-                             <PolarGrid content={<CustomPolarGrid />} />
-                             <PolarAngleAxis dataKey="subject" tick={<CustomTick radarData={radarData} />} />
-                             <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
-                             <Radar 
-                               name="能力" 
-                               dataKey="A" 
-                               stroke="#f97316" 
-                               strokeWidth={3} 
-                               fill="#fb923c" 
-                               fillOpacity={0.8} 
-                               isAnimationActive={true}
-                               animationBegin={0}
-                               animationDuration={1500}
-                               animationEasing="ease-out"
-                               dot={{ r: 4, fill: '#fff', stroke: '#f97316', strokeWidth: 2 }}
-                               activeDot={{ r: 6, fill: '#fff', stroke: '#f97316', strokeWidth: 2 }}
-                             />
-                           </RadarChart>
-                         </ResponsiveContainer>
                        </div>
                      </div>
-                   </div>
+                   </section>
+                 </div>
+               ) : currentView === 'profile-edit' ? (
+                 <div className="max-w-2xl mx-auto pb-10">
+                   <section className="bg-slate-100 border border-slate-200 rounded-[36px] p-[clamp(16px,4vw,24px)]">
+                     <div className="flex justify-center mb-4">
+                       <StudentAvatar seed={profileDraftAvatarSeed} className="w-32 h-32 p-1 shadow-lg" imgClassName="bg-[#fff9dc]" />
+                     </div>
 
-                   {/* Bottom: Overall Progress */}
-                   <div className="mt-[clamp(12px,3vw,16px)] bg-white border-4 border-slate-100 rounded-[24px] p-[clamp(12px,3vw,16px)] relative overflow-hidden shadow-sm shrink-0">
-                     <div className="flex justify-between items-end mb-[clamp(6px,2vw,8px)] relative z-10">
+                     <div className="space-y-5">
                        <div>
-                         <p className="text-slate-400 font-bold text-[clamp(14px,3.5vw,16px)] mb-1">当前进度</p>
-                         <h3 className="font-black text-[clamp(20px,5vw,24px)] text-slate-800 flex items-center space-x-[clamp(6px,2vw,8px)]">
-                           <Crown className="text-yellow-500" size={20} />
-                           <span>{kikiCurrentLabel}</span>
-                         </h3>
+                         <label className="block text-slate-500 font-black text-lg mb-2">学员昵称</label>
+                         <div className="flex gap-3">
+                           <input
+                             ref={profileNameInputRef}
+                             type="text"
+                             value={profileDraftName}
+                             onChange={(e) => setProfileDraftName(e.target.value.slice(0, 16))}
+                             placeholder="请输入可爱昵称"
+                             className="flex-1 bg-white rounded-2xl border-2 border-slate-200 px-4 py-3 text-2xl font-black text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-300"
+                           />
+                           <button
+                             type="button"
+                             onClick={randomizeCuteProfile}
+                             className="px-4 py-3 bg-violet-100 text-violet-600 rounded-2xl border border-violet-200 font-black flex items-center gap-2 hover:bg-violet-200 active:scale-95 transition-all"
+                           >
+                             <Shuffle size={18} />
+                             随机
+                           </button>
+                         </div>
+                         <button
+                           type="button"
+                           onClick={focusNameInput}
+                           className="mt-2 text-slate-500 font-black text-sm flex items-center gap-1 hover:text-slate-700"
+                         >
+                           <Keyboard size={16} />
+                           手动调出键盘编辑
+                         </button>
                        </div>
-                       <div className="text-right">
-                         <p className="text-slate-400 font-bold text-[clamp(14px,3.5vw,16px)] mb-1">下一级</p>
-                         <h3 className="font-black text-[clamp(18px,4.5vw,20px)] text-slate-400">{kikiNextLabel}</h3>
+
+                       <div>
+                         <p className="text-slate-500 font-black text-lg mb-2">选择头像（30 个圆形矢量卡通头像）</p>
+                         <div className="bg-white rounded-[28px] border-2 border-slate-200 p-4 grid grid-cols-5 sm:grid-cols-6 gap-3">
+                           {CUTE_AVATAR_SEEDS.map((seed) => {
+                             const selected = seed === profileDraftAvatarSeed;
+                             return (
+                               <button
+                                 key={seed}
+                                 type="button"
+                                 onClick={() => setProfileDraftAvatarSeed(seed)}
+                                 className={`rounded-full p-1.5 transition-all ${selected ? 'bg-blue-100 ring-2 ring-blue-500 scale-105' : 'bg-slate-100 hover:bg-slate-200'}`}
+                                 title={seed}
+                               >
+                                 <StudentAvatar seed={seed} className="w-full h-full aspect-square" imgClassName="bg-[#fff9dc]" />
+                               </button>
+                             );
+                           })}
+                         </div>
                        </div>
+
+                       <button
+                         type="button"
+                         onClick={saveProfile}
+                         className="w-full py-3 rounded-2xl bg-blue-500 text-white font-black text-xl hover:bg-blue-600 active:scale-[0.99] transition-all"
+                       >
+                         保存个人信息
+                       </button>
                      </div>
-                     <div className="h-6 bg-slate-100 rounded-full relative overflow-hidden p-1 z-10">
-                       <div className="absolute left-1 top-1 bottom-1 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full w-[30%] shadow-sm relative overflow-hidden">
-                         <div className="absolute top-0 left-0 right-0 h-1/2 bg-white/20 rounded-full"></div>
-                       </div>
-                     </div>
-                     <Rocket className="absolute -right-2 -bottom-2 text-slate-50 opacity-50" size={80} />
-                   </div>
+                   </section>
                  </div>
                ) : currentView === 'shop' ? (
                  <div className="max-w-5xl mx-auto pb-[clamp(24px,6vw,40px)]">
