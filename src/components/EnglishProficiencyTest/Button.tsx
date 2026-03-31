@@ -66,6 +66,37 @@ export const playSuccessSound = () => {
   }
 };
 
+export const playWarningSound = () => {
+  try {
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      audioCtx = new AudioContextClass();
+    }
+    
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+
+    const now = audioCtx.currentTime;
+    [0, 0.4].forEach(delay => {
+      const osc = audioCtx!.createOscillator();
+      const gain = audioCtx!.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx!.destination);
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(440, now + delay);
+      gain.gain.setValueAtTime(0, now + delay);
+      gain.gain.linearRampToValueAtTime(0.1, now + delay + 0.05);
+      gain.gain.linearRampToValueAtTime(0, now + delay + 0.2);
+      osc.start(now + delay);
+      osc.stop(now + delay + 0.2);
+    });
+  } catch (e) {
+    // Ignore audio errors
+  }
+};
+
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'accent' | 'outline' | 'ghost';
   size?: 'sm' | 'md' | 'lg' | 'icon';

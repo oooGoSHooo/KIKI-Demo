@@ -14,6 +14,7 @@ export interface Question {
   audio?: string;
   text?: string;
   passage?: string;
+  image?: string;
   options?: Option[];
 }
 
@@ -219,6 +220,54 @@ export const testModules: Module[] = [
           { id: 'b', image: '/test/M3/wordcard/VA-1-08/moon.png', isCorrect: false },
           { id: 'c', image: '/test/M3/wordcard/VA-1-08/stars.png', isCorrect: false },
           { id: 'd', image: '/test/M3/wordcard/VA-1-08/earth.png', isCorrect: false },
+        ],
+      },
+      {
+        id: 'VA-1-09',
+        type: 'vocabulary',
+        text: 'library',
+        image: '/test/M3/VB-1-05 06 07 08/05.jpg',
+        options: [
+          { id: 'a', text: 'library', isCorrect: true },
+          { id: 'b', text: 'hospital', isCorrect: false },
+          { id: 'c', text: 'restaurant', isCorrect: false },
+          { id: 'd', text: 'cinema', isCorrect: false },
+        ],
+      },
+      {
+        id: 'VA-1-10',
+        type: 'vocabulary',
+        text: 'dentist',
+        image: '/test/M3/VB-1-05 06 07 08/06.jpg',
+        options: [
+          { id: 'a', text: 'doctor', isCorrect: false },
+          { id: 'b', text: 'dentist', isCorrect: true },
+          { id: 'c', text: 'nurse', isCorrect: false },
+          { id: 'd', text: 'vet', isCorrect: false },
+        ],
+      },
+      {
+        id: 'VA-1-11',
+        type: 'vocabulary',
+        text: 'fire station',
+        image: '/test/M3/VB-1-05 06 07 08/07.jpg',
+        options: [
+          { id: 'a', text: 'police station', isCorrect: false },
+          { id: 'b', text: 'fire station', isCorrect: true },
+          { id: 'c', text: 'hospital', isCorrect: false },
+          { id: 'd', text: 'school', isCorrect: false },
+        ],
+      },
+      {
+        id: 'VA-1-12',
+        type: 'vocabulary',
+        text: 'autumn',
+        image: '/test/M3/VB-1-05 06 07 08/08.jpg',
+        options: [
+          { id: 'a', text: 'spring', isCorrect: false },
+          { id: 'b', text: 'summer', isCorrect: false },
+          { id: 'c', text: 'autumn', isCorrect: true },
+          { id: 'd', text: 'winter', isCorrect: false },
         ],
       },
     ],

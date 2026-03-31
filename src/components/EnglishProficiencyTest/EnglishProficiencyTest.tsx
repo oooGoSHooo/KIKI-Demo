@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { testModules } from './questions';
-import { Button, playClickSound, playSuccessSound } from './Button';
+import { Button, playClickSound, playSuccessSound, playWarningSound } from './Button';
 import { AudioPlayer } from './AudioPlayer';
 import { Clock, ArrowRight, Mic, CheckCircle2, FileText, X, ArrowLeft } from 'lucide-react';
 import {
@@ -26,9 +26,9 @@ function mapLevel13to7(level13: number): number {
 function buildTestState(answers: boolean[]): TestState {
   const listeningAnswers = answers.slice(0, 5);
   const speakingAnswers = answers.slice(5, 8);
-  const vocabAnswers = answers.slice(8, 16);
-  const readingAnswers = answers.slice(16, 20);
-  const grammarAnswers = answers.slice(20, 23);
+  const vocabAnswers = answers.slice(8, 20);
+  const readingAnswers = answers.slice(20, 24);
+  const grammarAnswers = answers.slice(24, 27);
 
   const listeningScore = listeningAnswers.filter(Boolean).length;
   const oralScore = speakingAnswers.length > 0
@@ -64,7 +64,7 @@ export function EnglishProficiencyTest({ onComplete, onBack }: EnglishProficienc
   const [step, setStep] = useState<Step>('questionnaire');
   const [currentModuleIndex, setCurrentModuleIndex] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [timeRemaining, setTimeRemaining] = useState(15 * 60);
+  const [timeRemaining, setTimeRemaining] = useState(1 * 60);
   const [timeSpent, setTimeSpent] = useState(0);
   const [answers, setAnswers] = useState<boolean[]>([]);
   const [showExitModal, setShowExitModal] = useState(false);
@@ -97,7 +97,11 @@ export function EnglishProficiencyTest({ onComplete, onBack }: EnglishProficienc
     if (step === 'test' || step === 'transition') {
       timer = setInterval(() => {
         setTimeRemaining((prev) => {
-          if (prev <= 1) { clearInterval(timer); setStep('result'); return 0; }
+          if (prev <= 1) {
+            clearInterval(timer);
+            playWarningSound();
+            return 0;
+          }
           return prev - 1;
         });
         setTimeSpent((prev) => prev + 1);
@@ -197,10 +201,27 @@ export function EnglishProficiencyTest({ onComplete, onBack }: EnglishProficienc
       </AnimatePresence>
 
       {(step === 'test' || step === 'transition') && (
-        <div className="fixed bottom-6 left-6 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full shadow-lg flex items-center gap-2 text-[#2F3640] font-bold z-50">
-          <Clock size={20} className="text-[#ED7470]" />
+        <motion.div
+          initial={{ x: -100, opacity: 0 }}
+          animate={{ 
+            x: 0, 
+            opacity: 1,
+            scale: timeRemaining === 0 ? [1, 1.2, 1, 1.2, 1] : 1
+          }}
+          transition={{ 
+            type: 'spring', 
+            stiffness: 100, 
+            damping: 15, 
+            mass: 1,
+            scale: { duration: 0.6, times: [0, 0.25, 0.5, 0.75, 1] }
+          }}
+          className={`fixed bottom-6 left-6 backdrop-blur-md px-4 py-2 rounded-full shadow-lg flex items-center gap-2 font-bold z-50 transition-colors duration-300 ${
+            timeRemaining === 0 ? 'bg-[#ED7470] text-white' : 'bg-white/80 text-[#2F3640]'
+          }`}
+        >
+          <Clock size={20} className={timeRemaining === 0 ? 'text-white' : 'text-[#ED7470]'} />
           <span>{formatTime(timeRemaining)}</span>
-        </div>
+        </motion.div>
       )}
 
       {showExitModal && (
@@ -369,9 +390,18 @@ const TestScreen: React.FC<{ moduleIndex: number; questionIndex: number; onNext:
               <AudioPlayer text={question.audioText} audio={question.audio} autoPlay={true} />
             </div>
           )}
-          {question.text && <h2 className="text-3xl font-bold text-center mb-8 text-[#2F3640] leading-tight">{question.text}</h2>}
+          {question.text && !question.image && (
+            <h2 className="text-3xl font-bold text-center mb-8 text-[#2F3640] leading-tight">
+              {question.text}
+            </h2>
+          )}
+          {question.image && (
+            <div className="mb-8 w-full max-w-md aspect-video rounded-3xl overflow-hidden shadow-lg border-4 border-white">
+              <img src={question.image} alt="Question" className="w-full h-full object-cover" />
+            </div>
+          )}
           {question.options && (
-            <div className={'grid ' + (module.id === 'VA-1' ? 'gap-8' : 'gap-4') + ' w-full ' + (question.options[0].image ? (module.id === 'VA-1' ? 'grid-cols-4' : 'grid-cols-2') : 'grid-cols-1')}>
+            <div className={'grid ' + (module.id === 'VA-1' ? 'gap-8' : 'gap-4') + ' w-full ' + (question.options[0].image ? (module.id === 'VA-1' ? 'grid-cols-4' : 'grid-cols-2') : (question.image ? 'grid-cols-2' : 'grid-cols-1'))}>
               {question.options.map((option) => (
                 <button key={option.id} onClick={() => { playClickSound(); setSelectedOptionId(option.id); }}
                   className={'relative overflow-hidden rounded-3xl transition-all active:scale-95 ' + (selectedOptionId === option.id ? 'shadow-lg scale-[1.02] bg-[#ED7470]' : 'shadow-sm bg-white')}>
