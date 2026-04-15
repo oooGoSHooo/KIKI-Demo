@@ -864,7 +864,7 @@ export default function App() {
   const [diamonds, setDiamonds] = useState(500); 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showCalendar, setShowCalendar] = useState(false);
-  const [showModuleReward, setShowModuleReward] = useState<number | null>(null);
+  const [showModuleReward, setShowModuleReward] = useState<number | null>(null); 
   const [showGrandReward, setShowGrandReward] = useState(false);
   const [highlightedStageIdx, setHighlightedStageIdx] = useState<number | null>(null);
   const [showParentGate, setShowParentGate] = useState(false);
@@ -893,7 +893,7 @@ export default function App() {
     if (showCalendar) {
       const el = document.getElementById(`cal-day-${selectedDate.getDate()}`);
       if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
   }, [selectedDate, showCalendar]);
@@ -1050,23 +1050,22 @@ export default function App() {
   useEffect(() => {
     const playPop = () => {
       try {
-        const AudioContext =
-          window.AudioContext || (window as any).webkitAudioContext;
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
         if (!AudioContext) return;
         const ctx = new AudioContext();
         const osc = ctx.createOscillator();
         const gainNode = ctx.createGain();
-
-        osc.type = "sine";
+        
+        osc.type = 'sine';
         osc.frequency.setValueAtTime(400, ctx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.05);
-
+        
         gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-
+        
         osc.connect(gainNode);
         gainNode.connect(ctx.destination);
-
+        
         osc.start();
         osc.stop(ctx.currentTime + 0.1);
       } catch (e) {
@@ -1076,59 +1075,51 @@ export default function App() {
 
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (
-        target.closest("button") ||
-        target.closest('[class*="cursor-pointer"]')
-      ) {
+      if (target.closest('button') || target.closest('[class*="cursor-pointer"]')) {
         playPop();
       }
     };
 
-    document.addEventListener("click", handleClick);
-    return () => document.removeEventListener("click", handleClick);
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
   }, []);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
 
-  const startDraggingX = (pageX: number) => {
+  const handleMouseDown = (e: React.MouseEvent) => {
     if (!mainRef.current) return;
     isDragging.current = true;
-    startX.current = pageX - mainRef.current.offsetLeft;
+    startX.current = e.pageX - mainRef.current.offsetLeft;
     scrollLeft.current = mainRef.current.scrollLeft;
   };
 
-  const stopDraggingX = () => {
+  const handleMouseLeave = () => {
     isDragging.current = false;
   };
 
-  const moveDraggingX = (pageX: number, e: any) => {
+  const handleMouseUp = () => {
+    isDragging.current = false;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging.current || !mainRef.current) return;
-    if (e.cancelable) e.preventDefault();
-    const x = pageX - mainRef.current.offsetLeft;
+    e.preventDefault();
+    const x = e.pageX - mainRef.current.offsetLeft;
     const walk = (x - startX.current) * 1.5;
     mainRef.current.scrollLeft = scrollLeft.current - walk;
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => startDraggingX(e.pageX);
-  const handleMouseLeave = () => stopDraggingX();
-  const handleMouseUp = () => stopDraggingX();
-  const handleMouseMove = (e: React.MouseEvent) => moveDraggingX(e.pageX, e);
-
-  const handleTouchStart = (e: React.TouchEvent) => startDraggingX(e.touches[0].pageX);
-  const handleTouchEnd = () => stopDraggingX();
-  const handleTouchMove = (e: React.TouchEvent) => moveDraggingX(e.touches[0].pageX, e);
-
   useEffect(() => {
-    if (currentView === "home" && mainRef.current) {
+    if (currentView === 'home' && mainRef.current) {
       mainRef.current.scrollLeft = mapScrollRef.current;
     }
   }, [currentView]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (currentView === "learning") {
+    if (currentView === 'learning') {
       interval = setInterval(() => {
-        setStudyTime((prev) => prev + 1);
+        setStudyTime(prev => prev + 1);
       }, 1000);
     }
     return () => clearInterval(interval);
@@ -1249,7 +1240,7 @@ export default function App() {
 
   const startLearning = (title: string) => {
     setLearningTitle(title);
-    setCurrentView("learning");
+    setCurrentView('learning');
   };
 
   const skipSubTask = () => {
@@ -1258,17 +1249,17 @@ export default function App() {
   };
 
   const finishSubTask = () => {
-    setDiamonds((prev) => prev + 10);
-    setSubIdx((prev) => prev + 1);
-    setCurrentView("home");
-
+    setDiamonds(prev => prev + 10);
+    setSubIdx(prev => prev + 1);
+    setCurrentView('home');
+    
     // Toast 提示
-    const toast = document.getElementById("toast");
+    const toast = document.getElementById('toast');
     if (toast) {
-      toast.style.opacity = "1";
-      toast.style.transform = "translate(-50%, 0) scale(1)";
+      toast.style.opacity = '1';
+      toast.style.transform = 'translate(-50%, 0) scale(1)';
       setTimeout(() => {
-        toast.style.opacity = "0";
+        toast.style.opacity = '0';
         setTimeout(() => {
           toast.style.transform = 'translate(-50%, 0) scale(0.5)';
         }, 250);
@@ -1276,68 +1267,43 @@ export default function App() {
     }
   };
 
-  const handleRandomName = () => {
-    const adj = NAME_ADJS[Math.floor(Math.random() * NAME_ADJS.length)];
-    const noun = NAME_NOUNS[Math.floor(Math.random() * NAME_NOUNS.length)];
-    setTempProfile((prev) => ({ ...prev, name: `${adj}${noun}` }));
-  };
-
-  const handleSaveProfile = () => {
-    setUserProfile(tempProfile);
-    setCurrentView("profile");
-  };
-
-  const handleOpenEditProfile = () => {
-    setTempProfile(userProfile);
-    setCurrentView("edit-profile");
-  };
-
   const handleOpenReward = (mIdx: number) => {
     setShowModuleReward(mIdx);
-
+    
     // 播放胜利庆祝音效
     try {
-      const AudioContext =
-        window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       if (AudioContext) {
         const ctx = new AudioContext();
-
-        const playNote = (
-          freq: number,
-          startTime: number,
-          duration: number,
-          type: OscillatorType = "triangle",
-        ) => {
+        
+        const playNote = (freq: number, startTime: number, duration: number, type: OscillatorType = 'triangle') => {
           const osc = ctx.createOscillator();
           const gainNode = ctx.createGain();
-
+          
           osc.type = type;
           osc.frequency.setValueAtTime(freq, startTime);
-
+          
           gainNode.gain.setValueAtTime(0, startTime);
           gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
-          gainNode.gain.exponentialRampToValueAtTime(
-            0.01,
-            startTime + duration,
-          );
-
+          gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+          
           osc.connect(gainNode);
           gainNode.connect(ctx.destination);
-
+          
           osc.start(startTime);
           osc.stop(startTime + duration);
         };
 
         const now = ctx.currentTime;
         // C Major Arpeggio: C4, E4, G4, C5
-        playNote(261.63, now, 0.4); // C4
+        playNote(261.63, now, 0.4);       // C4
         playNote(329.63, now + 0.1, 0.4); // E4
-        playNote(392.0, now + 0.2, 0.4); // G4
-        playNote(523.25, now + 0.3, 0.8, "sine"); // C5
-
+        playNote(392.00, now + 0.2, 0.4); // G4
+        playNote(523.25, now + 0.3, 0.8, 'sine'); // C5
+        
         // Add harmony on the last note
-        playNote(329.63, now + 0.3, 0.8, "sine"); // E4
-        playNote(392.0, now + 0.3, 0.8, "sine"); // G4
+        playNote(329.63, now + 0.3, 0.8, 'sine'); // E4
+        playNote(392.00, now + 0.3, 0.8, 'sine'); // G4
       }
     } catch (e) {
       // Ignore audio context errors
@@ -1348,62 +1314,53 @@ export default function App() {
       spread: 80,
       origin: { y: 0.6 },
       zIndex: 1000,
-      colors: ["#3b82f6", "#22c55e", "#f59e0b", "#a855f7", "#ec4899"],
+      colors: ['#3b82f6', '#22c55e', '#f59e0b', '#a855f7', '#ec4899']
     });
   };
 
   const handleRewardConfirm = () => {
     const isLastMajor = majorIdx === TASK_DATA.length - 1;
-    setDiamonds((prev) => prev + 50);
+    setDiamonds(prev => prev + 50);
     setShowModuleReward(null);
     if (isLastMajor) {
       setShowGrandReward(true);
-
+      
       // 播放更盛大的胜利庆祝音效
       try {
-        const AudioContext =
-          window.AudioContext || (window as any).webkitAudioContext;
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
         if (AudioContext) {
           const ctx = new AudioContext();
-
-          const playNote = (
-            freq: number,
-            startTime: number,
-            duration: number,
-            type: OscillatorType = "triangle",
-          ) => {
+          
+          const playNote = (freq: number, startTime: number, duration: number, type: OscillatorType = 'triangle') => {
             const osc = ctx.createOscillator();
             const gainNode = ctx.createGain();
-
+            
             osc.type = type;
             osc.frequency.setValueAtTime(freq, startTime);
-
+            
             gainNode.gain.setValueAtTime(0, startTime);
             gainNode.gain.linearRampToValueAtTime(0.4, startTime + 0.05);
-            gainNode.gain.exponentialRampToValueAtTime(
-              0.01,
-              startTime + duration,
-            );
-
+            gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+            
             osc.connect(gainNode);
             gainNode.connect(ctx.destination);
-
+            
             osc.start(startTime);
             osc.stop(startTime + duration);
           };
 
           const now = ctx.currentTime;
           // Fanfare: C4, F4, C4, F4, A4, C5
-          playNote(261.63, now, 0.2); // C4
+          playNote(261.63, now, 0.2);       // C4
           playNote(349.23, now + 0.2, 0.2); // F4
           playNote(261.63, now + 0.4, 0.2); // C4
           playNote(349.23, now + 0.6, 0.2); // F4
-          playNote(440.0, now + 0.8, 0.2); // A4
-          playNote(523.25, now + 1.0, 1.5, "sine"); // C5
-
+          playNote(440.00, now + 0.8, 0.2); // A4
+          playNote(523.25, now + 1.0, 1.5, 'sine'); // C5
+          
           // Harmony
-          playNote(349.23, now + 1.0, 1.5, "sine"); // F4
-          playNote(440.0, now + 1.0, 1.5, "sine"); // A4
+          playNote(349.23, now + 1.0, 1.5, 'sine'); // F4
+          playNote(440.00, now + 1.0, 1.5, 'sine'); // A4
         }
       } catch (e) {
         // Ignore audio context errors
@@ -1419,16 +1376,16 @@ export default function App() {
           angle: 60,
           spread: 55,
           origin: { x: 0 },
-          colors: ["#3b82f6", "#22c55e", "#f59e0b", "#a855f7", "#ec4899"],
-          zIndex: 1000,
+          colors: ['#3b82f6', '#22c55e', '#f59e0b', '#a855f7', '#ec4899'],
+          zIndex: 1000
         });
         confetti({
           particleCount: 5,
           angle: 120,
           spread: 55,
           origin: { x: 1 },
-          colors: ["#3b82f6", "#22c55e", "#f59e0b", "#a855f7", "#ec4899"],
-          zIndex: 1000,
+          colors: ['#3b82f6', '#22c55e', '#f59e0b', '#a855f7', '#ec4899'],
+          zIndex: 1000
         });
 
         if (Date.now() < end) {
@@ -1436,6 +1393,7 @@ export default function App() {
         }
       };
       frame();
+
     } else {
       const nextIdx = majorIdx + 1;
       setMajorIdx(nextIdx);
@@ -1448,13 +1406,10 @@ export default function App() {
         if (nextModule && mainRef.current) {
           // Calculate the center position
           const container = mainRef.current;
-          const scrollLeft =
-            nextModule.offsetLeft -
-            container.clientWidth / 2 +
-            nextModule.clientWidth / 2;
+          const scrollLeft = nextModule.offsetLeft - (container.clientWidth / 2) + (nextModule.clientWidth / 2);
           container.scrollTo({
             left: scrollLeft,
-            behavior: "smooth",
+            behavior: 'smooth'
           });
         }
       }, 100);
@@ -1475,16 +1430,9 @@ export default function App() {
       setMajorIdx(0);
       setSubIdx(0);
     } else {
-      if (status === 2) {
-        setMajorIdx(TASK_DATA.length);
-        setSubIdx(0);
-      } else if (status === 1) {
-        setMajorIdx(1);
-        setSubIdx(1);
-      } else {
-        setMajorIdx(0);
-        setSubIdx(0);
-      }
+      if (status === 2) { setMajorIdx(TASK_DATA.length); setSubIdx(0); }
+      else if (status === 1) { setMajorIdx(1); setSubIdx(1); }
+      else { setMajorIdx(0); setSubIdx(0); }
     }
     setShowCalendar(false);
   };
@@ -1501,7 +1449,7 @@ export default function App() {
   const handleParentGateSubmit = () => {
     if (parseInt(gateInput) === gateMath.a) {
       setShowParentGate(false);
-      setCurrentView("parent");
+      setCurrentView('parent');
     } else {
       setGateError(true);
       setGateInput('');
@@ -1792,19 +1740,10 @@ export default function App() {
       
       if (isMajorDone) {
         // Finished: Soft theme color, solid but calm
-        if (mIdx === 0) {
-          bgClass = "bg-[#d5ecfe]";
-          borderClass = "border-blue-200";
-        } else if (mIdx === 1) {
-          bgClass = "bg-green-100/80";
-          borderClass = "border-green-300/50";
-        } else if (mIdx === 2) {
-          bgClass = "bg-amber-100/80";
-          borderClass = "border-amber-300/50";
-        } else if (mIdx === 3) {
-          bgClass = "bg-purple-100/80";
-          borderClass = "border-purple-300/50";
-        }
+        if (mIdx === 0) { bgClass = 'bg-[#d5ecfe]'; borderClass = 'border-blue-200'; }
+        else if (mIdx === 1) { bgClass = 'bg-green-100/80'; borderClass = 'border-green-300/50'; }
+        else if (mIdx === 2) { bgClass = 'bg-amber-100/80'; borderClass = 'border-amber-300/50'; }
+        else if (mIdx === 3) { bgClass = 'bg-purple-100/80'; borderClass = 'border-purple-300/50'; }
       } else if (isMajorCurrent) {
         // Current: Bright, glowing, active
         stageCardShadow = '0 28px 72px rgba(0,121,160,0.25)';
@@ -1814,8 +1753,8 @@ export default function App() {
         else if (mIdx === 3) { bgClass = 'bg-purple-50/90'; borderClass = 'border-purple-500'; }
       } else {
         // Unfinished: Muted, glassmorphism, gray
-        bgClass = "bg-white/20 grayscale opacity-60";
-        borderClass = "border-white/30";
+        bgClass = 'bg-white/20 grayscale opacity-60';
+        borderClass = 'border-white/30';
       }
 
       const stageContent: React.ReactNode[] = [];
@@ -1839,7 +1778,7 @@ export default function App() {
         }
 
         stageContent.push(
-          <div
+          <div 
             key={`dot-sub-${mIdx}-${sIdx}`}
             onClick={() => isSubActive && startLearning(`${major.name} · ${sub}`)}
             className={`relative flex items-center justify-center h-[86px] w-[clamp(48px,14vw,72px)]`}
@@ -1962,12 +1901,8 @@ export default function App() {
             {/* Animated Background for Current Module */}
             {isMajorCurrent && (
               <div className="absolute inset-0 pointer-events-none z-0">
-                <div
-                  className={`absolute -top-10 -left-10 w-[clamp(160px,50vw,256px)] h-[clamp(160px,50vw,256px)] rounded-full opacity-20 animate-drift-1 ${mIdx === 0 ? "bg-blue-300" : mIdx === 1 ? "bg-green-300" : mIdx === 2 ? "bg-amber-300" : "bg-purple-300"}`}
-                ></div>
-                <div
-                  className={`absolute -bottom-10 -right-10 w-[clamp(200px,60vw,288px)] h-[clamp(200px,60vw,288px)] rounded-full opacity-20 animate-drift-2 ${mIdx === 0 ? "bg-blue-200" : mIdx === 1 ? "bg-green-200" : mIdx === 2 ? "bg-amber-200" : "bg-purple-200"}`}
-                ></div>
+                <div className={`absolute -top-10 -left-10 w-[clamp(160px,50vw,256px)] h-[clamp(160px,50vw,256px)] rounded-full opacity-20 animate-drift-1 ${mIdx === 0 ? 'bg-blue-300' : mIdx === 1 ? 'bg-green-300' : mIdx === 2 ? 'bg-amber-300' : 'bg-purple-300'}`}></div>
+                <div className={`absolute -bottom-10 -right-10 w-[clamp(200px,60vw,288px)] h-[clamp(200px,60vw,288px)] rounded-full opacity-20 animate-drift-2 ${mIdx === 0 ? 'bg-blue-200' : mIdx === 1 ? 'bg-green-200' : mIdx === 2 ? 'bg-amber-200' : 'bg-purple-200'}`}></div>
               </div>
             )}
 
@@ -1992,13 +1927,10 @@ export default function App() {
             )}
 
             {/* Stage Label Watermark */}
-            <div
-              className="absolute top-3 left-0 w-full text-center font-black text-[15px] tracking-widest uppercase opacity-40 z-10"
-              style={{ color: isMajorFuture ? "#94a3b8" : major.color }}
-            >
+            <div className="absolute top-3 left-0 w-full text-center font-black text-[15px] tracking-widest uppercase opacity-40 z-10" style={{ color: isMajorFuture ? '#94a3b8' : major.color }}>
               STAGE {mIdx + 1} · {major.id}
             </div>
-
+            
             {/* Nodes */}
             <div className="flex items-center relative z-10 mt-[clamp(12px,3vw,16px)]">
               {stageContent}
@@ -2007,17 +1939,11 @@ export default function App() {
 
           {/* 4. 大关连接 */}
           {mIdx < TASK_DATA.length - 1 && (
-            <div
-              key={`major-conn-${mIdx}`}
-              className="w-[clamp(48px,14vw,64px)] h-3 bg-white/30 rounded-full mx-1 shadow-inner overflow-hidden relative shrink-0"
-            >
-              <div
-                className={`h-full transition-all duration-1000 ${mIdx < majorIdx ? "bg-gradient-to-r from-blue-400 to-cyan-400" : "bg-transparent"}`}
-                style={{ width: mIdx < majorIdx ? "100%" : "0%" }}
-              />
+            <div key={`major-conn-${mIdx}`} className="w-[clamp(48px,14vw,64px)] h-3 bg-white/30 rounded-full mx-1 shadow-inner overflow-hidden relative shrink-0">
+              <div className={`h-full transition-all duration-1000 ${mIdx < majorIdx ? 'bg-gradient-to-r from-blue-400 to-cyan-400' : 'bg-transparent'}`} style={{ width: mIdx < majorIdx ? '100%' : '0%' }} />
             </div>
           )}
-        </React.Fragment>,
+        </React.Fragment>
       );
     });
     return pathNodes;
@@ -2340,244 +2266,23 @@ export default function App() {
                     <Clock size={24} />
                   </div>
                   <div>
-                    <h1 className="text-[clamp(22px,5.5vw,28px)] font-black text-slate-800">
-                      荣誉勋章墙
-                    </h1>
-                    <p className="text-slate-500 font-bold text-[clamp(14px,3.5vw,16px)] opacity-60">
-                      已解锁{" "}
-                      {ACHIEVEMENTS_LIST.filter((a) => a.acquired).length} /{" "}
-                      {ACHIEVEMENTS_LIST.length}
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Study Time</p>
+                    <p className="text-[clamp(20px,5vw,24px)] font-black text-slate-800">
+                      {Math.floor(studyTime / 60)} <span className="text-[clamp(12px,3vw,14px)]">MIN</span>
                     </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-[clamp(12px,3vw,16px)] sm:gap-[clamp(16px,4vw,24px)] pb-0 auto-rows-fr">
-                  {ACHIEVEMENTS_LIST.map((ach) => (
-                    <AchievementCard key={ach.id} ach={ach} />
-                  ))}
-                </div>
-              </div>
-            ) : currentView === "parent" ? (
-                <div className="max-w-4xl mx-auto space-y-8 pt-0 pb-12">
-                  {/* 今日学习成就 */}
-                  <section>
-                    <div className="flex items-center space-x-[clamp(8px,2.5vw,12px)] mb-[clamp(16px,4vw,24px)]">
-                      <BarChart3 className="text-blue-500" size={28} />
-                      <h3 className="text-[clamp(20px,5vw,24px)] font-black text-slate-800">
-                        今日学习成就
-                      </h3>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-[clamp(12px,3vw,16px)]">
-                      <div className="bg-blue-50 rounded-[24px] p-[clamp(14px,3.5vw,20px)] flex flex-col items-center justify-center text-center border-2 border-blue-100">
-                        <BookOpen
-                          className="text-blue-500 mb-[clamp(6px,2vw,8px)]"
-                          size={24}
-                        />
-                        <span className="text-[clamp(22px,5.5vw,28px)] font-black text-blue-600 mb-1">
-                          1,250
-                        </span>
-                        <span className="text-[clamp(14px,3.5vw,16px)] font-bold text-blue-400">
-                          总阅读量(字)
-                        </span>
-                      </div>
-                      <div className="bg-green-50 rounded-[24px] p-[clamp(14px,3.5vw,20px)] flex flex-col items-center justify-center text-center border-2 border-green-100">
-                        <Sparkles
-                          className="text-green-500 mb-[clamp(6px,2vw,8px)]"
-                          size={24}
-                        />
-                        <span className="text-[clamp(22px,5.5vw,28px)] font-black text-green-600 mb-1">
-                          24
-                        </span>
-                        <span className="text-[clamp(14px,3.5vw,16px)] font-bold text-green-400">
-                          新增词汇量(个)
-                        </span>
-                      </div>
-                      <div className="bg-amber-50 rounded-[24px] p-[clamp(14px,3.5vw,20px)] flex flex-col items-center justify-center text-center border-2 border-amber-100">
-                        <Clock
-                          className="text-amber-500 mb-[clamp(6px,2vw,8px)]"
-                          size={24}
-                        />
-                        <span className="text-[clamp(22px,5.5vw,28px)] font-black text-amber-600 mb-1">
-                          45
-                        </span>
-                        <span className="text-[clamp(14px,3.5vw,16px)] font-bold text-amber-400">
-                          学习时长(分)
-                        </span>
-                      </div>
-                      <div className="bg-purple-50 rounded-[24px] p-[clamp(14px,3.5vw,20px)] flex flex-col items-center justify-center text-center border-2 border-purple-100">
-                        <BookOpen
-                          className="text-purple-500 mb-[clamp(6px,2vw,8px)]"
-                          size={24}
-                        />
-                        <span className="text-[clamp(22px,5.5vw,28px)] font-black text-purple-600 mb-1">
-                          3
-                        </span>
-                        <span className="text-[clamp(14px,3.5vw,16px)] font-bold text-purple-400">
-                          读书总量(本)
-                        </span>
-                      </div>
-                    </div>
-                  </section>
 
-                  {/* 功能入口 */}
-                  <section className="flex flex-col space-y-[clamp(12px,3vw,16px)]">
-                    <button
-                      onClick={() => setCurrentView("subscriptions")}
-                      className="bg-amber-50 transition-colors rounded-[24px] p-[clamp(16px,4vw,24px)] flex items-center justify-between border-2 border-amber-100 group w-full"
-                    >
-                      <div className="flex items-center space-x-[clamp(12px,3vw,16px)]">
-                        <div className="w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] bg-white rounded-full shadow-sm flex items-center justify-center group- transition-transform">
-                          <Crown className="text-amber-500" size={28} />
-                        </div>
-                        <div className="text-left">
-                          <h3 className="font-black text-slate-800 text-[clamp(20px,5vw,24px)]">
-                            管理订阅
-                          </h3>
-                          <p className="text-slate-500 font-bold text-[clamp(14px,3.5vw,16px)]">
-                            查看千千妈妈课程订阅状态
-                          </p>
-                        </div>
-                      </div>
-                      <ChevronRight
-                        className="text-amber-400 group- transition-colors"
-                        size={32}
-                      />
-                    </button>
-                    <button
-                      onClick={() => setCurrentView("reports")}
-                      className="bg-blue-50 transition-colors rounded-[24px] p-[clamp(16px,4vw,24px)] flex items-center justify-between border-2 border-blue-100 group w-full"
-                    >
-                      <div className="flex items-center space-x-[clamp(12px,3vw,16px)]">
-                        <div className="w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] bg-white rounded-full shadow-sm flex items-center justify-center group- transition-transform">
-                          <FileText className="text-blue-500" size={28} />
-                        </div>
-                        <div className="text-left">
-                          <h3 className="font-black text-slate-800 text-[clamp(20px,5vw,24px)]">
-                            接收学习报告
-                          </h3>
-                          <p className="text-slate-500 font-bold text-[clamp(14px,3.5vw,16px)]">
-                            绑定微信，获取每周学习反馈
-                          </p>
-                        </div>
-                      </div>
-                      <ChevronRight
-                        className="text-blue-400 group- transition-colors"
-                        size={32}
-                      />
-                    </button>
-                  </section>
-                </div>
-              ) : currentView === "subscriptions" ? (
-                <div className="max-w-3xl mx-auto space-y-[clamp(12px,3vw,16px)] py-[clamp(12px,3vw,16px)]">
-                  {SUBSCRIPTIONS_LIST.map((sub) => (
-                    <div
-                      key={sub.id}
-                      className={`bg-slate-50 rounded-[24px] p-[clamp(16px,4vw,24px)] border border-slate-100 flex items-center justify-between ${sub.status === "expired" ? "opacity-60 grayscale" : ""}`}
-                    >
-                      <div className="flex items-center space-x-[clamp(12px,3vw,16px)] sm:space-x-[clamp(14px,3.5vw,20px)]">
-                        <div className="w-[clamp(64px,20vw,96px)] h-[clamp(64px,20vw,96px)] sm:w-[clamp(80px,25vw,112px)] sm:h-[clamp(80px,25vw,112px)] flex-shrink-0 relative flex items-center justify-center">
-                          <div className="absolute inset-0 bg-[#CCCCCC] rounded-[clamp(12px,3vw,16px)] animate-pulse" />
-                          <img
-                            src={sub.image}
-                            alt={sub.name}
-                            className={`w-full h-full object-contain drop-shadow-sm relative z-10 opacity-0 transition-opacity duration-300 ${sub.status === "unpurchased" ? "brightness-75 saturate-50" : ""}`}
-                            referrerPolicy="no-referrer"
-                            onLoad={(e) => {
-                              e.currentTarget.classList.remove("opacity-0");
-                              e.currentTarget.classList.add("opacity-100");
-                              const prev = e.currentTarget
-                                .previousElementSibling as HTMLElement;
-                              if (prev) prev.style.display = "none";
-                            }}
-                            onError={(e) => {
-                              e.currentTarget.src = `https://picsum.photos/seed/${sub.id}/200/200`;
-                            }}
-                          />
-                          {sub.status === "unpurchased" && (
-                            <div className="absolute inset-0 flex items-center justify-center rounded-[clamp(12px,3vw,16px)] z-20">
-                              <div className="bg-black/50 rounded-full p-[clamp(8px,2vw,12px)] flex items-center justify-center">
-                                <Lock
-                                  className="text-white drop-shadow-md"
-                                  size={28}
-                                />
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <h3 className="font-black text-slate-800 text-[clamp(18px,4.5vw,20px)]">
-                            {sub.name}
-                          </h3>
-                          <p className="text-slate-500 font-bold text-[clamp(14px,3.5vw,16px)]">
-                            {sub.desc}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[clamp(14px,3.5vw,16px)] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                          {sub.status === "unpurchased"
-                            ? "状态"
-                            : sub.status === "expired"
-                              ? "状态"
-                              : "到期时间"}
-                        </p>
-                        <p
-                          className={`font-black ${sub.status === "unpurchased" ? "text-slate-400" : sub.status === "expired" ? "text-slate-500" : "text-slate-700"}`}
-                        >
-                          {sub.expireDate}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : currentView === "reports" ? (
-                <div className="h-full w-full flex items-center justify-center">
-                  <div className="max-w-5xl w-full flex flex-col md:flex-row items-center justify-between px-[clamp(20px,5vw,32px)] gap-[clamp(32px,8vw,48px)]">
-                    {/* Left Side: Icon, Title, Subtitle */}
-                    <div className="flex-1 flex flex-col items-start text-left">
-                      <div className="w-[clamp(64px,20vw,96px)] h-[clamp(64px,20vw,96px)] bg-green-100 rounded-[32px] flex items-center justify-center text-green-500 mb-[clamp(20px,5vw,32px)] shadow-inner">
-                        <FileText size={48} />
-                      </div>
-                      <h2 className="text-[clamp(28px,7vw,40px)] sm:text-[clamp(32px,8vw,48px)] font-black text-slate-800 mb-[clamp(16px,4vw,24px)] leading-tight">
-                        绑定微信
-                        <br />
-                        接收学习报告
-                      </h2>
-                      <p className="text-slate-500 font-bold text-[clamp(18px,4.5vw,20px)] max-w-md leading-relaxed mb-[clamp(20px,5vw,32px)]">
-                        使用微信扫描右侧二维码，关注“千千妈妈”官方公众号，即可每周自动接收孩子的详细学习进度与报告。
-                      </p>
-                      <div className="flex items-center space-x-[clamp(6px,2vw,8px)] text-slate-400 font-bold text-[clamp(14px,3.5vw,16px)] bg-slate-50 px-[clamp(14px,3.5vw,20px)] py-[clamp(8px,2.5vw,12px)] rounded-full border border-slate-100">
-                        <ShieldCheck size={20} className="text-green-500" />
-                        <span>安全绑定，随时可取消</span>
-                      </div>
-                    </div>
+                <div className="h-[clamp(32px,8vw,40px)] w-[1px] bg-slate-200" />
 
-                    {/* Right Side: QR Code and Prompt */}
-                    <div className="flex flex-col items-center justify-center">
-                      <div className="bg-white p-[clamp(16px,4vw,24px)] rounded-[40px] shadow-2xl border border-slate-100 mb-[clamp(16px,4vw,24px)] relative group transform -translate-y-4">
-                        <div className="absolute -top-4 -right-4 bg-green-500 text-white text-[clamp(14px,3.5vw,16px)] font-black px-[clamp(12px,3vw,16px)] py-[clamp(6px,2vw,8px)] rounded-full shadow-lg transform rotate-12 group- transition-transform z-10">
-                          扫一扫
-                        </div>
-                        <div className="w-[clamp(160px,50vw,224px)] h-[clamp(160px,50vw,224px)] sm:w-[clamp(160px,50vw,256px)] sm:h-[clamp(160px,50vw,256px)] bg-slate-50 rounded-[clamp(12px,3vw,16px)] overflow-hidden relative">
-                          {/* 占位二维码，如果用户上传了图片，请将 src 替换为本地路径，例如 "./qrcode.jpg" */}
-                          <img
-                            src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=QianQianMaMa"
-                            alt="千千妈妈公众号二维码"
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                        </div>
-                      </div>
-                      <p className="text-slate-400 font-black tracking-widest uppercase text-[clamp(14px,3.5vw,16px)] mb-[clamp(16px,4vw,24px)]">
-                        Scan to Subscribe
-                      </p>
-                      <button
-                        onClick={() => setCurrentView("report-generator")}
-                        className="px-[clamp(20px,5vw,32px)] py-[clamp(12px,3vw,16px)] bg-blue-500 text-white rounded-full font-black text-[clamp(18px,4.5vw,20px)] shadow-lg active:scale-95 transition-all flex items-center space-x-[clamp(6px,2vw,8px)]"
-                      >
-                        <FileText size={24} />
-                        <span>预览学习报告</span>
-                      </button>
-                    </div>
+                {/* Daily Goal */}
+                <div className="flex items-center space-x-[clamp(12px,3vw,16px)]">
+                  <div className="w-[clamp(36px,10vw,48px)] h-[clamp(36px,10vw,48px)] rounded-full bg-green-100 flex items-center justify-center text-green-500">
+                    <Trophy size={24} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Daily Goal</p>
+                    <p className="text-[clamp(20px,5vw,24px)] font-black text-slate-800">STAGE {Math.min(majorIdx + 1, TASK_DATA.length)}/{TASK_DATA.length}</p>
                   </div>
                 </div>
 
@@ -2612,256 +2317,24 @@ export default function App() {
                             {isReached ? <Check size={14} color="white" strokeWidth={3} /> : task.icon}
                           </div>
                         </div>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-center justify-center bg-orange-50 rounded-[24px] px-[clamp(16px,4vw,24px)] py-[clamp(12px,3vw,16px)] border-2 border-orange-100">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <Flame className="text-orange-500" size={24} />
-                        <span className="text-[clamp(24px,6vw,32px)] font-black text-orange-600">
-                          12
-                        </span>
-                      </div>
-                      <span className="text-[clamp(12px,3vw,14px)] font-bold text-orange-400">
-                        连续学习(天)
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* 2. 今日任务完成度 */}
-                  <div className="shrink-0">
-                    <div className="flex justify-between items-center mb-[clamp(16px,4vw,24px)]">
-                      <h2 className="text-[clamp(20px,5vw,24px)] font-black text-slate-800 flex items-center space-x-2">
-                        <Target className="text-green-500" size={28} />
-                        <span>今日任务</span>
-                      </h2>
-                      <span className="text-green-500 font-black text-[clamp(14px,3.5vw,16px)] bg-green-50 px-3 py-1 rounded-full">
-                        已完成 2/3
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-[clamp(12px,3vw,16px)]">
-                      {/* Task 1 */}
-                      <div className="flex items-center justify-between bg-slate-50 p-[clamp(12px,3vw,16px)] rounded-[20px] border border-slate-100">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-green-100 text-green-500 rounded-full flex items-center justify-center shrink-0">
-                            <Check size={20} strokeWidth={3} />
-                          </div>
-                          <div>
-                            <h3 className="font-black text-slate-700 text-[clamp(14px,3.5vw,16px)] line-clamp-1">
-                              完成1个绘本跟读
-                            </h3>
-                            <p className="text-slate-400 font-bold text-[clamp(12px,3vw,14px)]">
-                              +10 经验值
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      {/* Task 2 */}
-                      <div className="flex items-center justify-between bg-slate-50 p-[clamp(12px,3vw,16px)] rounded-[20px] border border-slate-100">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-green-100 text-green-500 rounded-full flex items-center justify-center shrink-0">
-                            <Check size={20} strokeWidth={3} />
-                          </div>
-                          <div>
-                            <h3 className="font-black text-slate-700 text-[clamp(14px,3.5vw,16px)] line-clamp-1">
-                              完成1个单词卡学习
-                            </h3>
-                            <p className="text-slate-400 font-bold text-[clamp(12px,3vw,14px)]">
-                              +10 经验值
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      {/* Task 3 */}
-                      <div className="flex items-center justify-between bg-blue-50 p-[clamp(12px,3vw,16px)] rounded-[20px] border border-blue-100">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center shrink-0">
-                            <BookOpen size={20} strokeWidth={3} />
-                          </div>
-                          <div>
-                            <h3 className="font-black text-slate-700 text-[clamp(14px,3.5vw,16px)] line-clamp-1">
-                              学习时长达到 20 分钟
-                            </h3>
-                            <p className="text-blue-400 font-bold text-[clamp(12px,3vw,14px)]">
-                              进度: 15/20 分钟
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 3. 能力成长区 */}
-                  <div className="flex flex-col space-y-[clamp(16px,4vw,24px)]">
-                    <div className="flex justify-between items-center shrink-0">
-                      <h2 className="text-[clamp(20px,5vw,24px)] font-black text-slate-800 flex items-center space-x-2">
-                        <TrendingUp className="text-purple-500" size={28} />
-                        <span>能力成长</span>
-                      </h2>
-                    </div>
-
-                    <div className="flex flex-col lg:flex-row gap-[clamp(16px,4vw,24px)] min-h-0">
-                      {/* Radar Chart */}
-                      <div className="flex-1 bg-slate-50 rounded-[24px] p-[clamp(12px,3vw,16px)] flex items-center justify-center border-2 border-slate-100 relative min-h-[250px]">
-                        <ResponsiveContainer
-                          width="100%"
-                          height="100%"
-                          className="outline-none focus:outline-none"
-                          tabIndex={-1}
-                          style={{ outline: "none" }}
-                        >
-                          <RadarChart
-                            cx="50%"
-                            cy="50%"
-                            outerRadius="65%"
-                            data={RADAR_DATA}
-                            className="outline-none focus:outline-none"
-                            tabIndex={-1}
-                            style={{ outline: "none" }}
-                          >
-                            <PolarGrid content={<CustomPolarGrid />} />
-                            <PolarAngleAxis
-                              dataKey="subject"
-                              tick={<CustomTick />}
-                            />
-                            <PolarRadiusAxis
-                              angle={90}
-                              domain={[0, 100]}
-                              tick={false}
-                              axisLine={false}
-                            />
-                            <Radar
-                              name="能力"
-                              dataKey="A"
-                              stroke="#8b5cf6"
-                              strokeWidth={3}
-                              fill="#a78bfa"
-                              fillOpacity={0.6}
-                              isAnimationActive={true}
-                              animationBegin={0}
-                              animationDuration={1500}
-                              animationEasing="ease-out"
-                              dot={{
-                                r: 4,
-                                fill: "#fff",
-                                stroke: "#8b5cf6",
-                                strokeWidth: 2,
-                              }}
-                              activeDot={{
-                                r: 6,
-                                fill: "#fff",
-                                stroke: "#8b5cf6",
-                                strokeWidth: 2,
-                              }}
-                            />
-                          </RadarChart>
-                        </ResponsiveContainer>
-                      </div>
-
-                      {/* 13 Levels Progress */}
-                      <div className="flex-1 flex flex-col justify-center bg-slate-50 rounded-[24px] p-[clamp(16px,4vw,24px)] border-2 border-slate-100">
-                        <div className="mb-[clamp(24px,6vw,32px)] text-center">
-                          <h3 className="font-black text-[clamp(20px,5vw,24px)] text-slate-700 mb-2">
-                            当前级别:{" "}
-                            <span className="text-purple-600">Lv.2 启蒙期</span>
-                          </h3>
-                          <p className="text-slate-500 font-bold text-[clamp(14px,3.5vw,16px)]">
-                            再获得 150 经验值即可升级到 Lv.3！
-                          </p>
-                        </div>
-
-                        <div className="relative py-12 px-4 w-full max-w-md mx-auto">
-                          {/* Progress Line */}
-                          <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-4 bg-slate-200 rounded-full overflow-hidden">
-                            <div className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full w-[15%]"></div>
-                          </div>
-
-                          {/* 13 Level Nodes */}
-                          <div className="relative flex justify-between items-center z-10">
-                            {Array.from({ length: 13 }).map((_, i) => {
-                              const level = i + 1;
-                              const isCurrent = level === 2;
-                              const isPassed = level < 2;
-                              // Only show nodes for 1, 4, 7, 10, 13 to avoid crowding, but keep the current one
-                              const showNode =
-                                level === 1 ||
-                                level === 13 ||
-                                level % 3 === 1 ||
-                                isCurrent;
-
-                              if (!showNode)
-                                return <div key={`progress-node-empty-${level}`} className="w-0 h-0" />;
-
-                              return (
-                                <div
-                                  key={`progress-node-${level}`}
-                                  className="relative flex flex-col items-center"
-                                >
-                                  {isCurrent && (
-                                    <div className="absolute -top-14 w-12 h-12 bg-white rounded-full p-1 shadow-lg border-2 border-purple-500 z-20 animate-bounce">
-                                      <img
-                                        src={userProfile.avatar}
-                                        alt="avatar"
-                                        className="w-full h-full object-cover bg-blue-50 rounded-full"
-                                      />
-                                    </div>
-                                  )}
-                                  <div
-                                    className={`w-5 h-5 rounded-full border-4 ${isPassed ? "bg-purple-500 border-purple-500" : isCurrent ? "bg-white border-purple-500 scale-125 shadow-md" : "bg-slate-200 border-slate-300"} transition-all`}
-                                  ></div>
-                                  <span
-                                    className={`absolute top-8 text-[12px] font-black ${isPassed || isCurrent ? "text-purple-600" : "text-slate-400"}`}
-                                  >
-                                    Lv.{level}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                      );
+                    })}
                   </div>
                 </div>
-              ) : currentView === "shop" ? (
-                <div className="max-w-5xl mx-auto pb-0">
-                  <h2 className="text-[clamp(18px,4.5vw,20px)] font-black text-slate-700 mb-[clamp(12px,3vw,16px)] flex items-center">
-                    <Sparkles className="text-amber-500 mr-2" size={24} />{" "}
-                    售卖中
-                  </h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-[clamp(12px,3vw,16px)] mb-0">
-                    {/* Item 1 */}
-                    <div className="bg-white border-2 border-slate-100 rounded-[24px] p-[clamp(12px,3vw,16px)] flex flex-col items-center text-center shadow-sm transition-shadow relative overflow-hidden group">
-                      <div className="w-[clamp(64px,18vw,80px)] h-[clamp(64px,18vw,80px)] bg-blue-50 rounded-full flex items-center justify-center mb-[clamp(12px,3vw,16px)] group- transition-transform">
-                        <Hourglass className="text-blue-500" size={32} />
-                      </div>
-                      <h3 className="font-black text-slate-800 text-[clamp(16px,4vw,18px)] mb-1">
-                        魔法沙漏
-                      </h3>
-                      <p className="text-slate-500 text-[clamp(12px,3vw,14px)] font-bold mb-[clamp(12px,3vw,16px)] line-clamp-2">
-                        增加15分钟学习时间
-                      </p>
-                      <button className="w-full mt-auto bg-blue-100 text-blue-600 font-black py-[clamp(8px,2.5vw,10px)] rounded-[clamp(12px,3vw,16px)] flex items-center justify-center space-x-1 transition-colors">
-                        <Gem size={16} />
-                        <span>50</span>
-                      </button>
-                    </div>
+              </div>
 
-                    {/* Item 2 */}
-                    <div className="bg-white border-2 border-slate-100 rounded-[24px] p-[clamp(12px,3vw,16px)] flex flex-col items-center text-center shadow-sm transition-shadow relative overflow-hidden group">
-                      <div className="w-[clamp(64px,18vw,80px)] h-[clamp(64px,18vw,80px)] bg-purple-50 rounded-full flex items-center justify-center mb-[clamp(12px,3vw,16px)] group- transition-transform">
-                        <FlaskConical className="text-purple-500" size={32} />
-                      </div>
-                      <h3 className="font-black text-slate-800 text-[clamp(16px,4vw,18px)] mb-1">
-                        智慧药水
-                      </h3>
-                      <p className="text-slate-500 text-[clamp(12px,3vw,14px)] font-bold mb-[clamp(12px,3vw,16px)] line-clamp-2">
-                        经验值双倍卡(1小时)
-                      </p>
-                      <button className="w-full mt-auto bg-blue-100 text-blue-600 font-black py-[clamp(8px,2.5vw,10px)] rounded-[clamp(12px,3vw,16px)] flex items-center justify-center space-x-1 transition-colors">
-                        <Gem size={16} />
-                        <span>100</span>
-                      </button>
-                    </div>
+              {/* Secondary Pill (Buttons) */}
+              <div className="bg-white p-[clamp(6px,2vw,8px)] rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.05)] flex items-center space-x-[clamp(8px,2.5vw,12px)] border border-slate-100">
+                <button onClick={() => setShowCalendar(true)} className="w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] bg-purple-500 rounded-full flex items-center justify-center text-white transition-all shadow-[0_4px_0_#7e22ce] active:shadow-none active:translate-y-1">
+                  <CalendarIcon size={24} />
+                </button>
+                <button onClick={() => setCurrentView('awards')} className="w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] bg-sky-500 rounded-full flex items-center justify-center text-white transition-all shadow-[0_4px_0_#0369a1] active:shadow-none active:translate-y-1">
+                  <Award size={24} />
+                </button>
+              </div>
+            </footer>
+          </div>
+        )}
 
         {/* 学习详情页：纯白背景 & 修复按钮高度 */}
         {currentView === 'learning' && (
@@ -2925,12 +2398,7 @@ export default function App() {
                   <Settings size={28} />
                 </button>
               ) : (
-                <div className="flex flex-col items-center justify-center py-20 opacity-30">
-                  <div className="text-6xl mb-[clamp(12px,3vw,16px)]">👤</div>
-                  <p className="font-black text-[clamp(14px,3.5vw,16px)] uppercase">
-                    界面设计中...
-                  </p>
-                </div>
+                <div className="w-[clamp(40px,12vw,56px)]" />
               )}
             </header>
             <main {...(currentView === 'profile-edit' ? {} : verticalDragProps)} className={`flex-1 p-[4%] overflow-y-auto no-scrollbar text-slate-800 ${currentView === 'profile-edit' ? '' : 'cursor-grab active:cursor-grabbing'}`}>
@@ -3501,118 +2969,55 @@ export default function App() {
         )}
 
         {showCalendar && (
-          <div
-            className="absolute inset-0 z-[700] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-[4%]"
-            onClick={() => setShowCalendar(false)}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white w-full max-w-4xl h-[90%] rounded-[40px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-90 fade-in duration-300 ease-out text-slate-800"
-            >
+          <div className="absolute inset-0 z-[700] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-[4%]" onClick={() => setShowCalendar(false)}>
+            <div onClick={(e) => e.stopPropagation()} className="bg-white w-full max-w-4xl h-[90%] rounded-[40px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-90 fade-in duration-300 ease-out text-slate-800">
               <header className="bg-blue-600 p-[clamp(16px,4vw,24px)] text-white flex justify-between items-center">
-                <button
-                  onClick={() => setShowCalendar(false)}
-                  className="w-[clamp(36px,10vw,48px)] h-[clamp(36px,10vw,48px)] bg-white/20 rounded-[clamp(8px,2vw,12px)] flex items-center justify-center"
-                >
-                  <X size={24} />
-                </button>
+                <button onClick={() => setShowCalendar(false)} className="w-[clamp(36px,10vw,48px)] h-[clamp(36px,10vw,48px)] bg-white/20 rounded-[clamp(8px,2vw,12px)] flex items-center justify-center"><X size={24}/></button>
                 <div className="flex items-center bg-white/10 rounded-[clamp(12px,3vw,16px)] p-[clamp(6px,2vw,8px)] px-[clamp(12px,3vw,16px)] space-x-[clamp(16px,4vw,24px)]">
-                  <button
-                    onClick={() => changeDay(-1)}
-                    className="p-[clamp(6px,2vw,8px)] rounded-full transition-colors"
-                  >
-                    <ArrowLeft size={24} />
-                  </button>
+                  <button onClick={() => changeDay(-1)} className="p-[clamp(6px,2vw,8px)] hover:bg-white/20 rounded-full transition-colors"><ArrowLeft size={24}/></button>
                   <div className="text-center min-w-[120px]">
-                    <p className="text-[clamp(14px,3.5vw,16px)] font-bold opacity-70 uppercase tracking-widest">
-                      March 2024
-                    </p>
-                    <p className="text-[clamp(22px,5.5vw,28px)] font-black">
-                      {selectedDate.getDate()}日
-                    </p>
+                    <p className="text-[clamp(14px,3.5vw,16px)] font-bold opacity-70 uppercase tracking-widest">March 2024</p>
+                    <p className="text-[clamp(22px,5.5vw,28px)] font-black">{selectedDate.getDate()}日</p>
                   </div>
-                  <button
-                    onClick={() => changeDay(1)}
-                    disabled={
-                      new Date(
-                        new Date(selectedDate).setDate(
-                          selectedDate.getDate() + 1,
-                        ),
-                      ) > new Date()
-                    }
-                    className="p-[clamp(6px,2vw,8px)] rounded-full transition-colors disabled:opacity-30"
-                  >
-                    <ArrowRight size={24} />
-                  </button>
+                  <button onClick={() => changeDay(1)} disabled={new Date(new Date(selectedDate).setDate(selectedDate.getDate()+1)) > new Date()} className="p-[clamp(6px,2vw,8px)] hover:bg-white/20 rounded-full transition-colors disabled:opacity-30"><ArrowRight size={24}/></button>
                 </div>
-                <button
-                  onClick={() => setSelectedDate(new Date())}
-                  className="bg-white text-blue-600 px-[clamp(16px,4vw,24px)] py-[clamp(8px,2.5vw,10px)] rounded-[clamp(8px,2vw,12px)] font-black text-[clamp(14px,3.5vw,16px)] active:scale-95"
-                >
-                  回到今天
-                </button>
+                <button onClick={() => setSelectedDate(new Date())} className="bg-white text-blue-600 px-[clamp(16px,4vw,24px)] py-[clamp(8px,2.5vw,10px)] rounded-[clamp(8px,2vw,12px)] font-black text-[clamp(14px,3.5vw,16px)] active:scale-95">回到今天</button>
               </header>
               <div className="flex-1 p-[clamp(20px,5vw,32px)] flex flex-col overflow-hidden">
                 <div className="grid grid-cols-7 gap-[clamp(8px,2.5vw,12px)] text-center mb-[clamp(8px,2.5vw,12px)]">
-                  {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-                    <div
-                      key={`cal-h-${i}`}
-                      className="font-black text-[clamp(14px,3.5vw,16px)] text-slate-300 uppercase"
-                    >
-                      {d}
-                    </div>
-                  ))}
+                  {['S','M','T','W','T','F','S'].map((d, i) => <div key={`cal-h-${i}`} className="font-black text-[clamp(14px,3.5vw,16px)] text-slate-300 uppercase">{d}</div>)}
                 </div>
-                <div
-                  {...calendarDragProps}
-                  className="grid grid-cols-7 gap-[clamp(8px,2.5vw,12px)] flex-1 overflow-y-auto no-scrollbar cursor-grab active:cursor-grabbing pb-12"
-                >
-                  {[...Array(31)].map((_, i) => {
-                    const d = i + 1;
-                    const isFuture = d > new Date().getDate();
-                    const isPicked = d === selectedDate.getDate();
-                    const status = MOCK_HISTORY_STATUS[d] ?? -1;
-                    let statusColor = "bg-slate-50 text-slate-600";
-                    if (!isFuture) {
-                      if (status === 2)
-                        statusColor = "bg-green-50 text-green-600";
-                      else if (status === 1)
-                        statusColor = "bg-yellow-50 text-yellow-600";
-                      else if (status === 0)
-                        statusColor = "bg-red-50 text-red-400";
-                    }
+                <div {...calendarDragProps} className="grid grid-cols-7 gap-[clamp(8px,2.5vw,12px)] flex-1 overflow-y-auto no-scrollbar cursor-grab active:cursor-grabbing pb-12">
+                  {[...Array(31)].map((_, i) => { 
+                    const d = i + 1; 
+                    const isFuture = d > new Date().getDate(); 
+                    const isPicked = d === selectedDate.getDate(); 
+                    const status = MOCK_HISTORY_STATUS[d] ?? -1; 
+                    let statusColor = "bg-slate-50 text-slate-600"; 
+                    if (!isFuture) { 
+                      if (status === 2) statusColor = "bg-green-50 text-green-600"; 
+                      else if (status === 1) statusColor = "bg-yellow-50 text-yellow-600"; 
+                      else if (status === 0) statusColor = "bg-red-50 text-red-400"; 
+                    } 
                     return (
-                      <div
-                        key={`day-c-${i}`}
+                      <div 
+                        key={`day-c-${i}`} 
                         id={`cal-day-${d}`}
-                        onClick={() =>
-                          !isFuture && setSelectedDate(new Date(2024, 2, d))
-                        }
-                        className={`h-[clamp(48px,14vw,64px)] relative flex flex-col items-center justify-center rounded-[clamp(12px,3vw,16px)] font-black text-[clamp(18px,4.5vw,20px)] transition-all cursor-pointer ${isFuture ? "text-slate-200 cursor-not-allowed bg-slate-50/30" : isPicked ? "ring-4 ring-blue-500/30 scale-105 z-10" : ""} ${!isPicked ? statusColor : "bg-blue-600 text-white shadow-lg"}`}
+                        onClick={() => !isFuture && setSelectedDate(new Date(2024, 2, d))} 
+                        className={`h-[clamp(48px,14vw,64px)] relative flex flex-col items-center justify-center rounded-[clamp(12px,3vw,16px)] font-black text-[clamp(18px,4.5vw,20px)] transition-all cursor-pointer ${isFuture ? 'text-slate-200 cursor-not-allowed bg-slate-50/30' : isPicked ? 'ring-4 ring-blue-500/30 scale-105 z-10' : ''} ${!isPicked ? statusColor : 'bg-blue-600 text-white shadow-lg'}`}
                       >
                         <span>{d}</span>
                         {!isFuture && !isPicked && status !== -1 && (
-                          <div
-                            className={`w-2 h-2 rounded-full absolute bottom-2 ${status === 2 ? "bg-green-400" : status === 1 ? "bg-yellow-400" : "bg-red-300"}`}
-                          />
+                          <div className={`w-2 h-2 rounded-full absolute bottom-2 ${status === 2 ? 'bg-green-400' : status === 1 ? 'bg-yellow-400' : 'bg-red-300'}`} />
                         )}
                       </div>
-                    );
+                    ); 
                   })}
                 </div>
                 <div className="mt-[clamp(16px,4vw,24px)] flex justify-center space-x-[clamp(16px,4vw,24px)] text-[clamp(14px,3.5vw,16px)] font-bold text-slate-400 border-t border-slate-50 pt-4">
-                  <div className="flex items-center space-x-[clamp(6px,2vw,8px)]">
-                    <div className="w-3 h-3 rounded-full bg-green-400" />
-                    <span>已完成</span>
-                  </div>
-                  <div className="flex items-center space-x-[clamp(6px,2vw,8px)]">
-                    <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                    <span>未完成</span>
-                  </div>
-                  <div className="flex items-center space-x-[clamp(6px,2vw,8px)]">
-                    <div className="w-3 h-3 rounded-full bg-red-400" />
-                    <span>未学习</span>
-                  </div>
+                  <div className="flex items-center space-x-[clamp(6px,2vw,8px)]"><div className="w-3 h-3 rounded-full bg-green-400" /><span>已完成</span></div>
+                  <div className="flex items-center space-x-[clamp(6px,2vw,8px)]"><div className="w-3 h-3 rounded-full bg-yellow-400" /><span>未完成</span></div>
+                  <div className="flex items-center space-x-[clamp(6px,2vw,8px)]"><div className="w-3 h-3 rounded-full bg-red-400" /><span>未学习</span></div>
                 </div>
               </div>
               <div className="p-[clamp(16px,4vw,24px)] bg-slate-50 border-t flex justify-center">
@@ -3622,115 +3027,18 @@ export default function App() {
                   let btnColor = "bg-blue-600 text-white";
                   if (!isToday) {
                     if (status === 2) btnColor = "bg-green-500 text-white";
-                    else if (status === 1)
-                      btnColor = "bg-yellow-500 text-white";
+                    else if (status === 1) btnColor = "bg-yellow-500 text-white";
                     else if (status === 0) btnColor = "bg-red-500 text-white";
                     else btnColor = "bg-slate-400 text-white";
                   }
                   return (
-                    <button
-                      onClick={handleConfirmDate}
-                      className={`w-full py-[clamp(12px,3vw,16px)] rounded-[clamp(12px,3vw,16px)] font-black text-[clamp(20px,5vw,24px)] shadow-lg active:scale-95 transition-colors ${btnColor}`}
-                    >
+                    <button onClick={handleConfirmDate} className={`w-full py-[clamp(12px,3vw,16px)] rounded-[clamp(12px,3vw,16px)] font-black text-[clamp(20px,5vw,24px)] shadow-lg active:scale-95 transition-colors ${btnColor}`}>
                       {isToday ? "开始今日学习探险" : "开启该日复习模式"}
                     </button>
                   );
                 })()}
               </div>
             </div>
-          </div>
-        )}
-
-        {currentView === "edit-profile" && (
-          <div className="absolute inset-0 z-[100] bg-slate-50 flex flex-col animate-in slide-in-from-right duration-300">
-            <header className="h-[12%] px-[4%] flex items-center justify-between bg-white shadow-sm border-b border-slate-100 shrink-0">
-              <button
-                onClick={() => setCurrentView("profile")}
-                className="w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] bg-slate-100 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center text-slate-600 active:scale-90 transition-transform"
-              >
-                <ChevronLeft size={32} />
-              </button>
-              <h2 className="font-black text-slate-800 text-[clamp(22px,5.5vw,28px)] tracking-widest">
-                编辑资料
-              </h2>
-              <button
-                onClick={handleSaveProfile}
-                className="px-[clamp(16px,4vw,24px)] h-[clamp(40px,12vw,56px)] bg-blue-500 text-white font-black rounded-[clamp(12px,3vw,16px)] active:scale-90 transition-transform shadow-sm text-[clamp(16px,4vw,18px)]"
-              >
-                保存
-              </button>
-            </header>
-            <main
-              {...verticalDragProps}
-              className="flex-1 px-[4%] pb-0 pt-0 overflow-y-auto no-scrollbar flex flex-col items-center"
-            >
-              {/* Avatar Preview */}
-              <div className="w-[clamp(100px,25vw,140px)] h-[clamp(100px,25vw,140px)] bg-white rounded-full p-2 shadow-xl border-4 border-slate-100 overflow-hidden relative mb-[clamp(16px,4vw,24px)] shrink-0">
-                <img
-                  src={tempProfile.avatar}
-                  alt="avatar"
-                  className="w-full h-full object-cover bg-blue-50 rounded-full"
-                />
-              </div>
-
-              {/* Nickname Input */}
-              <div className="w-full max-w-md mb-[clamp(24px,6vw,32px)]">
-                <label className="block text-slate-500 font-bold text-[clamp(14px,3.5vw,16px)] mb-2">
-                  学员昵称
-                </label>
-                <div className="flex space-x-3">
-                  <input
-                    type="text"
-                    value={tempProfile.name}
-                    onChange={(e) =>
-                      setTempProfile({ ...tempProfile, name: e.target.value })
-                    }
-                    className="flex-1 bg-white border-2 border-slate-200 rounded-[16px] px-4 py-3 font-black text-slate-800 text-[clamp(16px,4vw,18px)] focus:outline-none focus:border-blue-500 transition-colors shadow-sm"
-                    maxLength={10}
-                  />
-                  <button
-                    onClick={handleRandomName}
-                    className="bg-purple-100 text-purple-600 px-4 rounded-[16px] font-black flex items-center justify-center active:scale-95 transition-transform border-2 border-purple-200 whitespace-nowrap"
-                  >
-                    <Dices size={20} className="mr-1" />
-                    随机
-                  </button>
-                </div>
-              </div>
-
-              {/* Avatar Selection */}
-              <div className="w-full max-w-md flex-1 flex flex-col min-h-0">
-                <label className="block text-slate-500 font-bold text-[clamp(14px,3.5vw,16px)] mb-3 shrink-0">
-                  选择头像
-                </label>
-                <div className="bg-white rounded-[24px] p-[clamp(16px,4vw,24px)] shadow-sm border-2 border-slate-100 flex-1 overflow-y-auto no-scrollbar">
-                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-[clamp(12px,3vw,16px)]">
-                    {AVATAR_SEEDS.map((seed) => {
-                      const avatarUrl = `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${seed}`;
-                      const isSelected = tempProfile.avatar === avatarUrl;
-                      return (
-                        <button
-                          key={seed}
-                          onClick={() =>
-                            setTempProfile({
-                              ...tempProfile,
-                              avatar: avatarUrl,
-                            })
-                          }
-                          className={`aspect-square rounded-full p-1 transition-all ${isSelected ? "border-4 border-blue-500 scale-110 shadow-md" : "border-2 border-transparent hover:scale-105"}`}
-                        >
-                          <img
-                            src={avatarUrl}
-                            alt={seed}
-                            className="w-full h-full object-cover bg-slate-50 rounded-full"
-                          />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </main>
           </div>
         )}
 
@@ -3753,43 +3061,7 @@ export default function App() {
 
         {showGrandReward && (
           <div className="absolute inset-0 z-[900] bg-gradient-to-b from-blue-900/90 to-purple-900/90 backdrop-blur-xl flex items-center justify-center text-slate-800">
-            <div className="bg-white rounded-[50px] p-[clamp(24px,6vw,40px)] max-w-lg w-full text-center shadow-[0_0_100px_rgba(255,183,3,0.5)] animate-in zoom-in">
-              <div className="w-[clamp(56px,16vw,80px)] h-[clamp(56px,16vw,80px)] bg-yellow-400 rounded-full border-4 border-white shadow-2xl flex items-center justify-center mx-auto mb-[clamp(16px,4vw,24px)] animate-bounce">
-                <Award size={40} color="white" />
-              </div>
-              <h2 className="text-[clamp(24px,6vw,32px)] font-black text-slate-800 mb-[clamp(20px,5vw,32px)] tracking-tight">
-                今日探险圆满达成！
-              </h2>
-              <div className="grid grid-cols-3 gap-[clamp(8px,2.5vw,12px)] mb-10 text-center">
-                <div className="bg-blue-50 p-[clamp(12px,3vw,16px)] rounded-[clamp(12px,3vw,16px)]">
-                  <p className="text-[clamp(20px,5vw,24px)] font-black text-blue-600">
-                    30M
-                  </p>
-                  <p className="text-[8px] font-bold opacity-40">时长</p>
-                </div>
-                <div className="bg-green-50 p-[clamp(12px,3vw,16px)] rounded-[clamp(12px,3vw,16px)]">
-                  <p className="text-[clamp(20px,5vw,24px)] font-black text-green-600">
-                    45W
-                  </p>
-                  <p className="text-[8px] font-bold opacity-40">单词</p>
-                </div>
-                <div className="bg-purple-50 p-[clamp(12px,3vw,16px)] rounded-[clamp(12px,3vw,16px)]">
-                  <p className="text-[clamp(20px,5vw,24px)] font-black text-purple-600">
-                    +200
-                  </p>
-                  <p className="text-[8px] font-bold opacity-40">奖励</p>
-                </div>
-              </div>
-              <button className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[clamp(18px,4.5vw,20px)] font-black py-[clamp(14px,3.5vw,20px)] rounded-[clamp(16px,4vw,24px)] shadow-xl flex items-center justify-center space-x-[clamp(6px,2vw,8px)] mb-[clamp(8px,2.5vw,12px)]">
-                <Camera size={20} /> <span>领取勋章并分享</span>
-              </button>
-              <button
-                onClick={() => setShowGrandReward(false)}
-                className="w-full py-1.5 text-slate-400 font-black text-[clamp(14px,3.5vw,16px)] uppercase tracking-widest"
-              >
-                回到地图
-              </button>
-            </div>
+            <div className="bg-white rounded-[50px] p-[clamp(24px,6vw,40px)] max-w-lg w-full text-center shadow-[0_0_100px_rgba(255,183,3,0.5)] animate-in zoom-in"><div className="w-[clamp(56px,16vw,80px)] h-[clamp(56px,16vw,80px)] bg-yellow-400 rounded-full border-4 border-white shadow-2xl flex items-center justify-center mx-auto mb-[clamp(16px,4vw,24px)] animate-bounce"><Award size={40} color="white" /></div><h2 className="text-[clamp(24px,6vw,32px)] font-black text-slate-800 mb-[clamp(20px,5vw,32px)] tracking-tight">今日探险圆满达成！</h2><div className="grid grid-cols-3 gap-[clamp(8px,2.5vw,12px)] mb-10 text-center"><div className="bg-blue-50 p-[clamp(12px,3vw,16px)] rounded-[clamp(12px,3vw,16px)]"><p className="text-[clamp(20px,5vw,24px)] font-black text-blue-600">30M</p><p className="text-[8px] font-bold opacity-40">时长</p></div><div className="bg-green-50 p-[clamp(12px,3vw,16px)] rounded-[clamp(12px,3vw,16px)]"><p className="text-[clamp(20px,5vw,24px)] font-black text-green-600">45W</p><p className="text-[8px] font-bold opacity-40">单词</p></div><div className="bg-purple-50 p-[clamp(12px,3vw,16px)] rounded-[clamp(12px,3vw,16px)]"><p className="text-[clamp(20px,5vw,24px)] font-black text-purple-600">+200</p><p className="text-[8px] font-bold opacity-40">奖励</p></div></div><button className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[clamp(18px,4.5vw,20px)] font-black py-[clamp(14px,3.5vw,20px)] rounded-[clamp(16px,4vw,24px)] shadow-xl flex items-center justify-center space-x-[clamp(6px,2vw,8px)] mb-[clamp(8px,2.5vw,12px)]"><Camera size={20} /> <span>领取勋章并分享</span></button><button onClick={() => setShowGrandReward(false)} className="w-full py-1.5 text-slate-400 font-black text-[clamp(14px,3.5vw,16px)] uppercase tracking-widest">回到地图</button></div>
           </div>
         )}
 
@@ -3899,20 +3171,11 @@ export default function App() {
         <div id="toast" className="absolute top-[10vw] left-1/2 bg-white px-[clamp(20px,5vw,36px)] py-[clamp(10px,3vw,16px)] rounded-full shadow-2xl border-4 border-yellow-400 opacity-0 transition-all duration-500 z-[1100] flex items-center space-x-[clamp(12px,3vw,16px)] pointer-events-none text-slate-700" style={{ transform: 'translate(-50%, 0) scale(0.5)' }}>
           <Gem className="text-blue-400" size={36} /><span className="text-[clamp(24px,6vw,32px)] font-black text-blue-600">+10 钻石！</span>
         </div>
-        </AnimatePresence>
-      </MainLayout>
+      </div>
 
       <div className="fixed inset-0 z-[9999] bg-slate-950 text-white flex flex-col items-center justify-center p-[clamp(16px,4vw,24px)] text-center landscape:hidden">
-        <div className="text-6xl animate-bounce mb-[clamp(16px,4vw,24px)]">
-          🔄
-        </div>
-        <h2 className="text-[clamp(22px,5.5vw,28px)] font-black mb-[clamp(6px,2vw,8px)]">
-          请旋转您的设备
-        </h2>
-        <p className="opacity-60 text-[clamp(14px,3.5vw,16px)]">
-          横屏体验能够开启完整学习探险哦！
-        </p>
+        <div className="text-6xl animate-bounce mb-[clamp(16px,4vw,24px)]">🔄</div><h2 className="text-[clamp(22px,5.5vw,28px)] font-black mb-[clamp(6px,2vw,8px)]">请旋转您的设备</h2><p className="opacity-60 text-[clamp(14px,3.5vw,16px)]">横屏体验能够开启完整学习探险哦！</p>
       </div>
-    </>
+    </div>
   );
 }
