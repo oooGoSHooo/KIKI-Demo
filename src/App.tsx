@@ -4,6 +4,7 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Responsi
 import { EbookReader } from './components/EbookReader';
 import { ReadAloud } from './components/ReadAloud';
 import { ExerciseModule } from './components/ExerciseModule';
+import { LetterTracing } from './components/LetterTracing';
 import { EnglishProficiencyTest } from './components/EnglishProficiencyTest/EnglishProficiencyTest';
 import type { AbilityTestResult } from './components/EnglishProficiencyTest/types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -872,6 +873,7 @@ export default function App() {
   const [gateError, setGateError] = useState(false);
   const [learningTitle, setLearningTitle] = useState('');
   const [studyTime, setStudyTime] = useState(0);
+  const [activeLetter, setActiveLetter] = useState('A');
 
   // --- 能力测试（English Proficiency Test）---
   const ABILITY_TEST_STORAGE_KEY = 'abilityTestResult_v1';
@@ -2163,6 +2165,26 @@ export default function App() {
           <div className="absolute top-1/3 left-1/2 w-[clamp(280px,80vw,384px)] h-[clamp(280px,80vw,384px)] bg-yellow-200/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
         </div>
 
+        {/* 描红模块 */}
+        {currentView === 'letter-tracing' && (
+          <div className="fixed inset-0 z-[100] bg-white">
+            <LetterTracing
+              letter={activeLetter}
+              onComplete={(completedLetter) => {
+                const charCode = completedLetter.charCodeAt(0);
+                const nextCharCode = charCode + 1;
+                if (nextCharCode <= 90) {
+                  setActiveLetter(String.fromCharCode(nextCharCode));
+                } else {
+                  setActiveLetter('A');
+                }
+                setCurrentView('home');
+              }}
+              onBack={() => setCurrentView('home')}
+            />
+          </div>
+        )}
+
         {/* 首页 */}
         {currentView === 'home' && (
           <div
@@ -2184,13 +2206,26 @@ export default function App() {
                     imgClassName="bg-[#fff9dc]"
                   />
                 </div>
-                <div className="bg-white/90 backdrop-blur-sm px-[clamp(14px,3.5vw,20px)] py-[clamp(8px,2.5vw,10px)] rounded-full shadow-md border border-white/50 group-hover:bg-white transition-colors">
+                <div className="b{
+                    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    const randomLetter = alphabet[Math.floor(Math.random() * alphabet.length)];
+                    setActiveLetter(randomLetter);
+                    setCurrentView('letter-tracing');
+                  }clamp(14px,3.5vw,20px)] py-[clamp(8px,2.5vw,10px)] rounded-full shadow-md border border-white/50 group-hover:bg-white transition-colors">
                   <span className={`font-black text-[clamp(14px,3.5vw,16px)] tracking-wide ${isToday ? 'bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent' : 'text-green-600'}`}>
                     L{kikiLevel} · {isToday ? '今日探险' : `复习(${selectedDate.getDate()}日)`}
                   </span>
                 </div>
               </div>
+
               <div className="flex items-center space-x-[clamp(14px,3.5vw,20px)]">
+                <button
+                  onClick={() => setCurrentView('letter-tracing')}
+                  className="bg-white/90 backdrop-blur-sm px-[clamp(14px,3.5vw,20px)] py-[clamp(8px,2.5vw,10px)] rounded-full shadow-md flex items-center cursor-pointer hover:bg-white hover:scale-105 transition-all border border-white/50"
+                >
+                  <Pencil size={20} className="mr-2 text-indigo-500" />
+                  <span className="font-black text-indigo-700 text-[clamp(14px,3.5vw,16px)]">描红</span>
+                </button>
                 <div onClick={() => setCurrentView('shop')} className="bg-white/90 backdrop-blur-sm px-[clamp(14px,3.5vw,20px)] py-[clamp(8px,2.5vw,10px)] rounded-full shadow-md flex items-center cursor-pointer hover:bg-white hover:scale-105 transition-all border border-white/50">
                   <Gem size={22} className="text-blue-500 drop-shadow-sm mr-2" />
                   <span className="font-black text-slate-700 text-[clamp(18px,4.5vw,20px)] tracking-wider">{diamonds}</span>
