@@ -2,7 +2,7 @@ const fs = require('fs');
 let content = fs.readFileSync('src/App.tsx', 'utf8');
 
 const startStr = `) : currentView === 'profile' ? (`;
-const endStr = `) : currentView === 'shop' ? (`;
+const endStr = `) : currentView === 'edit-profile' ? (`;
 
 const startIndex = content.indexOf(startStr);
 const endIndex = content.indexOf(endStr);
@@ -174,40 +174,6 @@ if (startIndex !== -1 && endIndex !== -1) {
                 </div>
               </div>
             </div>
-          </div>
-        ) : currentView === 'edit-profile' ? (
-          <div className="relative h-full w-full bg-slate-50 z-50 flex flex-col animate-in slide-in-from-right duration-300">
-            <header className="h-[12%] px-[4%] flex items-center justify-between bg-white shadow-sm border-b border-slate-100 shrink-0">
-              <button onClick={() => setCurrentView('profile')} className="w-[clamp(40px,12vw,56px)] h-[clamp(40px,12vw,56px)] bg-slate-100 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center text-slate-600 active:scale-90 transition-transform"><ChevronLeft size={32} /></button>
-              <h2 className="font-black text-slate-800 text-[clamp(22px,5.5vw,28px)] tracking-widest">编辑资料</h2>
-              <div className="w-[clamp(40px,12vw,56px)]" />
-            </header>
-            <main className="flex-1 p-[4%] overflow-y-auto no-scrollbar flex flex-col items-center">
-              <div className="w-[clamp(120px,30vw,160px)] h-[clamp(120px,30vw,160px)] bg-white rounded-full p-2 shadow-xl border-4 border-slate-100 overflow-hidden relative mb-[clamp(24px,6vw,32px)]">
-                <img src="https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Qian" alt="avatar" className="w-full h-full object-cover bg-blue-50 rounded-full" />
-                <button className="absolute bottom-2 right-2 w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform">
-                  <Edit2 size={20} />
-                </button>
-              </div>
-              <div className="w-full max-w-md space-y-[clamp(16px,4vw,24px)]">
-                <div>
-                  <label className="block text-slate-500 font-bold text-[clamp(14px,3.5vw,16px)] mb-2">昵称</label>
-                  <input type="text" defaultValue="糯米团子" className="w-full bg-white border-2 border-slate-200 rounded-[16px] px-4 py-3 font-black text-slate-800 text-[clamp(16px,4vw,18px)] focus:outline-none focus:border-blue-500 transition-colors shadow-sm" />
-                </div>
-                <div className="bg-orange-50 rounded-[20px] p-[clamp(16px,4vw,24px)] border-2 border-orange-100 flex items-center justify-between shadow-sm cursor-pointer active:scale-95 transition-transform">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center">
-                      <Shirt size={24} />
-                    </div>
-                    <div>
-                      <h3 className="font-black text-slate-800 text-[clamp(16px,4vw,18px)]">个性装扮</h3>
-                      <p className="text-slate-500 font-bold text-[clamp(12px,3vw,14px)]">敬请期待...</p>
-                    </div>
-                  </div>
-                  <Lock className="text-orange-300" size={24} />
-                </div>
-              </div>
-            </main>
           </div>
         ` + content.substring(endIndex);
   fs.writeFileSync('src/App.tsx', newContent);
