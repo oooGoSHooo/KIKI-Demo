@@ -1,24 +1,27 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mic, Square, X, RotateCcw, Star, Volume2, Play, Pause, ArrowRight } from 'lucide-react';
+import { Mic, Square, Check, X, RotateCcw, Star, Volume2, Play, Pause, ArrowRight } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { EBOOK_PAGES } from './EbookReader';
 
-type ReadAloudPage = (typeof EBOOK_PAGES)[number];
+const READ_ALOUD_PAGES = [
+  { id: 'page1', image: '/U6%20L1%20D1/01.jpg', audio: '/U6%20L1%20D1/01.MP3' },
+  { id: 'page2', image: '/U6%20L1%20D1/02.jpg', audio: '/U6%20L1%20D1/02.MP3' },
+  { id: 'page3', image: '/U6%20L1%20D1/03.jpg', audio: '/U6%20L1%20D1/03.MP3' },
+  { id: 'page4', image: '/U6%20L1%20D1/04.jpg', audio: '/U6%20L1%20D1/04.MP3' },
+  { id: 'page5', image: '/U6%20L1%20D1/05.jpg', audio: '/U6%20L1%20D1/05.MP3' },
+  { id: 'page6', image: '/U6%20L1%20D1/06.jpg', audio: '/U6%20L1%20D1/06.MP3' },
+  { id: 'page7', image: '/U6%20L1%20D1/07.jpg', audio: '/U6%20L1%20D1/07.MP3' },
+  { id: 'page8', image: '/U6%20L1%20D1/08.jpg', audio: '/U6%20L1%20D1/08.MP3' },
+];
 
-const MOCK_AUDIO_DATA_URI = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
-
-const FOLLOW_READ_PAGES = EBOOK_PAGES.filter(
-  (page): page is ReadAloudPage & { audio: string } => page.id !== 'cover' && page.id !== 'backcover' && Boolean(page.audio)
-);
-
-const buildFallbackWaveform = () => Array.from({ length: 50 }, () => Math.random() * 0.5 + 0.15);
-
-export const ReadAloud = ({ onFinish, onBack, onSkip }: { onFinish: () => void; onBack: () => void; onSkip: () => void }) => {
+export const ReadAloud = ({ onFinish, onBack }: { onFinish: () => void, onBack: () => void }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [recordingState, setRecordingState] = useState<'idle' | 'recording' | 'scoring' | 'scored'>('idle');
   const [stars, setStars] = useState(0);
   const [direction, setDirection] = useState(1);
+  const [hasMicPermission, setHasMicPermission] = useState(false);
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
+  
   const [audioDuration, setAudioDuration] = useState(3);
   const [recordingProgress, setRecordingProgress] = useState(0);
   const [isOriginalPlaying, setIsOriginalPlaying] = useState(false);
@@ -26,210 +29,216 @@ export const ReadAloud = ({ onFinish, onBack, onSkip }: { onFinish: () => void; 
   const [userAudioUrl, setUserAudioUrl] = useState<string | null>(null);
   const [isUserPlaying, setIsUserPlaying] = useState(false);
   const [userPlaybackProgress, setUserPlaybackProgress] = useState(0);
-  const [precalculatedWaveforms, setPrecalculatedWaveforms] = useState<Record<number, number[]>>({});
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const userAudioRef = useRef<HTMLAudioElement>(null);
-  const recordingStartTimeRef = useRef(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingStartTimeRef = useRef<number>(0);
   const progressAnimationRef = useRef<number>();
-  const scoringTimeoutRef = useRef<number>();
-
-  const currentPage = FOLLOW_READ_PAGES[currentIndex];
-  const currentWaveform = useMemo(
-    () => precalculatedWaveforms[currentIndex] || Array(50).fill(0.15),
-    [currentIndex, precalculatedWaveforms]
-  );
+  
+  const [precalculatedWaveforms, setPrecalculatedWaveforms] = useState<Record<number, number[]>>({});
 
   const playCelebrationSound = () => {
     try {
-      const AudioContextCtor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (!AudioContextCtor) return;
-      const context = new AudioContextCtor();
-      const playTone = (frequency: number, startOffset: number, duration: number) => {
-        const oscillator = context.createOscillator();
-        const gainNode = context.createGain();
-        oscillator.type = 'triangle';
-        oscillator.frequency.setValueAtTime(frequency, context.currentTime + startOffset);
-        gainNode.gain.setValueAtTime(0, context.currentTime + startOffset);
-        gainNode.gain.linearRampToValueAtTime(0.2, context.currentTime + startOffset + 0.03);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + startOffset + duration);
-        oscillator.connect(gainNode);
-        gainNode.connect(context.destination);
-        oscillator.start(context.currentTime + startOffset);
-        oscillator.stop(context.currentTime + startOffset + duration);
-      };
-
-      playTone(523.25, 0, 0.25);
-      playTone(659.25, 0.12, 0.3);
-      playTone(783.99, 0.24, 0.35);
-
-      window.setTimeout(() => {
-        void context.close();
-      }, 1000);
-    } catch {
-      // Ignore unsupported audio APIs.
+      const audio = new Audio('/sounds/success.mp3');
+      audio.volume = 0.5;
+      audio.play().catch(e => console.log("Audio play failed:", e));
+    } catch (e) {
+      console.log("Audio not supported");
     }
-  };
-
-  const stopAllPlayback = () => {
-    if (audioRef.current) audioRef.current.pause();
-    if (userAudioRef.current) userAudioRef.current.pause();
-  };
-
-  const resetUserRecording = () => {
-    stopAllPlayback();
-    setRecordingState('idle');
-    setStars(0);
-    setRecordingProgress(0);
-    setOriginalPlaybackProgress(0);
-    setUserPlaybackProgress(0);
-    if (userAudioUrl?.startsWith('blob:')) {
-      URL.revokeObjectURL(userAudioUrl);
-    }
-    setUserAudioUrl(null);
   };
 
   const playOriginalAudio = () => {
     if (isUserPlaying && userAudioRef.current) {
       userAudioRef.current.pause();
     }
-    if (!audioRef.current) return;
-    if (isOriginalPlaying) {
-      audioRef.current.pause();
-      return;
+    if (audioRef.current) {
+      if (isOriginalPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(e => console.error("Error playing original audio:", e));
+      }
     }
-    audioRef.current.currentTime = 0;
-    void audioRef.current.play().catch(() => {
-      setIsOriginalPlaying(false);
-    });
   };
 
   const playUserAudio = () => {
-    if (!userAudioRef.current || !userAudioUrl) return;
     if (isOriginalPlaying && audioRef.current) {
       audioRef.current.pause();
     }
-    if (isUserPlaying) {
-      userAudioRef.current.pause();
-      return;
+    if (userAudioRef.current && userAudioUrl) {
+      if (isUserPlaying) {
+        userAudioRef.current.pause();
+      } else {
+        userAudioRef.current.currentTime = 0;
+        userAudioRef.current.play().catch(e => console.error("Error playing user audio:", e));
+      }
     }
-    userAudioRef.current.currentTime = 0;
-    void userAudioRef.current.play().catch(() => {
-      setIsUserPlaying(false);
-    });
   };
 
   useEffect(() => {
-    let isMounted = true;
-
     const calculateWaveforms = async () => {
       const waveforms: Record<number, number[]> = {};
-      await Promise.all(
-        FOLLOW_READ_PAGES.map(async (page, index) => {
+      
+      await Promise.all(READ_ALOUD_PAGES.map(async (page, i) => {
+        const url = page.audio;
+        if (url) {
           try {
-            const response = await fetch(page.audio);
-            const buffer = await response.arrayBuffer();
-            const AudioContextCtor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-            if (!AudioContextCtor) {
-              waveforms[index] = buildFallbackWaveform();
-              return;
-            }
-            const context = new AudioContextCtor();
-            const audioBuffer = await context.decodeAudioData(buffer.slice(0));
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
             const channelData = audioBuffer.getChannelData(0);
-            const sampleCount = 50;
-            const blockSize = Math.max(1, Math.floor(channelData.length / sampleCount));
+            
+            const samples = 50;
+            const blockSize = Math.floor(channelData.length / samples);
             const rawWaveform: number[] = [];
-
-            for (let waveformIndex = 0; waveformIndex < sampleCount; waveformIndex += 1) {
-              const start = waveformIndex * blockSize;
+            
+            for (let j = 0; j < samples; j++) {
+              const start = j * blockSize;
               let sum = 0;
-              for (let sampleIndex = 0; sampleIndex < blockSize; sampleIndex += 1) {
-                sum += Math.abs(channelData[start + sampleIndex] || 0);
+              for (let k = 0; k < blockSize; k++) {
+                sum += Math.abs(channelData[start + k]);
               }
               rawWaveform.push(sum / blockSize);
             }
-
-            const maxAmplitude = Math.max(...rawWaveform, 0.0001);
-            waveforms[index] = rawWaveform.map((value) => Math.max(0.1, value / maxAmplitude));
-            void context.close();
-          } catch {
-            waveforms[index] = buildFallbackWaveform();
+            
+            const max = Math.max(...rawWaveform);
+            waveforms[i] = rawWaveform.map(val => max ? Math.max(0.1, val / max) : 0.1);
+          } catch (e) {
+            console.error("Failed to decode audio for waveform", e);
+            waveforms[i] = Array.from({ length: 50 }, () => Math.random() * 0.5 + 0.1);
           }
-        })
-      );
-
-      if (isMounted) {
-        setPrecalculatedWaveforms(waveforms);
-      }
+        } else {
+          waveforms[i] = Array.from({ length: 50 }, () => Math.random() * 0.5 + 0.1);
+        }
+      }));
+      
+      setPrecalculatedWaveforms(waveforms);
     };
-
-    void calculateWaveforms();
-
-    return () => {
-      isMounted = false;
-    };
+    
+    calculateWaveforms();
   }, []);
+
+  const currentWaveform = precalculatedWaveforms[currentIndex] || Array(50).fill(0.1);
 
   useEffect(() => {
     let isMounted = true;
-
     const loadAudioDuration = async () => {
+      const url = READ_ALOUD_PAGES[currentIndex].audio;
       try {
-        const response = await fetch(currentPage.audio);
-        const buffer = await response.arrayBuffer();
-        const AudioContextCtor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-        if (!AudioContextCtor) {
-          if (isMounted) setAudioDuration(3);
-          return;
-        }
-        const context = new AudioContextCtor();
-        const audioBuffer = await context.decodeAudioData(buffer.slice(0));
-        if (isMounted) {
-          setAudioDuration(audioBuffer.duration || 3);
-          setRecordingProgress(0);
-        }
-        void context.close();
-      } catch {
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+        if (!isMounted) return;
+        setAudioDuration(audioBuffer.duration);
+        setRecordingProgress(0);
+      } catch (e) {
+        console.error("Audio duration error:", e);
         if (isMounted) {
           setAudioDuration(3);
           setRecordingProgress(0);
         }
       }
     };
-
-    void loadAudioDuration();
-
-    return () => {
-      isMounted = false;
+    loadAudioDuration();
+    return () => { 
+      isMounted = false; 
       if (progressAnimationRef.current) cancelAnimationFrame(progressAnimationRef.current);
     };
-  }, [currentPage.audio]);
+  }, [currentIndex]);
+  
+  const handleRecordClick = () => {
+    if (isOriginalPlaying && audioRef.current) audioRef.current.pause();
+    if (isUserPlaying && userAudioRef.current) userAudioRef.current.pause();
+    if (!hasMicPermission) {
+      setShowPermissionModal(true);
+      return;
+    }
+    startRecordingProcess();
+  };
 
-  useEffect(() => {
-    return () => {
-      if (progressAnimationRef.current) cancelAnimationFrame(progressAnimationRef.current);
-      if (scoringTimeoutRef.current) window.clearTimeout(scoringTimeoutRef.current);
-      stopAllPlayback();
-    };
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (userAudioUrl?.startsWith('blob:')) {
-        URL.revokeObjectURL(userAudioUrl);
+  const startRecordingProcess = async () => {
+    if (recordingState === 'idle') {
+      let stream: MediaStream | null = null;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (err) {
+        // Fallback for demo purposes when mic is not available
+        console.log("Using mock recording mode for demo");
       }
-    };
-  }, [userAudioUrl]);
+
+      if (stream) {
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+        audioChunksRef.current = [];
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) audioChunksRef.current.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          if (audioChunksRef.current.length > 0) {
+            const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType || 'audio/webm' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            setUserAudioUrl(audioUrl);
+          }
+          stream!.getTracks().forEach(track => track.stop());
+        };
+
+        mediaRecorder.start();
+      } else {
+        // Mock mode: simulate a recording
+        mediaRecorderRef.current = {
+          state: 'recording',
+          stop: () => {
+            if (mediaRecorderRef.current) {
+              (mediaRecorderRef.current as any).state = 'inactive';
+            }
+            // Use a valid silent WAV data URI so the audio element doesn't throw "no supported sources"
+            setUserAudioUrl('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+          }
+        } as any;
+      }
+
+      setRecordingState('recording');
+      setRecordingProgress(0);
+      setUserAudioUrl(null);
+      recordingStartTimeRef.current = performance.now();
+      
+      const updateProgress = (timestamp: number) => {
+        const elapsed = (timestamp - recordingStartTimeRef.current) / 1000;
+        const progress = Math.min(1, elapsed / audioDuration);
+        setRecordingProgress(progress);
+        
+        if (progress < 1) {
+          progressAnimationRef.current = requestAnimationFrame(updateProgress);
+        } else {
+          finishRecording();
+        }
+      };
+      progressAnimationRef.current = requestAnimationFrame(updateProgress);
+    }
+  };
 
   const finishRecording = () => {
     if (progressAnimationRef.current) cancelAnimationFrame(progressAnimationRef.current);
-    setUserAudioUrl(MOCK_AUDIO_DATA_URI);
+    
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    
     setRecordingState('scoring');
-
-    scoringTimeoutRef.current = window.setTimeout(() => {
-      const simulatedScore = Math.floor(Math.random() * 41) + 60;
-      const calculatedStars = simulatedScore >= 90 ? 3 : simulatedScore >= 70 ? 2 : simulatedScore >= 40 ? 1 : 0;
+    
+    setTimeout(() => {
+      const simulatedScore = Math.floor(Math.random() * 101);
+      let calculatedStars = 0;
+      if (simulatedScore >= 90) calculatedStars = 3;
+      else if (simulatedScore >= 70) calculatedStars = 2;
+      else if (simulatedScore >= 40) calculatedStars = 1;
+      
       setStars(calculatedStars);
       setRecordingState('scored');
 
@@ -240,92 +249,79 @@ export const ReadAloud = ({ onFinish, onBack, onSkip }: { onFinish: () => void; 
           spread: 70,
           origin: { y: 0.6 },
           colors: ['#f59e0b', '#fbbf24', '#fcd34d'],
-          zIndex: 2000,
+          zIndex: 2000
         });
       }
-    }, 800);
+    }, 1500);
   };
 
-  const startRecordingProcess = async () => {
-    if (recordingState !== 'idle') return;
-
-    stopAllPlayback();
-    setRecordingState('recording');
-    setRecordingProgress(0);
-    setUserAudioUrl((previousUrl) => {
-      if (previousUrl?.startsWith('blob:')) URL.revokeObjectURL(previousUrl);
-      return null;
-    });
-    recordingStartTimeRef.current = performance.now();
-
-    const updateProgress = (timestamp: number) => {
-      const elapsed = (timestamp - recordingStartTimeRef.current) / 1000;
-      const progress = Math.min(1, elapsed / Math.max(audioDuration, 1));
-      setRecordingProgress(progress);
-
-      if (progress < 1) {
-        progressAnimationRef.current = requestAnimationFrame(updateProgress);
-      } else {
-        finishRecording();
-      }
-    };
-
-    progressAnimationRef.current = requestAnimationFrame(updateProgress);
-  };
-
-  const handleRecordClick = () => {
-    void startRecordingProcess();
+  const handleStopRecording = () => {
+    if (recordingState === 'recording') {
+      finishRecording();
+    }
   };
 
   const handleNext = () => {
-    if (currentIndex < FOLLOW_READ_PAGES.length - 1) {
+    if (audioRef.current) audioRef.current.pause();
+    if (userAudioRef.current) userAudioRef.current.pause();
+    if (currentIndex < READ_ALOUD_PAGES.length - 1) {
       setDirection(1);
-      setCurrentIndex((previousIndex) => previousIndex + 1);
-      resetUserRecording();
-      return;
+      setCurrentIndex(prev => prev + 1);
+      setRecordingState('idle');
+      setStars(0);
+      setRecordingProgress(0);
+      setOriginalPlaybackProgress(0);
+      setUserPlaybackProgress(0);
+      if (userAudioUrl && userAudioUrl.startsWith('blob:')) URL.revokeObjectURL(userAudioUrl);
+      setUserAudioUrl(null);
+    } else {
+      onFinish();
     }
-    onFinish();
   };
 
   const variants = {
-    enter: (nextDirection: number) => ({ x: nextDirection > 0 ? '100%' : '-100%', opacity: 0 }),
+    enter: (direction: number) => ({
+      x: direction > 0 ? '100%' : '-100%',
+      opacity: 0,
+    }),
     center: {
       x: 0,
       opacity: 1,
       transition: {
-        x: { type: 'spring', stiffness: 300, damping: 30 },
-        opacity: { duration: 0.2 },
-      },
+        x: { type: "spring", stiffness: 300, damping: 30 },
+        opacity: { duration: 0.2 }
+      }
     },
-    exit: (nextDirection: number) => ({
-      x: nextDirection < 0 ? '100%' : '-100%',
+    exit: (direction: number) => ({
+      x: direction < 0 ? '100%' : '-100%',
       opacity: 0,
       transition: {
-        x: { type: 'spring', stiffness: 300, damping: 30 },
-        opacity: { duration: 0.2 },
-      },
-    }),
+        x: { type: "spring", stiffness: 300, damping: 30 },
+        opacity: { duration: 0.2 }
+      }
+    })
   };
 
   return (
     <div className="relative h-full w-full bg-slate-50 z-[100] flex flex-col animate-in slide-in-from-bottom duration-500 text-slate-800 overflow-hidden">
       <header className="h-[10%] min-h-[60px] px-[4%] flex items-center justify-between bg-white shadow-sm border-b border-slate-100 shrink-0 z-10">
-        <button onClick={onBack} className="w-[clamp(36px,10vw,48px)] h-[clamp(36px,10vw,48px)] bg-slate-100 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center text-slate-600 transition-colors">
+        <button onClick={onBack} className="w-[clamp(36px,10vw,48px)] h-[clamp(36px,10vw,48px)] bg-slate-100 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center text-slate-600 transition-colors active:brightness-90">
           <X size={28} />
         </button>
         <h2 className="font-black tracking-widest text-[clamp(20px,5vw,24px)] uppercase text-slate-600">
-          绘本跟读 ({currentIndex + 1}/{FOLLOW_READ_PAGES.length})
+          绘本跟读 ({currentIndex + 1}/{READ_ALOUD_PAGES.length})
         </h2>
-        <button onClick={onSkip} className="px-[clamp(10px,2.5vw,16px)] h-[clamp(40px,12vw,56px)] bg-amber-100 text-amber-700 rounded-[clamp(12px,3vw,16px)] flex items-center justify-center font-black text-[clamp(12px,3vw,16px)] whitespace-nowrap transition-colors">
+        <button onClick={onFinish} className="px-3 py-2 bg-slate-100 text-slate-500 rounded-xl font-bold text-[clamp(12px,3vw,14px)] active:scale-95 active:brightness-90 transition-all whitespace-nowrap">
           跳过本环节
         </button>
       </header>
 
       <div className="flex-1 flex flex-col items-center p-[clamp(16px,4vw,24px)] relative overflow-hidden">
+        {/* Image Area */}
         <div className="w-full h-[50%] sm:h-[60%] relative flex justify-center items-center">
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
             <motion.div
-              key={currentPage.id}
+              key={currentIndex}
               custom={direction}
               variants={variants}
               initial="enter"
@@ -333,16 +329,22 @@ export const ReadAloud = ({ onFinish, onBack, onSkip }: { onFinish: () => void; 
               exit="exit"
               className="absolute w-full h-full flex justify-center items-center"
             >
-              <img
-                src={currentPage.image}
+              <img 
+                src={READ_ALOUD_PAGES[currentIndex].image} 
                 alt={`Page ${currentIndex + 1}`}
                 className="max-w-full max-h-full object-contain rounded-2xl shadow-lg border border-slate-200"
                 referrerPolicy="no-referrer"
               />
               <div className="absolute bottom-4 right-4 flex flex-col space-y-3">
-                <button onClick={playOriginalAudio} className="w-16 h-16 bg-white/90 backdrop-blur-sm text-purple-500 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all">
+                <button
+                  onClick={playOriginalAudio}
+                  className="w-16 h-16 bg-white/90 backdrop-blur-sm text-purple-500 rounded-full flex items-center justify-center shadow-lg active:scale-95 active:brightness-90 transition-all"
+                >
                   {isOriginalPlaying ? (
-                    <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ repeat: Infinity, duration: 1 }}>
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ repeat: Infinity, duration: 1 }}
+                    >
                       <Volume2 size={32} />
                     </motion.div>
                   ) : (
@@ -353,7 +355,7 @@ export const ReadAloud = ({ onFinish, onBack, onSkip }: { onFinish: () => void; 
                   onClick={playUserAudio}
                   disabled={!userAudioUrl}
                   className={`w-16 h-16 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg transition-all ${
-                    userAudioUrl ? 'text-green-500 active:scale-95' : 'text-slate-300 opacity-50 cursor-not-allowed'
+                    userAudioUrl ? 'text-green-500 active:scale-95 active:brightness-90' : 'text-slate-300 opacity-50 cursor-not-allowed'
                   }`}
                 >
                   {isUserPlaying ? <Pause size={32} /> : <Play size={32} className="ml-1" />}
@@ -363,78 +365,81 @@ export const ReadAloud = ({ onFinish, onBack, onSkip }: { onFinish: () => void; 
           </AnimatePresence>
         </div>
 
-        <audio
-          ref={audioRef}
-          src={currentPage.audio}
+        <audio 
+          ref={audioRef} 
+          src={READ_ALOUD_PAGES[currentIndex].audio} 
           onPlay={() => setIsOriginalPlaying(true)}
           onPause={() => setIsOriginalPlaying(false)}
-          onEnded={() => {
-            setIsOriginalPlaying(false);
-            setOriginalPlaybackProgress(0);
-          }}
-          onTimeUpdate={(event) => {
-            const audioElement = event.currentTarget;
-            if (audioElement.duration) {
-              setOriginalPlaybackProgress(audioElement.currentTime / audioElement.duration);
+          onEnded={() => { setIsOriginalPlaying(false); setOriginalPlaybackProgress(0); }}
+          onTimeUpdate={(e) => {
+            const audio = e.currentTarget;
+            if (audio.duration) {
+              setOriginalPlaybackProgress(audio.currentTime / audio.duration);
             }
           }}
         />
-
         {userAudioUrl && (
-          <audio
-            ref={userAudioRef}
-            src={userAudioUrl}
+          <audio 
+            ref={userAudioRef} 
+            src={userAudioUrl} 
             onPlay={() => setIsUserPlaying(true)}
             onPause={() => setIsUserPlaying(false)}
-            onEnded={() => {
-              setIsUserPlaying(false);
-              setUserPlaybackProgress(0);
-            }}
-            onTimeUpdate={(event) => {
-              const audioElement = event.currentTarget;
-              if (audioElement.duration) {
-                setUserPlaybackProgress(audioElement.currentTime / audioElement.duration);
+            onEnded={() => { setIsUserPlaying(false); setUserPlaybackProgress(0); }}
+            onTimeUpdate={(e) => {
+              const audio = e.currentTarget;
+              if (audio.duration) {
+                setUserPlaybackProgress(audio.currentTime / audio.duration);
               }
             }}
           />
         )}
 
+        {/* Interaction Area */}
         <div className="w-full flex-1 mt-6 flex flex-col items-center justify-center relative">
-          <div className="w-full max-w-sm mb-4 px-4 relative h-12">
+          
+          {/* Waveform Progress Bar */}
+          <div className="w-full max-w-sm mb-4 -mt-8 px-4 relative h-12">
             <AnimatePresence>
-              <motion.div
-                key={currentPage.id}
+              <motion.div 
+                key={currentIndex} 
                 className="absolute inset-0 flex items-end justify-between gap-[3px] w-full"
                 initial="hidden"
                 animate="visible"
                 exit="exit"
                 variants={{
                   hidden: {},
-                  visible: { transition: { staggerChildren: 0.3 / 50 } },
-                  exit: { transition: { staggerChildren: 0.3 / 50, staggerDirection: 1 } },
+                  visible: {
+                    transition: {
+                      staggerChildren: 0.3 / 50,
+                    }
+                  },
+                  exit: {
+                    transition: {
+                      staggerChildren: 0.3 / 50,
+                      staggerDirection: 1
+                    }
+                  }
                 }}
               >
                 {(isOriginalPlaying || isUserPlaying) && (
-                  <motion.div
-                    className={`absolute top-0 bottom-0 w-1 rounded-full z-10 ${
-                      isOriginalPlaying ? 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]' : 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]'
-                    }`}
+                  <motion.div 
+                    className={`absolute top-0 bottom-0 w-1 rounded-full z-10 ${isOriginalPlaying ? 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]' : 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]'}`}
                     style={{ left: `${(isOriginalPlaying ? originalPlaybackProgress : userPlaybackProgress) * 100}%` }}
                     transition={{ duration: 0.1 }}
                   />
                 )}
-                {currentWaveform.map((amplitude, waveformIndex) => {
-                  const activeProgress = isOriginalPlaying ? originalPlaybackProgress : isUserPlaying ? userPlaybackProgress : recordingProgress;
-                  const isFilled = waveformIndex / currentWaveform.length <= activeProgress;
-                  const fillColor = isOriginalPlaying ? 'bg-purple-400' : isUserPlaying ? 'bg-green-400' : 'bg-blue-500';
+                {currentWaveform.map((amp, idx) => {
+                  const activeProgress = isOriginalPlaying ? originalPlaybackProgress : (isUserPlaying ? userPlaybackProgress : recordingProgress);
+                  const isFilled = (idx / currentWaveform.length) <= activeProgress;
+                  const fillColor = isOriginalPlaying ? 'bg-purple-400' : (isUserPlaying ? 'bg-green-400' : 'bg-blue-500');
                   return (
                     <motion.div
-                      key={waveformIndex}
+                      key={idx}
                       className={`flex-1 rounded-full ${isFilled ? fillColor : 'bg-slate-200'}`}
                       variants={{
                         hidden: { height: 0 },
-                        visible: { height: `${Math.max(12, amplitude * 100)}%`, transition: { duration: 0.3, ease: 'easeOut' } },
-                        exit: { height: 0, transition: { duration: 0.3, ease: 'easeIn' } },
+                        visible: { height: `${Math.max(12, amp * 100)}%`, transition: { duration: 0.3, ease: "easeOut" } },
+                        exit: { height: 0, transition: { duration: 0.3, ease: "easeIn" } }
                       }}
                     />
                   );
@@ -445,7 +450,10 @@ export const ReadAloud = ({ onFinish, onBack, onSkip }: { onFinish: () => void; 
 
           {recordingState === 'idle' && (
             <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300">
-              <button onClick={handleRecordClick} className="w-[clamp(80px,20vw,100px)] h-[clamp(80px,20vw,100px)] bg-blue-500 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(59,130,246,0.4)] active:scale-95 transition-all">
+              <button 
+                onClick={handleRecordClick}
+                className="w-[clamp(80px,20vw,100px)] h-[clamp(80px,20vw,100px)] bg-blue-500 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(59,130,246,0.4)] active:scale-95 active:brightness-90 transition-all"
+              >
                 <Mic size={48} />
               </button>
             </div>
@@ -454,9 +462,11 @@ export const ReadAloud = ({ onFinish, onBack, onSkip }: { onFinish: () => void; 
           {recordingState === 'recording' && (
             <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300">
               <div className="relative flex items-center justify-center">
-                <div className="absolute inset-0 bg-red-500 rounded-full recording-pulse opacity-20" />
-                <div className="absolute inset-0 bg-red-500 rounded-full recording-pulse recording-pulse-delayed opacity-15" />
-                <button onClick={finishRecording} className="w-[clamp(80px,20vw,100px)] h-[clamp(80px,20vw,100px)] bg-red-500 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(239,68,68,0.4)] relative z-10 active:scale-95 transition-all">
+                <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-20" />
+                <button 
+                  onClick={handleStopRecording}
+                  className="w-[clamp(80px,20vw,100px)] h-[clamp(80px,20vw,100px)] bg-red-500 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(239,68,68,0.4)] relative z-10 active:scale-95 active:brightness-90 transition-all"
+                >
                   <Square size={36} fill="currentColor" />
                 </button>
               </div>
@@ -468,6 +478,7 @@ export const ReadAloud = ({ onFinish, onBack, onSkip }: { onFinish: () => void; 
               <div className="w-[clamp(80px,20vw,100px)] h-[clamp(80px,20vw,100px)] bg-amber-400 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(251,191,36,0.4)]">
                 <Star size={48} className="animate-spin" />
               </div>
+              <p className="mt-4 text-[clamp(18px,4.5vw,20px)] font-bold text-amber-500">AI 评分中...</p>
             </div>
           )}
 
@@ -475,37 +486,51 @@ export const ReadAloud = ({ onFinish, onBack, onSkip }: { onFinish: () => void; 
             <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300 w-full max-w-md">
               <div className="flex items-center justify-center space-x-2 mb-8">
                 {[1, 2, 3].map((starIndex) => (
-                  <div key={starIndex} className="relative flex items-center justify-center w-16 h-16">
-                    <Star size={64} className="text-slate-200 fill-slate-200" />
-                    {starIndex <= stars && (
-                      <motion.div
-                        className="absolute inset-0 flex items-center justify-center"
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ type: 'spring', delay: starIndex * 0.15, bounce: 0.6, duration: 0.6 }}
-                      >
-                        <Star size={64} className="text-amber-400 fill-amber-400 drop-shadow-md" />
-                      </motion.div>
-                    )}
+                  <motion.div 
+                    key={starIndex}
+                    className="relative flex items-center justify-center"
+                    initial={{ scale: starIndex <= stars ? 0 : 1 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', delay: starIndex <= stars ? starIndex * 0.15 : 0, bounce: 0.6, duration: 0.6 }}
+                  >
+                    <Star 
+                      size={64} 
+                      className={`${starIndex <= stars ? 'text-amber-400 fill-amber-400 drop-shadow-md' : 'text-slate-200 fill-slate-200'} transition-colors duration-500`} 
+                    />
                     {starIndex <= stars && (
                       <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-full">
                         <motion.div
                           initial={{ x: '-150%' }}
                           animate={{ x: '150%' }}
-                          transition={{ delay: starIndex * 0.15 + 0.2, duration: 0.8, ease: 'easeInOut' }}
+                          transition={{ delay: starIndex * 0.15 + 0.2, duration: 0.8, ease: "easeInOut" }}
                           className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white to-transparent -skew-x-12 mix-blend-overlay opacity-80"
                         />
                       </div>
                     )}
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-
+              
               <div className="flex space-x-4 w-full px-4">
-                <button onClick={resetUserRecording} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl active:scale-95 transition-all flex items-center justify-center">
+                <button 
+                  onClick={() => {
+                    if (audioRef.current) audioRef.current.pause();
+                    if (userAudioRef.current) userAudioRef.current.pause();
+                    setRecordingState('idle');
+                    setRecordingProgress(0);
+                    setOriginalPlaybackProgress(0);
+                    setUserPlaybackProgress(0);
+                    if (userAudioUrl && userAudioUrl.startsWith('blob:')) URL.revokeObjectURL(userAudioUrl);
+                    setUserAudioUrl(null);
+                  }}
+                  className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl active:scale-95 active:brightness-90 transition-all flex items-center justify-center"
+                >
                   <RotateCcw size={32} />
                 </button>
-                <button onClick={handleNext} className="flex-1 py-4 bg-green-500 text-white rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center">
+                <button 
+                  onClick={handleNext}
+                  className="flex-1 py-4 bg-green-500 text-white rounded-2xl shadow-lg active:scale-95 active:brightness-90 transition-all flex items-center justify-center"
+                >
                   <ArrowRight size={32} strokeWidth={3} />
                 </button>
               </div>
@@ -514,6 +539,37 @@ export const ReadAloud = ({ onFinish, onBack, onSkip }: { onFinish: () => void; 
         </div>
       </div>
 
+      {/* Permission Modal */}
+      {showPermissionModal && (
+        <div className="absolute inset-0 z-[200] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[32px] p-[clamp(24px,6vw,40px)] w-full max-w-sm shadow-2xl flex flex-col items-center text-center">
+            <div className="w-20 h-20 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mb-6">
+              <Mic size={40} />
+            </div>
+            <h3 className="text-[clamp(20px,5vw,24px)] font-black text-slate-800 mb-2">允许使用麦克风</h3>
+            <p className="text-slate-500 font-medium mb-8">我们需要使用麦克风来听你读英语哦！请在弹出的提示中选择“允许”。</p>
+            <div className="flex w-full space-x-4">
+              <button 
+                onClick={() => setShowPermissionModal(false)}
+                className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold active:scale-95 active:brightness-90 transition-all"
+              >
+                稍后
+              </button>
+              <button 
+                onClick={() => {
+                  setShowPermissionModal(false);
+                  setHasMicPermission(true);
+                  startRecordingProcess();
+                }}
+                className="flex-1 py-4 bg-blue-500 text-white rounded-2xl font-bold shadow-lg shadow-blue-500/30 active:scale-95 active:brightness-90 transition-all"
+              >
+                好的，允许
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="absolute bottom-0 left-0 h-1.5 bg-blue-500 transition-all duration-500 z-50 rounded-r-full" style={{ width: `${((currentIndex + 1) / READ_ALOUD_PAGES.length) * 100}%` }} />
     </div>
   );
 };
