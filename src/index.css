@@ -32,8 +32,17 @@
   66% { transform: translate(20px, -20px) scale(1.15); }
 }
 
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
 .animate-breathe-scale {
   animation: breathe-scale 1.5s ease-in-out infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
 }
 
 .animate-drift-1 {
